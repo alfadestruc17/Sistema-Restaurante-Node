@@ -2,7 +2,7 @@ const base = '/inventario';
 let modoCompraRapida = false;
 let colaInsumosCompra = [];
 
-function abrirEntrada(id, nombre) { document.getElementById('entradaInsumoId').value = id; document.getElementById('entradaInsumoNombre').textContent = nombre; document.getElementById('entradaCantidad').value = ''; document.getElementById('entradaCosto').value = ''; document.getElementById('entradaRef').value = ''; new bootstrap.Modal(document.getElementById('modalEntrada')).show(); }
+function abrirEntrada(id, nombre) { document.getElementById('entradaInsumoId').value = id; document.getElementById('entradaInsumoNombre').textContent = nombre; document.getElementById('entradaCantidad').value = ''; document.getElementById('entradaCostoTotal').value = ''; document.getElementById('entradaCostoUnitarioPreview').textContent = ''; document.getElementById('entradaRef').value = ''; new bootstrap.Modal(document.getElementById('modalEntrada')).show(); }
 function abrirSalida(id, nombre, disp) { document.getElementById('salidaInsumoId').value = id; document.getElementById('salidaInsumoNombre').textContent = nombre; document.getElementById('salidaDisponible').textContent = disp; document.getElementById('salidaCantidad').value = ''; document.getElementById('salidaRef').value = ''; new bootstrap.Modal(document.getElementById('modalSalida')).show(); }
 function abrirAjuste(id, nombre, disp) {
     document.getElementById('ajusteInsumoId').value = id;
@@ -149,10 +149,25 @@ document.getElementById('nuevoPrecioCompra')?.addEventListener('input', actualiz
 document.getElementById('nuevoCantidadCompra')?.addEventListener('input', actualizarPreviewCosto);
 document.getElementById('nuevoUnidadBase')?.addEventListener('change', actualizarPreviewCosto);
 
+function actualizarPreviewCostoEntrada() {
+    const preview = document.getElementById('entradaCostoUnitarioPreview');
+    const cantidad = Number.parseFloat(document.getElementById('entradaCantidad').value);
+    const costoTotal = Number.parseFloat(document.getElementById('entradaCostoTotal').value);
+    if (cantidad > 0 && costoTotal > 0) {
+        const unitario = costoTotal / cantidad;
+        preview.textContent = '≈ $' + unitario.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' por unidad';
+    } else {
+        preview.textContent = '';
+    }
+}
+document.getElementById('entradaCantidad')?.addEventListener('input', actualizarPreviewCostoEntrada);
+document.getElementById('entradaCostoTotal')?.addEventListener('input', actualizarPreviewCostoEntrada);
+
 document.getElementById('btnConfirmarEntrada').addEventListener('click', async () => {
     const id = document.getElementById('entradaInsumoId').value;
     const cantidad = Number.parseFloat(document.getElementById('entradaCantidad').value);
-    const costo = document.getElementById('entradaCosto').value;
+    const costoTotal = document.getElementById('entradaCostoTotal').value;
+    const costo = costoTotal ? (Number.parseFloat(costoTotal) / cantidad) : null;
     const ref = document.getElementById('entradaRef').value;
     const fCant = document.getElementById('entradaCantidad');
     if (!cantidad || cantidad <= 0) {
@@ -228,7 +243,8 @@ function procesarSiguienteInsumo() {
     document.getElementById('entradaInsumoId').value = insumo.id || insumo.insumo_id;
     document.getElementById('entradaInsumoNombre').textContent = insumo.nombre;
     document.getElementById('entradaCantidad').value = falta > 0 ? falta : '';
-    document.getElementById('entradaCosto').value = insumo.precio_compra || '';
+    document.getElementById('entradaCostoTotal').value = '';
+    document.getElementById('entradaCostoUnitarioPreview').textContent = '';
     document.getElementById('entradaRef').value = 'Compra rápida - Lista mercado';
     document.getElementById('entradaProveedorId').value = insumo.proveedor_id || '';
     document.getElementById('entradaFactura').value = '';

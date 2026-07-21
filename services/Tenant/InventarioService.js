@@ -84,12 +84,12 @@ class InventarioService {
             ) {
                 nuevoCosto = (stockActual * (costoActual || costo) + cant * costo) / nuevoStock;
             }
-            await conn.query('UPDATE insumos SET stock_actual = ?, costo_promedio = ? WHERE id = ? AND tenant_id = ?', [
-                nuevoStock,
-                nuevoCosto,
-                insumo_id,
-                tenantId
-            ]);
+            const stockValorizadoActual = parseFloat(insumo.stock_valorizado) || 0;
+            const nuevoStockValorizado = stockValorizadoActual + cant;
+            await conn.query(
+                'UPDATE insumos SET stock_actual = ?, stock_valorizado = ?, costo_promedio = ? WHERE id = ? AND tenant_id = ?',
+                [nuevoStock, nuevoStockValorizado, nuevoCosto, insumo_id, tenantId]
+            );
 
             // --- INTEGRACIÓN CON FINANZAS ---
             // Si hay un costo real pagado, registrar el gasto
@@ -144,11 +144,12 @@ class InventarioService {
                 [tenantId, insumo_id, cant, insumo.costo_promedio, referencia || null]
             );
             const nuevoStock = stockActual - cant;
-            await conn.query('UPDATE insumos SET stock_actual = ? WHERE id = ? AND tenant_id = ?', [
-                nuevoStock,
-                insumo_id,
-                tenantId
-            ]);
+            const stockValorizadoActual = parseFloat(insumo.stock_valorizado) || 0;
+            const nuevoStockValorizado = stockValorizadoActual - cant;
+            await conn.query(
+                'UPDATE insumos SET stock_actual = ?, stock_valorizado = ? WHERE id = ? AND tenant_id = ?',
+                [nuevoStock, nuevoStockValorizado, insumo_id, tenantId]
+            );
             await conn.commit();
             return { nuevoStock };
         } catch (e) {
@@ -161,6 +162,9 @@ class InventarioService {
 
     /**
      * Ajuste manual: suma o resta directa al stock (cantidad puede ser negativa).
+     * No toca stock_valorizado ni costo_promedio a propósito: el ajuste corrige el
+     * conteo físico (mermas, errores de cocina) sin mover el "Valor de inventario"
+     * reportado — para eso ya existen el registro de compra y el registro de gasto.
      */
     static async registrarAjuste(tenantId, { insumo_id, cantidad, referencia }) {
         const insumo = await InsumoRepository.findById(insumo_id, tenantId);
@@ -293,6 +297,12 @@ class InventarioService {
                     return acc;
                 }
 
+                // Un ajuste manual (merma, corrección de cocina) mueve stock_actual pero no
+                // stock_valorizado: usar el mínimo evita que ese stock "gratis" (o el que ya
+                // no existe físicamente) infle o desinfle el valor reportado del inventario.
+                const stockValorizado = parseFloat(i.stock_valorizado) || 0;
+                const stockParaValorizar = Math.max(0, Math.min(stock, stockValorizado));
+
                 let costo =
                     i.costo_promedio !== null && i.costo_promedio !== undefined ? parseFloat(i.costo_promedio) : 0;
                 if (costo === 0) {
@@ -304,7 +314,7 @@ class InventarioService {
                 }
 
                 return {
-                    valorTotal: acc.valorTotal + stock * costo,
+                    valorTotal: acc.valorTotal + stockParaValorizar * costo,
                     itemsContados: acc.itemsContados + 1
                 };
             },

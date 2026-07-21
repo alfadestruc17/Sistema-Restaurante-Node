@@ -84,6 +84,12 @@ $(function () {
   document.getElementById('formCargarFactura')?.addEventListener('submit', async function (e) {
     e.preventDefault();
     const proveedorId = document.getElementById('facturaProveedorId').value;
+    const archivoInput = this.querySelector('input[name="archivo"]');
+    const archivo = archivoInput?.files?.[0];
+    if (archivo && archivo.size > 2 * 1024 * 1024) {
+      Swal.fire('Archivo muy pesado', 'El archivo supera el tamaño máximo permitido (2MB)', 'warning');
+      return;
+    }
     const formData = new FormData(this);
     const btn = this.querySelector('button[type="submit"]');
     const originalHtml = btn.innerHTML;

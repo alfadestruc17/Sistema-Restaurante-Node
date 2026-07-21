@@ -308,9 +308,13 @@
                 </div>
 
                 <div class="mb-2">
-                    <label class="form-label small fw-bold">Precio de compra (por unidad)</label>
-                    <input type="number" step="0.01" class="form-control" id="entradaCosto"
-                        placeholder="Dejar vacío para usar costo actual">
+                    <label class="form-label small fw-bold">¿Cuánto pagaste en total por esta compra?</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input type="number" step="0.01" class="form-control" id="entradaCostoTotal"
+                            placeholder="Dejar vacío para usar costo actual">
+                    </div>
+                    <div class="form-text" id="entradaCostoUnitarioPreview"></div>
                 </div>
 
                 <div class="row g-2 mb-2">

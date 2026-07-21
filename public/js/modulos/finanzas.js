@@ -78,7 +78,7 @@
         if (!payload.monto) return Swal.fire('Aviso', 'Ingrese un monto válido', 'warning');
 
         try {
-            const r = await fetch('/caja/api/movimientos', {
+            const r = await fetch('/finanzas/api/movimientos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -91,7 +91,8 @@
                     confirmButtonColor: '#0f172a'
                 }).then(function () { location.reload(); });
             } else {
-                Swal.fire('Error', 'No se pudo completar la operación', 'error');
+                const err = await r.json().catch(function () { return {}; });
+                Swal.fire('Error', err.error || 'No se pudo completar la operación', 'error');
             }
         } catch (e) {
             Swal.fire('Error de Conexión', e.message, 'error');

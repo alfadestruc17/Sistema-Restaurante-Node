@@ -8,39 +8,46 @@ class StoreConfiguracionRequest extends BaseRequest {
      */
     static rules() {
         return [
-            body('nombre_restaurante')
-                .notEmpty().withMessage('El nombre del restaurante es obligatorio')
+            body('nombre_negocio')
+                .notEmpty()
+                .withMessage('El nombre del negocio es obligatorio')
                 .trim()
-                .isLength({ max: 100 }).withMessage('El nombre no puede exceder 100 caracteres'),
+                .isLength({ max: 100 })
+                .withMessage('El nombre no puede exceder 100 caracteres'),
+
+            body('nit')
+                .optional({ checkFalsy: true })
+                .trim()
+                .isLength({ max: 30 })
+                .withMessage('El NIT no puede exceder 30 caracteres'),
 
             body('direccion')
                 .optional({ checkFalsy: true })
                 .trim()
-                .isLength({ max: 200 }).withMessage('La dirección no puede exceder 200 caracteres'),
+                .isLength({ max: 200 })
+                .withMessage('La dirección no puede exceder 200 caracteres'),
 
             body('telefono')
                 .optional({ checkFalsy: true })
-                .trim(),
+                .trim()
+                .isLength({ max: 30 })
+                .withMessage('El teléfono no puede exceder 30 caracteres'),
 
-            body('prefijo_factura')
+            body('pie_pagina')
                 .optional({ checkFalsy: true })
                 .trim()
-                .isLength({ max: 10 }).withMessage('El prefijo de factura no puede exceder 10 caracteres'),
+                .isLength({ max: 300 })
+                .withMessage('El pie de página no puede exceder 300 caracteres'),
 
-            body('resolucion_dian')
+            body('ancho_papel')
                 .optional({ checkFalsy: true })
-                .trim(),
+                .isInt({ min: 58, max: 80 })
+                .withMessage('El ancho del papel debe estar entre 58 y 80 mm'),
 
-            body('propina_sugerida')
+            body('font_size')
                 .optional({ checkFalsy: true })
-                .isNumeric().withMessage('La propina sugerida debe ser un número')
-                .custom(value => {
-                    const p = parseFloat(value);
-                    if (p < 0 || p > 100) {
-                        throw new Error('La propina debe estar entre 0% y 100%');
-                    }
-                    return true;
-                })
+                .isInt({ min: 1, max: 2 })
+                .withMessage('Tamaño de fuente inválido')
         ];
     }
 }

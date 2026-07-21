@@ -52,6 +52,26 @@ class FinanzasController {
             res.status(500).json({ error: e.message });
         }
     }
+
+    /**
+     * Registra un movimiento manual (ingreso/egreso) desde el modal "Nueva Operación Financiera"
+     */
+    static async registrarMovimiento(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            const { monto, motivo, categoria, tipo } = req.body;
+            const id = await FinanzasService.registrarMovimientoManual(tenantId, {
+                monto,
+                motivo,
+                categoria,
+                tipo,
+                usuario_id: req.user?.id
+            });
+            res.status(201).json({ id });
+        } catch (e) {
+            res.status(400).json({ error: e.message });
+        }
+    }
 }
 
 module.exports = FinanzasController;

@@ -13,7 +13,7 @@ class FinanzasService {
     static async registrarIngresoVenta(tenantId, { monto, factura_id, detalle, esCeramica = false, usuario_id }) {
         // Intentar obtener sesión de caja abierta
         const sesion = await CajaRepository.getSesionAbierta(tenantId);
-        
+
         // Prioridad de usuario: 1. El que viene en la req, 2. El de la sesión de caja, 3. Usuario 1 (admin)
         const finalUsuarioId = usuario_id || (sesion ? sesion.usuario_id : 1);
 
@@ -44,6 +44,33 @@ class FinanzasService {
             categoria_gasto: categoria_nombre === 'Cerámicas' ? 'Inventario Cerámica' : 'Insumos Generales',
             referencia_tipo: 'compra_inventario',
             referencia_id: mov_id
+        });
+    }
+
+    /**
+     * Registra un movimiento manual (ingreso/egreso) desde el módulo de Finanzas.
+     * No requiere una sesión de caja abierta (movimiento administrativo, fuera de turno).
+     */
+    static async registrarMovimientoManual(tenantId, { monto, motivo, categoria, tipo, usuario_id }) {
+        const montoNum = parseFloat(monto);
+        if (!montoNum || montoNum <= 0) {
+            throw new Error('El monto debe ser mayor a 0');
+        }
+        if (!['entrada', 'salida'].includes(tipo)) {
+            throw new Error('Tipo de operación inválido');
+        }
+
+        const sesion = await CajaRepository.getSesionAbierta(tenantId);
+
+        return await FinanzasRepository.createMovimiento(tenantId, {
+            sesion_id: sesion ? sesion.id : null,
+            usuario_id: usuario_id || (sesion ? sesion.usuario_id : 1),
+            tipo,
+            monto: montoNum,
+            motivo: motivo || (tipo === 'salida' ? 'Egreso manual' : 'Ingreso manual'),
+            categoria_gasto: categoria || 'General',
+            referencia_tipo: 'manual',
+            referencia_id: null
         });
     }
 

@@ -18,6 +18,18 @@ const upload = multer({
     }
 });
 
+// El fileFilter/límite de Multer llama a next(err) en vez de lanzar, así que
+// sin este handler el error salía sin capturar hacia el 500 genérico global.
+function manejarErrorUploadFactura(err, req, res, next) {
+    if (!err) {
+        return next();
+    }
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'El archivo supera el tamaño máximo permitido (2MB)' });
+    }
+    return res.status(400).json({ error: err.message || 'No se pudo procesar el archivo' });
+}
+
 // --- Rutas de Proveedores ---
 
 router.get('/', requirePermission('proveedores.ver'), ProveedoresController.index);
@@ -33,7 +45,13 @@ router.delete('/:id', requirePermission('proveedores.editar'), ProveedoresContro
 router.get('/:id/facturas', requirePermission('proveedores.facturas'), ProveedoresController.listFacturas);
 
 // Cargar nueva factura
-router.post('/:id/facturas', requirePermission('proveedores.facturas'), upload.single('archivo'), ProveedoresController.storeFactura);
+router.post(
+    '/:id/facturas',
+    requirePermission('proveedores.facturas'),
+    upload.single('archivo'),
+    manejarErrorUploadFactura,
+    ProveedoresController.storeFactura
+);
 
 // Ver/Descargar factura
 router.get('/facturas/:facturaId/ver', requirePermission('proveedores.facturas'), ProveedoresController.showFactura);

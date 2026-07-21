@@ -34,7 +34,12 @@ class ConfiguracionController {
             res.redirect('/configuracion');
         } catch (error) {
             console.error('Error en el procesamiento:', error);
-            res.status(500).json({ error: 'Error interno del servidor' });
+            res.status(500).render('errors/internal', {
+                error: {
+                    message: 'No se pudo guardar la configuración',
+                    stack: process.env.NODE_ENV === 'development' ? error.stack : ''
+                }
+            });
         }
     }
 
