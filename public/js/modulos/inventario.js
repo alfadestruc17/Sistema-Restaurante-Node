@@ -2,7 +2,7 @@ const base = '/inventario';
 let modoCompraRapida = false;
 let colaInsumosCompra = [];
 
-function abrirEntrada(id, nombre) { document.getElementById('entradaInsumoId').value = id; document.getElementById('entradaInsumoNombre').textContent = nombre; document.getElementById('entradaCantidad').value = ''; document.getElementById('entradaCostoTotal').value = ''; document.getElementById('entradaCostoUnitarioPreview').textContent = ''; document.getElementById('entradaRef').value = ''; new bootstrap.Modal(document.getElementById('modalEntrada')).show(); }
+function abrirEntrada(id, nombre, unidad) { document.getElementById('entradaInsumoId').value = id; document.getElementById('entradaInsumoNombre').textContent = nombre; document.getElementById('entradaUnidadLabel').textContent = unidad || 'g'; document.getElementById('entradaCantidad').value = ''; document.getElementById('entradaCostoTotal').value = ''; document.getElementById('entradaCostoUnitarioPreview').textContent = ''; document.getElementById('entradaRef').value = ''; new bootstrap.Modal(document.getElementById('modalEntrada')).show(); }
 function abrirSalida(id, nombre, disp) { document.getElementById('salidaInsumoId').value = id; document.getElementById('salidaInsumoNombre').textContent = nombre; document.getElementById('salidaDisponible').textContent = disp; document.getElementById('salidaCantidad').value = ''; document.getElementById('salidaRef').value = ''; new bootstrap.Modal(document.getElementById('modalSalida')).show(); }
 function abrirAjuste(id, nombre, disp) {
     document.getElementById('ajusteInsumoId').value = id;
@@ -127,6 +127,12 @@ document.getElementById('nuevoCategoriaId')?.addEventListener('change', function
     }
 });
 
+const AYUDA_UNIDAD_COMPRA = {
+    g: 'Ej: 1 kg = 1000 <span class="fw-bold">g</span>',
+    ml: 'Ej: 1 L = 1000 <span class="fw-bold">ml</span>',
+    UND: 'Ej: 1 paquete = 12 <span class="fw-bold">UND</span> (ajusta según tu presentación)'
+};
+
 function actualizarPreviewCosto() {
     const precio = Number.parseFloat(document.getElementById('nuevoPrecioCompra')?.value) || 0;
     const cantidad = Number.parseFloat(document.getElementById('nuevoCantidadCompra')?.value) || 1;
@@ -134,6 +140,12 @@ function actualizarPreviewCosto() {
     const preview = document.getElementById('previewCostoPorUnidad');
     const previewValor = document.getElementById('previewCosto');
     const previewUnidad = document.getElementById('previewUnidadBase');
+
+    const ayudaUnidad = document.getElementById('nuevoUnidadCompraAyuda');
+    if (ayudaUnidad) {
+        ayudaUnidad.innerHTML = AYUDA_UNIDAD_COMPRA[unidadBase] || AYUDA_UNIDAD_COMPRA.g;
+    }
+
     if (preview && previewValor) {
         previewUnidad.textContent = unidadBase;
         if (precio > 0 && cantidad > 0) {
@@ -242,6 +254,7 @@ function procesarSiguienteInsumo() {
 
     document.getElementById('entradaInsumoId').value = insumo.id || insumo.insumo_id;
     document.getElementById('entradaInsumoNombre').textContent = insumo.nombre;
+    document.getElementById('entradaUnidadLabel').textContent = insumo.unidad_base || 'g';
     document.getElementById('entradaCantidad').value = falta > 0 ? falta : '';
     document.getElementById('entradaCostoTotal').value = '';
     document.getElementById('entradaCostoUnitarioPreview').textContent = '';
@@ -665,9 +678,10 @@ document.getElementById('editCategoriaId')?.addEventListener('change', function 
         const id = btn.dataset.id;
         const nombre = (btn.dataset.nombre || '').replaceAll('&quot;', '"');
         const stock = btn.dataset.stock;
+        const unidad = btn.dataset.unidad;
 
         if (btn.classList.contains('btn-action-entrada')) {
-            abrirEntrada(id, nombre);
+            abrirEntrada(id, nombre, unidad);
         } else if (btn.classList.contains('btn-action-salida')) {
             abrirSalida(id, nombre, stock);
         } else if (btn.classList.contains('btn-action-ajuste')) {

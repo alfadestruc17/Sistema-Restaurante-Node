@@ -106,7 +106,17 @@ class InsumoService {
         if (!insumo) {
             throw new Error('Insumo no encontrado');
         }
-        await InsumoRepository.delete(id, tenantId);
+        try {
+            await InsumoRepository.delete(id, tenantId);
+        } catch (e) {
+            if (e.code === 'ER_ROW_IS_REFERENCED_2' || e.code === 'ER_ROW_IS_REFERENCED') {
+                throw new Error(
+                    'No se puede eliminar este insumo porque ya tiene movimientos de inventario (compras/salidas) o está usado en una receta. Ajusta su stock a 0 y déjalo sin usar en recetas, o simplemente no lo uses más.',
+                    { cause: e }
+                );
+            }
+            throw e;
+        }
         return { message: 'Insumo eliminado' };
     }
 

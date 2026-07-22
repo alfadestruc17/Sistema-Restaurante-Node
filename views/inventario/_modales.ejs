@@ -118,7 +118,7 @@
                                         <input type="number" step="0.01" class="form-control form-control-sm"
                                             id="nuevoCantidadCompra" value="1" min="0.01"
                                             title="Cuántas unidades base trae cada presentación de compra. Ej: 1 bolsa = 1000g">
-                                        <div class="form-text">Ej: 1 kg = 1000 <span class="fw-bold">g</span></div>
+                                        <div class="form-text" id="nuevoUnidadCompraAyuda">Ej: 1 kg = 1000 <span class="fw-bold">g</span></div>
                                     </div>
                                 </div>
                                 <div class="mb-2">
@@ -303,7 +303,7 @@
                 <input type="hidden" id="entradaInsumoId">
 
                 <div class="mb-2">
-                    <label class="form-label small fw-bold">¿Cuánto entró? (Cantidad)</label>
+                    <label class="form-label small fw-bold">¿Cuánto entró? (Cantidad en <span id="entradaUnidadLabel">g</span>)</label>
                     <input type="number" step="0.0001" class="form-control" id="entradaCantidad">
                 </div>
 

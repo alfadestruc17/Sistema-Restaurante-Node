@@ -57,6 +57,7 @@
                                     <button type="button" class="btn-icon btn-icon-e btn-action-entrada"
                                         data-id="<%= i.id %>"
                                         data-nombre="<%= i.nombre.replace(/"/g, '&quot;') %>"
+                                        data-unidad="<%= i.unidad_base || 'g' %>"
                                         title="Registrar Compra"><i class="bi bi-cart-plus"></i></button>
                                     <button type="button" class="btn-icon btn-icon-s btn-action-salida"
                                         data-id="<%= i.id %>"

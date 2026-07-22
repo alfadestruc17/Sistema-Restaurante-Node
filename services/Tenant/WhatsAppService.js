@@ -188,6 +188,11 @@ class WhatsAppService {
 
         // 2. Comandos globales (Reset / Cancel)
         if (body === 'menu' || body === 'hola' || body === 'inicio') {
+            // Conversación nueva: el saludo del cliente ("hola") no debe robarle el
+            // mensaje de bienvenida al atajo global de "ir directo al catálogo".
+            if (conversation.current_state === 'welcome') {
+                await msg.reply(welcomeMsg);
+            }
             await this.updateConversationState(tenantId, from, 'selecting_category');
             await this.sendCategories(tenantId, msg);
             return;

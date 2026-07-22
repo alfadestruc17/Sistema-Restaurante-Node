@@ -13,13 +13,12 @@
 
 
     <div class="factura">
-        <% if (config.logo_src) { %>
-            <img src="<%= config.logo_src %>" alt="Logo" class="logo mb-3">
-            <% } %>
+        <img id="previewLogoImg" src="<%= config.logo_src || '' %>" alt="Logo" class="logo mb-3"
+            style="<%= config.logo_src ? '' : 'display:none' %>">
 
                 <div class="text-center mb-3">
                     <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px;">
-                        <%= tenant.nombre || config.nombre_negocio %>
+                        <%= config.nombre_negocio || tenant.nombre %>
                     </h2>
 
                     <% if (tenant.regimen_fiscal) { %>
@@ -29,19 +28,19 @@
                         <% } %>
 
                             <div class="small">
-                                <% if (tenant.nit || config.nit) { %>
-                                    <span>NIT: <%= tenant.nit || config.nit %></span><br>
+                                <% if (config.nit || tenant.nit) { %>
+                                    <span>NIT: <%= config.nit || tenant.nit %></span><br>
                                     <% } %>
-                                        <% if (tenant.direccion || config.direccion) { %>
+                                        <% if (config.direccion || tenant.direccion) { %>
                                             <span>
-                                                <%= tenant.direccion || config.direccion %>
+                                                <%= config.direccion || tenant.direccion %>
                                             </span>
                                             <% if (tenant.ciudad) { %> - <%= tenant.ciudad %>
                                                     <% } %>
                                                         <br>
                                                         <% } %>
-                                                            <% if (tenant.telefono || config.telefono) { %>
-                                                                <span>Tel: <%= tenant.telefono || config.telefono %>
+                                                            <% if (config.telefono || tenant.telefono) { %>
+                                                                <span>Tel: <%= config.telefono || tenant.telefono %>
                                                                 </span>
                                                                 <% } %>
                             </div>
@@ -137,11 +136,9 @@
                             <% } %>
                         </div>
                     <% } %>
-                    <% if (config.qr_src) { %>
-                        <div class="mt-3 mb-3">
-                            <img src="<%= config.qr_src %>" alt="QR para transferencia" style="max-width: 150px;">
-                        </div>
-                        <% } %>
+                    <div id="previewQrContainer" class="mt-3 mb-3" style="<%= config.qr_src ? '' : 'display:none' %>">
+                        <img id="previewQrImg" src="<%= config.qr_src || '' %>" alt="QR para transferencia" style="max-width: 150px;">
+                    </div>
                             <div class="mt-2">
                                 <%= config.pie_pagina || '¡Gracias por su compra!' %>
                             </div>

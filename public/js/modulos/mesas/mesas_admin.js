@@ -110,6 +110,28 @@ $(function () {
     }
   });
 
+  // Generar tokens QR faltantes (mesas físicas sin qr_token asignado)
+  $('#btnGenerarQRs').on('click', async function (e) {
+    e.preventDefault();
+    try {
+      Swal.fire({ title: 'Generando tokens...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      const r = await fetch('/mesas/qrs/generar', { method: 'POST' });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'No se pudieron generar los tokens');
+      Swal.fire({
+        icon: 'success',
+        title: data.message || 'Tokens generados',
+        confirmButtonText: 'Imprimir QRs',
+        showCancelButton: true,
+        cancelButtonText: 'Cerrar'
+      }).then(result => {
+        if (result.isConfirmed) window.open('/mesas/qrs/imprimir', '_blank');
+      });
+    } catch (err) {
+      Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+    }
+  });
+
   // Crear nueva mesa
   $('#btnNuevaMesa').on('click', async function () {
     const { value: numero } = await Swal.fire({ title: 'Número de mesa', input: 'text', showCancelButton: true, inputValidator: v => !v?.trim() ? 'El número es obligatorio' : null });
