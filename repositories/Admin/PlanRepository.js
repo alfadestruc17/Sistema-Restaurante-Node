@@ -91,6 +91,10 @@ class PlanRepository {
             fields.push('descripcion_detallada = ?');
             values.push(data.descripcion_detallada);
         }
+        if (data.caracteristicas !== undefined) {
+            fields.push('caracteristicas = ?');
+            values.push(JSON.stringify(Array.isArray(data.caracteristicas) ? data.caracteristicas : []));
+        }
 
         if (fields.length === 0) {
             return;

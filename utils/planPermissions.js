@@ -86,6 +86,29 @@ const PLAN_MODULES = [
     'proveedores'
 ];
 
+// Etiquetas legibles para cada slug de módulo — usadas por el editor de características
+// (admin/planes) y por el comparador de planes del navbar del tenant.
+const MODULE_LABELS = {
+    dashboard: 'Dashboard',
+    productos: 'Productos',
+    clientes: 'Clientes',
+    mesas: 'Mesas',
+    cocina: 'Cocina',
+    ventas: 'Ventas',
+    configuracion: 'Configuración',
+    inventario: 'Inventario',
+    recetas: 'Recetas y costeo de platos',
+    eventos: 'Eventos',
+    analitica: 'Analítica avanzada',
+    prediccion_ml: 'Predicción con IA',
+    plantillas: 'Plantillas',
+    importar_exportar: 'Importar/Exportar',
+    costeo: 'Costeo',
+    caja: 'Caja registradora',
+    servicios: 'Servicios',
+    proveedores: 'Proveedores'
+};
+
 /**
  * Indica si el plan permite un permiso concreto.
  * @param {Object|null} plan - Objeto plan con .caracteristicas (array de strings)
@@ -205,6 +228,7 @@ function getAllowedForUser(plan, userPermissions, addonSlugs = []) {
 module.exports = {
     PERMISSION_TO_MODULE,
     PLAN_MODULES,
+    MODULE_LABELS,
     ADDON_TO_MODULE,
     planAllowsPermission,
     planHasModule,

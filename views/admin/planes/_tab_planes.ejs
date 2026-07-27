@@ -18,13 +18,22 @@
                                 <textarea class="form-control form-control-sm" id="pdd-<%= p.id %>" rows="3"
                                     style="font-size: 0.75rem;"><%= p.descripcion_detallada %></textarea>
                             </div>
-                            <ul class="feat-list">
-                                <% for (var fi=0; fi < (p.caracteristicas ? p.caracteristicas.length : 0); fi++) { %>
-                                    <li><i class="bi bi-check-circle-fill text-success" style="font-size:.68rem;"></i>
-                                        <%= p.caracteristicas[fi] %>
-                                    </li>
-                                    <% } %>
-                            </ul>
+                            <div class="mb-2">
+                                <label class="small text-muted fw-bold">Características incluidas</label>
+                                <div class="feat-check-grid">
+                                    <% for (var mi=0; mi < (planModules ? planModules.length : 0); mi++) {
+                                        var modSlug = planModules[mi];
+                                        var modLabel = (moduleLabels && moduleLabels[modSlug]) || modSlug;
+                                        var checked = p.caracteristicas && p.caracteristicas.includes(modSlug);
+                                    %>
+                                        <label class="feat-check-item">
+                                            <input type="checkbox" id="pc-<%= p.id %>-<%= modSlug %>"
+                                                data-plan-module="<%= modSlug %>" <%= checked ? 'checked' : '' %>>
+                                            <%= modLabel %>
+                                        </label>
+                                        <% } %>
+                                </div>
+                            </div>
                             <div class="section-lbl">Precio mensual por tamaño</div>
                             <div class="price-row"><label>Pequeño</label><input type="number" class="price-input"
                                     id="pp-<%= p.id %>-pequeno" value="<%= p.precio_pequeno %>" min="0" step="100">

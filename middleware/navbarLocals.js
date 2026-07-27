@@ -6,7 +6,11 @@
  * Así allowedByPlan, req.user y req.tenant están disponibles.
  */
 
+const { MODULE_LABELS } = require('../utils/planPermissions');
+
 module.exports = function navbarLocals(req, res, next) {
+    res.locals.moduleLabels = MODULE_LABELS;
+
     Object.defineProperty(res.locals, 'nav', {
         configurable: true,
         enumerable: true,

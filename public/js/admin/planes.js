@@ -11,21 +11,42 @@
         metaMap[t.id] = { planId: t.plan_id, tamano: t.tamano || 'pequeno', plan_slug: t.plan_slug, nombre: t.nombre, slug: t.slug };
     });
 
-    var mTid = null, mTamano = 'pequeno';
+    var mTid = null, mTamano = 'pequeno', mPlanId = null;
 
     function openModal(tid) {
         mTid = tid;
         var meta = metaMap[tid];
         mTamano = meta.tamano || 'pequeno';
+        mPlanId = meta.planId || (ALL_PLANS[0] && ALL_PLANS[0].id) || null;
         document.getElementById('mTitle').textContent = meta.nombre;
         document.getElementById('mSlug').textContent = meta.slug;
-        var plan = ALL_PLANS.find(function (p) { return p.id === meta.planId; });
-        document.getElementById('mPlanDot').style.background = PC[meta.plan_slug] || '#64748b';
-        document.getElementById('mPlanNombre').textContent = plan ? plan.nombre : 'Sin plan';
+        renderPlanButtons();
         selTamano(mTamano, true);
         renderList();
         recalc();
         new bootstrap.Modal(document.getElementById('modalAddons')).show();
+    }
+
+    function renderPlanButtons() {
+        var c = document.getElementById('mPlanButtons');
+        c.innerHTML = '';
+        ALL_PLANS.forEach(function (p) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn btn-sm flex-fill plan-btn ' + (p.id === mPlanId ? 'btn-primary' : 'btn-outline-secondary');
+            b.dataset.planId = p.id;
+            b.textContent = p.nombre;
+            b.onclick = function () { selPlan(p.id); };
+            c.appendChild(b);
+        });
+    }
+
+    function selPlan(id, silent) {
+        mPlanId = id;
+        document.querySelectorAll('.plan-btn').forEach(function (b) {
+            b.className = 'btn btn-sm flex-fill plan-btn ' + (Number(b.dataset.planId) === id ? 'btn-primary' : 'btn-outline-secondary');
+        });
+        if (!silent) recalc();
     }
 
     function selTamano(t, silent) {
@@ -85,8 +106,7 @@
     }
 
     function recalc() {
-        var meta = metaMap[mTid];
-        var plan = ALL_PLANS.find(function (p) { return p.id === meta.planId; });
+        var plan = ALL_PLANS.find(function (p) { return p.id === mPlanId; });
         var keyP = 'precio_' + mTamano;
         var pPlan = plan ? (plan[keyP] || 0) : 0;
         var act = ALL_ADDONS.filter(function (a) { return (addonMap[mTid] || new Set()).has(a.id); });
@@ -98,8 +118,12 @@
     document.getElementById('btnGuardar').addEventListener('click', async function () {
         var tid = mTid;
         var tamano = mTamano;
+        var planId = mPlanId;
         var newSet = new Set(addonMap[tid]);
         try {
+            if (planId && planId !== metaMap[tid].planId) {
+                await localFetch('/admin/planes/api/tenant/' + tid + '/plan', 'PUT', { plan_id: planId });
+            }
             await localFetch('/admin/planes/api/tenant/' + tid + '/tamano', 'PUT', { tamano: tamano });
             var cur = await localFetch('/admin/planes/api/tenant/' + tid + '/addons', 'GET');
             var curIds = new Set(cur.map(function (a) { return a.id; }));
@@ -111,7 +135,10 @@
             for (var j = 0; j < toDel.length; j++) {
                 await localFetch('/admin/planes/api/tenant/' + tid + '/addons/' + toDel[j], 'DELETE');
             }
+            var plan = ALL_PLANS.find(function (p) { return p.id === planId; });
             metaMap[tid].tamano = tamano;
+            metaMap[tid].planId = planId;
+            metaMap[tid].plan_slug = plan ? plan.slug : '';
             updateRow(tid, tamano, newSet);
             bootstrap.Modal.getInstance(document.getElementById('modalAddons')).hide();
             Swal.fire({ icon: 'success', title: 'Guardado', timer: 1300, showConfirmButton: false });
@@ -119,6 +146,19 @@
             Swal.fire({ icon: 'error', title: 'Error al guardar', text: e.message });
         }
     });
+
+    function planBadgeEl(plan) {
+        var sp = document.createElement('span');
+        if (!plan) {
+            sp.className = 'text-muted small';
+            sp.textContent = 'Sin plan';
+            return sp;
+        }
+        sp.className = 'badge-plan';
+        sp.style.background = PC[plan.slug] || '#64748b';
+        sp.textContent = plan.nombre;
+        return sp;
+    }
 
     function updateRow(tid, tamano, set) {
         var meta = metaMap[tid];
@@ -141,6 +181,11 @@
                 chipsEl.innerHTML = '<span class="text-muted" style="font-size:.75rem;">Ninguno</span>';
             }
         }
+        var planEl = document.getElementById('tb-plan-' + tid);
+        if (planEl) {
+            planEl.innerHTML = '';
+            planEl.appendChild(planBadgeEl(plan));
+        }
         setText('tb-total-' + tid, fmtCOP(pPlan + pAd));
         setText('tb-pp-' + tid, fmtCOP(pPlan));
         setText('tb-pa-' + tid, fmtCOP(pAd));
@@ -153,6 +198,10 @@
         var nombre = document.getElementById('pn-' + planId).value;
         var descShort = document.getElementById('pd-' + planId).value;
         var descLong = document.getElementById('pdd-' + planId).value;
+        var caracteristicas = Array.prototype.slice
+            .call(document.querySelectorAll('[id^="pc-' + planId + '-"]'))
+            .filter(function (chk) { return chk.checked; })
+            .map(function (chk) { return chk.dataset.planModule; });
 
         try {
             await localFetch('/admin/planes/api/planes/' + planId + '/precios', 'PUT', {
@@ -162,7 +211,8 @@
             await localFetch('/admin/planes/api/planes/' + planId, 'PUT', {
                 nombre: nombre,
                 descripcion: descShort,
-                descripcion_detallada: descLong
+                descripcion_detallada: descLong,
+                caracteristicas: caracteristicas
             });
 
             var p = ALL_PLANS.find(function (pl) { return pl.id === planId; });
@@ -173,6 +223,7 @@
                 p.nombre = nombre;
                 p.descripcion = descShort;
                 p.descripcion_detallada = descLong;
+                p.caracteristicas = caracteristicas;
             }
 
             Swal.fire({ icon: 'success', title: 'Plan actualizado correctamente', timer: 1500, showConfirmButton: false });
@@ -213,6 +264,11 @@
     window.selTamano = selTamano;
     window.savePlanCompleto = savePlanCompleto;
     window.saveAddon = saveAddon;
+
+    // Deep-link: /admin/planes?tenantId=<id> abre directo la gestión de ese restaurante
+    if (SD.openTenantId && metaMap[SD.openTenantId]) {
+        openModal(SD.openTenantId);
+    }
 
     var exportBtn = document.getElementById('exportPortafolioBtn');
     var exportLabel = document.getElementById('exportPortafolioLabel');

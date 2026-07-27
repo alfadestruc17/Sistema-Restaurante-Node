@@ -159,24 +159,28 @@
     padding: 1.2rem 1.4rem;
 }
 
-.feat-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 .9rem 0;
+.feat-check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .3rem .6rem;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: .9rem;
+    padding-right: .2rem;
 }
 
-.feat-list li {
+.feat-check-item {
     font-size: .79rem;
     color: var(--sa-text-secondary);
-    border-bottom: 1px solid var(--sa-border);
-    padding: .38rem 0;
     display: flex;
     align-items: center;
     gap: .4rem;
+    cursor: pointer;
+    margin: 0;
 }
 
-.feat-list li:last-child {
-    border-bottom: none;
+.feat-check-item input {
+    cursor: pointer;
 }
 
 .price-row {

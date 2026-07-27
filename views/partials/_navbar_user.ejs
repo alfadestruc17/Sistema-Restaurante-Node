@@ -7,7 +7,7 @@
                 <i class="bi bi-layers"></i>
                 <%= tenant.plan ? tenant.plan.nombre : (tenant.plan_nombre || 'Plan' ) %>
             </span>
-            <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width:280px;">
+            <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width:320px;max-height:70vh;overflow-y:auto;">
                 <li class="dropdown-header mb-1">Plan: <strong>
                         <%= tenant.plan ? tenant.plan.nombre : (tenant.plan_nombre || '' ) %>
                     </strong></li>
@@ -24,11 +24,13 @@
                                 <% if ((tenant.plan && tenant.plan.id===_pl.id) || (tenant.plan_id==_pl.id)) { %><span
                                         class="badge bg-success ms-1">Actual</span>
                                     <% } %>
-                                        <ul class="list-unstyled small mb-0 mt-1 text-muted">
-                                            <% for (var _ci=0; _ci < Math.min((_pl.caracteristicas || []).length, 4);
-                                                _ci++) { %>
+                                        <ul class="list-unstyled small mb-0 mt-1 text-muted"
+                                            style="max-height:140px;overflow-y:auto;">
+                                            <% for (var _ci=0; _ci < (_pl.caracteristicas || []).length; _ci++) { %>
                                                 <li><i class="bi bi-check text-success"></i>
-                                                    <%= _pl.caracteristicas[_ci] %>
+                                                    <%= (typeof moduleLabels !=='undefined' && moduleLabels &&
+                                                        moduleLabels[_pl.caracteristicas[_ci]]) ||
+                                                        _pl.caracteristicas[_ci] %>
                                                 </li>
                                                 <% } %>
                                         </ul>

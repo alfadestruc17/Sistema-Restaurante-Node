@@ -38,13 +38,21 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Plan de Servicio</label>
-                    <select name="plan_id" class="form-select">
-                        <% plans.forEach(p=> { %>
-                            <option value="<%= p.id %>" <%=selectedTenant.plan_id==p.id ? 'selected' : '' %>><%=
-                                    p.nombre %> - <%= p.descripcion %>
-                            </option>
-                            <% }); %>
-                    </select>
+                    <div class="d-flex align-items-center gap-2">
+                        <% if (selectedTenant.plan) { %>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                <%= selectedTenant.plan.nombre %>
+                            </span>
+                            <% } else { %>
+                                <span class="text-muted small">Sin plan asignado</span>
+                                <% } %>
+                                    <a href="/admin/planes?tenantId=<%= selectedTenant.id %>"
+                                        class="btn btn-outline-secondary btn-sm ms-auto">
+                                        <i class="bi bi-credit-card me-1"></i>Gestionar plan y facturación
+                                    </a>
+                    </div>
+                    <div class="form-text">El plan, tamaño y add-ons se gestionan desde
+                        Planes &amp; Add-ons.</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Color Corporativo</label>

@@ -29,7 +29,7 @@
                                         </div>
                                         <small class="text-muted"><code><%= t.slug %></code></small>
                                     </td>
-                                    <td>
+                                    <td id="tb-plan-<%= t.id %>">
                                         <% if (t.plan_slug==='basico' ) { %>
                                             <span class="badge-plan" style="background:#64748b">
                                                 <%= t.plan_nombre %>

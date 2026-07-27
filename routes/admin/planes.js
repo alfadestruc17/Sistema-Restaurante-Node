@@ -21,5 +21,6 @@ router.get('/api/tenant/:tenantId/addons', PlanesController.getTenantAddons);
 router.post('/api/tenant/:tenantId/addons', PlanesController.addAddonToTenant);
 router.delete('/api/tenant/:tenantId/addons/:addonId', PlanesController.removeAddonFromTenant);
 router.put('/api/tenant/:tenantId/tamano', PlanesController.updateTenantTamano);
+router.put('/api/tenant/:tenantId/plan', PlanesController.updateTenantPlan);
 
 module.exports = router;

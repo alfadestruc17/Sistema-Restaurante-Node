@@ -8,6 +8,7 @@ const AddonRepository = require('../../repositories/Admin/AddonRepository');
 const PlanRepository = require('../../repositories/Admin/PlanRepository');
 const db = require('../../config/database');
 const CacheService = require('../Shared/CacheService');
+const TenantAuditService = require('./TenantAuditService');
 
 class AddonService {
     /** Listar todos los add-ons del catálogo */
@@ -31,19 +32,31 @@ class AddonService {
     }
 
     /** Asignar add-on a un tenant */
-    static async addToTenant(tenantId, addonId) {
+    static async addToTenant(tenantId, addonId, userId = null) {
         const addon = await AddonRepository.findById(addonId);
         if (!addon) {
             throw new Error('Add-on no encontrado');
         }
         await AddonRepository.addToTenant(tenantId, addonId);
         CacheService.delete(`addons:${tenantId}`);
+        await TenantAuditService.log({
+            tenantId,
+            userId,
+            accion: 'agregar_addon',
+            detalles: `Addon=${addon.nombre} (id=${addonId})`
+        });
     }
 
     /** Quitar add-on de un tenant */
-    static async removeFromTenant(tenantId, addonId) {
+    static async removeFromTenant(tenantId, addonId, userId = null) {
         await AddonRepository.removeFromTenant(tenantId, addonId);
         CacheService.delete(`addons:${tenantId}`);
+        await TenantAuditService.log({
+            tenantId,
+            userId,
+            accion: 'quitar_addon',
+            detalles: `AddonId=${addonId}`
+        });
     }
 
     /**
@@ -79,13 +92,19 @@ class AddonService {
      * @param {number} tenantId
      * @param {'pequeno'|'mediano'|'grande'} tamano
      */
-    static async updateTamano(tenantId, tamano) {
+    static async updateTamano(tenantId, tamano, userId = null) {
         const validos = ['pequeno', 'mediano', 'grande'];
         if (!validos.includes(tamano)) {
             throw new Error('Tamaño inválido');
         }
         await db.query('UPDATE tenants SET tamano = ? WHERE id = ?', [tamano, tenantId]);
         CacheService.delete(`tenant:${tenantId}`);
+        await TenantAuditService.log({
+            tenantId,
+            userId,
+            accion: 'cambiar_tamano',
+            detalles: `Tamano=${tamano}`
+        });
     }
 
     /**
