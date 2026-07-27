@@ -25,7 +25,7 @@
                 <h2>Ventas de hoy por restaurante</h2>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-white text-dark border px-3 py-2 rounded-pill fw-bold" id="totalHoyBadge">
+                <span class="badge dashboard-soft-badge border px-3 py-2 rounded-pill fw-bold" id="totalHoyBadge">
                     Total Hoy: $<span id="ventasHoyTotalGlobal">
                         <%= Number(stats.ventasHoyTotalGlobal || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 }) %>
                     </span>
@@ -76,9 +76,9 @@
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 border-bottom pb-3 gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-graph-up-arrow text-success"></i>
-                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--text-secondary);">VENTAS DIARIAS POR RESTAURANTE (MES ACTUAL)</h5>
+                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--sa-text-secondary);">VENTAS DIARIAS POR RESTAURANTE (MES ACTUAL)</h5>
                 </div>
-                <span class="badge bg-light text-dark fw-bold border px-3 py-1.5 rounded-pill">Vista Multi-Serie</span>
+                <span class="badge dashboard-soft-badge fw-bold border px-3 py-1.5 rounded-pill">Vista Multi-Serie</span>
             </div>
             <div style="height: 380px;">
                 <canvas id="chartVentasTenants"></canvas>
@@ -95,14 +95,14 @@
             <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 border-bottom pb-3 gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-graph-up text-success"></i>
-                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--text-secondary);">COMPARATIVA MENSUAL · GLOBAL</h5>
+                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--sa-text-secondary);">COMPARATIVA MENSUAL · GLOBAL</h5>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <span class="d-flex align-items-center gap-1 small fw-bold text-muted">
                         <span class="dot bg-accent" style="width: 8px; height: 8px;"></span> Mes Actual
                     </span>
                     <span class="d-flex align-items-center gap-1 small fw-bold text-muted">
-                        <span class="dot" style="width: 8px; height: 8px; background-color: #b7c0cf;"></span> Mes Anterior
+                        <span class="dot" style="width: 8px; height: 8px; background-color: var(--sa-text-muted);"></span> Mes Anterior
                     </span>
                 </div>
             </div>
@@ -118,7 +118,7 @@
             <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-stars text-warning"></i>
-                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--text-secondary);">GANANCIAS POR EVENTOS (MES ACTUAL)</h5>
+                    <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--sa-text-secondary);">GANANCIAS POR EVENTOS (MES ACTUAL)</h5>
                 </div>
             </div>
             <div style="min-height: 300px;" class="d-flex flex-column justify-content-center">
@@ -133,7 +133,7 @@
                         %>
                             <div class="event-row">
                                 <div class="d-flex justify-content-between align-items-end">
-                                    <span class="fw-bold" style="font-size: 13px; color: var(--text-secondary);"><%= e.nombre %></span>
+                                    <span class="fw-bold" style="font-size: 13px; color: var(--sa-text-secondary);"><%= e.nombre %></span>
                                     <span class="fw-bold text-dark" style="font-size: 13px;">$<%= Number(e.total).toLocaleString('es-CO', { maximumFractionDigits: 0 }) %></span>
                                 </div>
                                 <div class="event-progress-bg">

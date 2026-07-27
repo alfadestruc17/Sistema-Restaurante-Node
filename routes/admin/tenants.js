@@ -1,22 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const TenantsController = require('../../app/Http/Controllers/Admin/TenantsController');
-const { ROLES } = require('../../utils/constants');
-const authService = require('../../services/Shared/AuthService');
 const BaseRequest = require('../../app/Http/Requests/BaseRequest');
 const StoreTenantRequest = require('../../app/Http/Requests/Admin/StoreTenantRequest');
 const UpdateTenantRequest = require('../../app/Http/Requests/Admin/UpdateTenantRequest');
 
-// Middleware de seguridad para el módulo admin
-router.use((req, res, next) => {
-    if (!req.user) {
-        return res.redirect('/auth/login');
-    }
-    if (!authService.hasRole(req.user.rol, [ROLES.SUPERADMIN])) {
-        return res.redirect('/');
-    }
-    next();
-});
+// Guard de superadmin aplicado en routes/web.js (requireRole(ROLES.SUPERADMIN))
 
 // Tenants list & creation
 router.get('/', TenantsController.index);

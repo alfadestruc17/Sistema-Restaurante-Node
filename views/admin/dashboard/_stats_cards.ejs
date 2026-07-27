@@ -5,7 +5,7 @@
             <div class="d-flex align-items-center gap-4">
                 <div class="status-ring-wrapper">
                     <svg viewBox="0 0 88 88" class="status-ring-svg">
-                        <circle cx="44" cy="44" r="34" fill="none" stroke="#eef1f4" stroke-width="10"></circle>
+                        <circle cx="44" cy="44" r="34" fill="none" stroke="var(--sa-surface-3)" stroke-width="10"></circle>
                         <% 
                             const active = Number(stats.restaurantesActivos) || 0;
                             const total = Number(stats.totalRestaurantes) || 1;
@@ -14,7 +14,7 @@
                             const C = 2 * Math.PI * radius;
                             const strokeDashoffset = C - (pct * C);
                         %>
-                        <circle cx="44" cy="44" r="34" fill="none" stroke="var(--accent)" stroke-width="10"
+                        <circle cx="44" cy="44" r="34" fill="none" stroke="var(--sa-accent)" stroke-width="10"
                             stroke-dasharray="<%= C %>" stroke-dashoffset="<%= strokeDashoffset %>"
                             stroke-linecap="round" transform="rotate(-90 44 44)"></circle>
                         <text x="44" y="42" text-anchor="middle" class="status-ring-text-val"><%= active %></text>

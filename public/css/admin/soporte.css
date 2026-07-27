@@ -1,0 +1,34 @@
+/* ==========================================================================
+   admin/soporte/index.ejs — reglas específicas de esta página.
+   ========================================================================== */
+
+.ticket-status-abierto { background-color: #ffc107; color: #000; }
+.ticket-status-en_proceso { background-color: #0dcaf0; color: #000; }
+.ticket-status-resuelto { background-color: #198754; color: #fff; }
+.ticket-status-cerrado { background-color: #6c757d; color: #fff; }
+
+.table-responsive {
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.table-responsive .table {
+    color: var(--sa-text-primary);
+    margin-bottom: 0;
+}
+
+.table-responsive .table-light,
+.table-responsive .table-light > th {
+    background-color: var(--sa-surface-3);
+    color: var(--sa-text-secondary);
+    border-color: var(--sa-border);
+}
+
+.table-responsive .form-select {
+    background-color: var(--sa-surface);
+    color: var(--sa-text-primary);
+    border-color: var(--sa-border);
+}
+

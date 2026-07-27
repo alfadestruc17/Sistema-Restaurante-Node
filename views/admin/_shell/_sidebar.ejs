@@ -1,0 +1,56 @@
+<aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-sidebar-brand">
+        <div class="admin-sidebar-brand-icon"><i class="bi bi-shop"></i></div>
+        <span class="admin-sidebar-brand-text">GastroFlow <small>Superadmin</small></span>
+        <button type="button" class="admin-sidebar-mobile-close d-lg-none" id="adminSidebarClose" aria-label="Cerrar menú">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="admin-sidebar-search">
+        <i class="bi bi-search"></i>
+        <input type="text" id="adminNavSearch" placeholder="Buscar en el panel...">
+    </div>
+
+    <div class="admin-quicklinks">
+        <div class="admin-quicklinks-title">Accesos rápidos</div>
+        <div class="admin-quicklinks-grid">
+            <% adminQuickLinks.forEach(function (l) { %>
+                <a href="<%= l.href %>" class="admin-quicklink-card">
+                    <i class="bi <%= l.icon %>"></i>
+                    <span><%= l.label %></span>
+                </a>
+            <% }); %>
+        </div>
+    </div>
+
+    <nav class="admin-sidebar-nav">
+        <% adminSections.forEach(function (section) { %>
+            <div class="admin-nav-section<%= section.collapsible ? ' collapsible' : '' %>" data-section="<%= section.key %>">
+                <% if (section.collapsible) { %>
+                    <button type="button" class="admin-nav-section-toggle">
+                        <span><%= section.label %></span>
+                        <i class="bi bi-chevron-down"></i>
+                    </button>
+                <% } else { %>
+                    <div class="admin-nav-section-label"><%= section.label %></div>
+                <% } %>
+                <ul class="admin-nav-list">
+                    <% section.items.forEach(function (item) { %>
+                        <li>
+                            <a href="<%= item.href %>"
+                               class="admin-nav-link<%= (typeof currentAdminPage !=='undefined' && currentAdminPage===item.key) ? ' active' : '' %>">
+                                <i class="bi <%= item.icon %>"></i>
+                                <span><%= item.label %></span>
+                                <% if (item.badgeKey && typeof adminBadges !=='undefined' && adminBadges[item.badgeKey]) { %>
+                                    <span class="admin-nav-badge"><%= adminBadges[item.badgeKey] %></span>
+                                <% } %>
+                            </a>
+                        </li>
+                    <% }); %>
+                </ul>
+            </div>
+        <% }); %>
+    </nav>
+</aside>
+<div class="admin-sidebar-backdrop d-lg-none" id="adminSidebarBackdrop"></div>

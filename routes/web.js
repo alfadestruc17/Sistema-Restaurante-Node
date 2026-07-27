@@ -1,8 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { requireAuth, optionalAuth, restrictSuperadminToAdmin, requirePermission } = require('../middleware/auth');
+const {
+    requireAuth,
+    optionalAuth,
+    restrictSuperadminToAdmin,
+    requirePermission,
+    requireRole
+} = require('../middleware/auth');
 const { attachTenantContext, costeoTenantContext } = require('../middleware/tenant');
 const { requirePlanFeature } = require('../middleware/planFeature');
+const adminLocals = require('../middleware/adminLocals');
+const { ROLES } = require('../utils/constants');
 
 // Importar controladores base
 const HomeController = require('../app/Http/Controllers/HomeController');
@@ -182,15 +190,16 @@ router.use('/api/dashboard', requireAuthWithTenant, requirePlanFeature('dashboar
 router.get('/api/notifications/subscribe', requireAuthWithTenant, NotificationController.subscribe);
 
 // --- RUTAS DE SUPERADMIN ---
-router.use('/admin/dashboard', requireAuth, adminDashboardRoutes);
-router.use('/admin/tenants', requireAuth, adminTenantsRoutes);
-router.use('/admin/sistema', requireAuth, adminSistemaRoutes);
-router.use('/admin/planes', requireAuth, adminPlanesRoutes);
-router.use('/admin/permisos', requireAuth, adminPermisosRoutes);
-router.use('/admin/ventas', requireAuth, adminVentasRoutes);
-router.use('/admin/soporte', requireAuth, adminSoporteRoutes);
-router.use('/admin/reportes', requireAuth, adminReportesRoutes);
-router.use('/admin/jobs', requireAuth, adminJobsRoutes);
-router.use('/admin/landing', requireAuth, adminLandingRoutes);
+const requireSuperadmin = [requireAuth, requireRole(ROLES.SUPERADMIN), adminLocals];
+router.use('/admin/dashboard', requireSuperadmin, adminDashboardRoutes);
+router.use('/admin/tenants', requireSuperadmin, adminTenantsRoutes);
+router.use('/admin/sistema', requireSuperadmin, adminSistemaRoutes);
+router.use('/admin/planes', requireSuperadmin, adminPlanesRoutes);
+router.use('/admin/permisos', requireSuperadmin, adminPermisosRoutes);
+router.use('/admin/ventas', requireSuperadmin, adminVentasRoutes);
+router.use('/admin/soporte', requireSuperadmin, adminSoporteRoutes);
+router.use('/admin/reportes', requireSuperadmin, adminReportesRoutes);
+router.use('/admin/jobs', requireSuperadmin, adminJobsRoutes);
+router.use('/admin/landing', requireSuperadmin, adminLandingRoutes);
 
 module.exports = router;

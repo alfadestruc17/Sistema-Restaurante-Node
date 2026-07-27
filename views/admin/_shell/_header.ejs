@@ -1,0 +1,11 @@
+<header class="admin-shell-header">
+    <button type="button" class="admin-sidebar-toggle d-lg-none" id="adminSidebarToggle" aria-label="Abrir menú">
+        <i class="bi bi-list"></i>
+    </button>
+    <div class="admin-shell-header-title">
+        <%= typeof pageTitle !=='undefined' ? pageTitle : title %>
+    </div>
+    <div class="admin-shell-header-user ms-auto">
+        <%- include('../../partials/_navbar_user') %>
+    </div>
+</header>

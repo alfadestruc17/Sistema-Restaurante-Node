@@ -112,6 +112,9 @@ function restrictSuperadminToAdmin(req, res, next) {
             path.startsWith('/admin/permisos') ||
             path.startsWith('/admin/ventas') ||
             path.startsWith('/admin/landing') ||
+            path.startsWith('/admin/reportes') ||
+            path.startsWith('/admin/soporte') ||
+            path.startsWith('/admin/jobs') ||
             path.startsWith('/costeo') ||
             path === '/auth/logout';
         if (!allowed) {

@@ -1,91 +1,72 @@
-<% const selectedTenant=tenants.find(t=> t.id === Number(activeTenantId)); %>
-    <!DOCTYPE html>
-    <html lang="es">
+<% const selectedTenant = tenants.find(t => t.id === Number(activeTenantId)); %>
+<%- include('_shell/_open', {
+    title: 'Restaurantes',
+    currentAdminPage: 'tenants',
+    pageCss: '/css/admin/tenants-modern.css'
+}) %>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Gestión de Restaurantes | Panel de Control</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-            rel="stylesheet">
-        <link rel="stylesheet" href="/css/admin/tenants-modern.css">
-    </head>
+    <div class="admin-layout">
+        <!-- Panel selector: Lista de Restaurantes -->
+        <%- include('tenants/_sidebar', { tenants, activeTenantId }) %>
 
-    <body>
-        <%- include('../partials/navbar', { user, tenant: selectedTenant || null, currentAdminPage: 'tenants' }) %>
+        <!-- Área de Detalle -->
+        <main class="tenant-detail-container">
+            <% if (selectedTenant) { %>
+                <div class="detail-header">
+                    <div class="detail-title">
+                        <div class="d-flex align-items-center gap-3">
+                            <h2>
+                                <%= selectedTenant.nombre %>
+                            </h2>
+                            <span
+                                class="badge bg-<%= selectedTenant.activo ? 'success' : 'danger' %>-subtle text-<%= selectedTenant.activo ? 'success' : 'danger' %> border border-<%= selectedTenant.activo ? 'success' : 'danger' %>-subtle">
+                                <%= selectedTenant.activo ? 'Suscripción Activa' : 'Suscripción bloqueada' %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn btn-outline-danger btn-sm px-3"
+                            onclick="confirmToggleStatus('<%= selectedTenant.id %>', <%= selectedTenant.activo ? 'false' : 'true' %>)">
+                            <i class="bi bi-<%= selectedTenant.activo ? 'pause-circle' : 'play-circle' %> me-2"></i>
+                            <%= selectedTenant.activo ? 'Deshabilitar Tienda' : 'Habilitar Tienda' %>
+                        </button>
+                    </div>
+                </div>
 
-            <div class="admin-layout">
-                <!-- Sidebar: Lista de Restaurantes -->
-                <%- include('tenants/_sidebar', { tenants, activeTenantId }) %>
+                <!-- Tabs de Navegación -->
+                <%- include('tenants/_tabs', { ...locals }) %>
 
-                    <!-- Área de Detalle -->
-                    <main class="tenant-detail-container">
-                        <% if (selectedTenant) { %>
-                            <div class="detail-header">
-                                <div class="detail-title">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <h2>
-                                            <%= selectedTenant.nombre %>
-                                        </h2>
-                                        <span
-                                            class="badge bg-<%= selectedTenant.activo ? 'success' : 'danger' %>-subtle text-<%= selectedTenant.activo ? 'success' : 'danger' %> border border-<%= selectedTenant.activo ? 'success' : 'danger' %>-subtle">
-                                            <%= selectedTenant.activo ? 'Suscripción Activa' : 'Suscripción bloqueada'
-                                                %>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="detail-actions">
-                                    <button class="btn btn-outline-danger btn-sm px-3"
-                                        onclick="confirmToggleStatus('<%= selectedTenant.id %>', <%= selectedTenant.activo ? 'false' : 'true' %>)">
-                                        <i
-                                            class="bi bi-<%= selectedTenant.activo ? 'pause-circle' : 'play-circle' %> me-2"></i>
-                                        <%= selectedTenant.activo ? 'Deshabilitar Tienda' : 'Habilitar Tienda' %>
-                                    </button>
-                                </div>
-                            </div>
+                <div class="tab-content">
+                    <!-- Tab General -->
+                    <%- include('tenants/_tab_general', { ...locals, selectedTenant, plans }) %>
 
-                            <!-- Tabs de Navegación -->
-                            <%- include('tenants/_tabs', {...locals}) %>
+                    <!-- Tab Fiscal -->
+                    <%- include('tenants/_tab_fiscal', { ...locals, selectedTenant }) %>
 
-                                <div class="tab-content">
-                                    <!-- Tab General -->
-                                    <%- include('tenants/_tab_general', { ...locals, selectedTenant, plans }) %>
+                    <!-- Tab Apariencia -->
+                    <%- include('tenants/_tab_apariencia', { ...locals, selectedTenant }) %>
 
-                                        <!-- Tab Fiscal -->
-                                        <%- include('tenants/_tab_fiscal', { ...locals, selectedTenant }) %>
+                    <!-- Tab Usuarios -->
+                    <%- include('tenants/_tab_usuarios', { ...locals, selectedTenant, tenantUsers }) %>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <i class="bi bi-shop"></i>
+                    <h3>No hay restaurante seleccionado</h3>
+                    <p class="text-muted">Elige una sucursal de la lista de la izquierda para
+                        comenzar la gestión profesional.</p>
+                    <div class="mt-4">
+                        <img src="https://illustrations.popsy.co/slate/waiting-for-data.svg"
+                            alt="Empty" style="max-width: 300px; opacity: 0.6;">
+                    </div>
+                </div>
+            <% } %>
+        </main>
+    </div>
 
-                                            <!-- Tab Apariencia -->
-                                            <%- include('tenants/_tab_apariencia', { ...locals, selectedTenant }) %>
+    <!-- Modales -->
+    <%- include('tenants/_modales', { ...locals, plans, selectedTenant }) %>
 
-                                                <!-- Tab Usuarios -->
-                                                <%- include('tenants/_tab_usuarios', { ...locals, selectedTenant,
-                                                    tenantUsers }) %>
-                                </div>
-                                <% } else { %>
-                                    <div class="empty-state">
-                                        <i class="bi bi-shop"></i>
-                                        <h3>No hay restaurante seleccionado</h3>
-                                        <p class="text-muted">Elige una sucursal de la lista de la izquierda para
-                                            comenzar la gestión profesional.</p>
-                                        <div class="mt-4">
-                                            <img src="https://illustrations.popsy.co/slate/waiting-for-data.svg"
-                                                alt="Empty" style="max-width: 300px; opacity: 0.6;">
-                                        </div>
-                                    </div>
-                                    <% } %>
-                    </main>
-            </div>
-
-            <!-- Modales -->
-            <%- include('tenants/_modales', { ...locals, plans, selectedTenant }) %>
-
-                <!-- Scripts -->
-                <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-                <script src="/js/admin/tenants.js"></script>
-    </body>
-
-    </html>
+<%- include('_shell/_close', {
+    extraScripts: '<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script><script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="/js/admin/tenants.js"></script>'
+}) %>

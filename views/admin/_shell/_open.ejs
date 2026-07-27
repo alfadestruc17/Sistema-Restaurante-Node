@@ -1,0 +1,10 @@
+<%- include('_head', {
+    title,
+    pageCss: typeof pageCss !=='undefined' ? pageCss : undefined,
+    extraHead: typeof extraHead !=='undefined' ? extraHead : undefined
+}) %>
+<div class="admin-shell">
+    <%- include('_sidebar') %>
+    <div class="admin-shell-main">
+        <%- include('_header', { pageTitle: typeof pageTitle !=='undefined' ? pageTitle : title }) %>
+        <main class="admin-shell-content">

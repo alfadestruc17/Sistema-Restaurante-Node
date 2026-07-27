@@ -1,78 +1,60 @@
-<!DOCTYPE html>
-<html lang="es">
+<%- include('../_shell/_open', {
+    title: 'Soporte Técnico',
+    currentAdminPage: 'soporte',
+    pageCss: '/css/admin/soporte.css'
+}) %>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soporte Técnico | Administrador</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        .ticket-status-abierto { background-color: #ffc107; color: #000; }
-        .ticket-status-en_proceso { background-color: #0dcaf0; color: #000; }
-        .ticket-status-resuelto { background-color: #198754; color: #fff; }
-        .ticket-status-cerrado { background-color: #6c757d; color: #fff; }
-        body { background-color: #f4f6f9; }
-        .table-responsive { background: white; border-radius: 8px; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); margin-top:20px;}
-    </style>
-</head>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-headset me-2"></i>Gestión de Soporte Técnico</h2>
+    </div>
 
-<body>
-    <%- include('../../partials/navbar', { user: user, tenant: null, currentAdminPage: 'soporte' }) %>
-    
-    <div class="container-fluid py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="bi bi-headset me-2"></i>Gestión de Soporte Técnico</h2>
-        </div>
-
-        <div class="table-responsive p-3">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Restaurante</th>
-                        <th>Usuario</th>
-                        <th>Tipo</th>
-                        <th>Estado</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (tickets && tickets.length > 0) { %>
-                        <% tickets.forEach(t => { %>
-                            <tr>
-                                <td><%= t.id %></td>
-                                <td><strong><%= t.tenant_nombre || 'Desconocido' %></strong></td>
-                                <td><%= t.usuario_nombre %> <br><small class="text-muted"><%= t.usuario_email %></small></td>
-                                <td><span class="badge bg-secondary"><%= t.tipo.toUpperCase() %></span></td>
-                                <td>
-                                    <select class="form-select form-select-sm status-select" data-id="<%= t.id %>" style="width: auto; display:inline-block;">
-                                        <option value="abierto" <%= t.estado === 'abierto' ? 'selected' : '' %>>Abierto</option>
-                                        <option value="en_proceso" <%= t.estado === 'en_proceso' ? 'selected' : '' %>>En Proceso</option>
-                                        <option value="resuelto" <%= t.estado === 'resuelto' ? 'selected' : '' %>>Resuelto</option>
-                                        <option value="cerrado" <%= t.estado === 'cerrado' ? 'selected' : '' %>>Cerrado</option>
-                                    </select>
-                                </td>
-                                <td><%= new Date(t.created_at).toLocaleString() %></td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary btn-responder" 
-                                            data-bs-toggle="modal" data-bs-target="#replyModal"
-                                            data-id="<%= t.id %>"
-                                            data-desc="<%= t.descripcion %>"
-                                            data-resp="<%= t.respuesta_admin || '' %>"
-                                            data-tenant="<%= t.tenant_nombre %>">
-                                        <i class="bi bi-reply-fill"></i> Responder
-                                    </button>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } else { %>
-                        <tr><td colspan="7" class="text-center py-4">No hay tickets de soporte registrados.</td></tr>
-                    <% } %>
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive p-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Restaurante</th>
+                    <th>Usuario</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (tickets && tickets.length > 0) { %>
+                    <% tickets.forEach(t => { %>
+                        <tr>
+                            <td><%= t.id %></td>
+                            <td><strong><%= t.tenant_nombre || 'Desconocido' %></strong></td>
+                            <td><%= t.usuario_nombre %> <br><small class="text-muted"><%= t.usuario_email %></small></td>
+                            <td><span class="badge bg-secondary"><%= t.tipo.toUpperCase() %></span></td>
+                            <td>
+                                <select class="form-select form-select-sm status-select" data-id="<%= t.id %>" style="width: auto; display:inline-block;">
+                                    <option value="abierto" <%= t.estado === 'abierto' ? 'selected' : '' %>>Abierto</option>
+                                    <option value="en_proceso" <%= t.estado === 'en_proceso' ? 'selected' : '' %>>En Proceso</option>
+                                    <option value="resuelto" <%= t.estado === 'resuelto' ? 'selected' : '' %>>Resuelto</option>
+                                    <option value="cerrado" <%= t.estado === 'cerrado' ? 'selected' : '' %>>Cerrado</option>
+                                </select>
+                            </td>
+                            <td><%= new Date(t.created_at).toLocaleString() %></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary btn-responder"
+                                        data-bs-toggle="modal" data-bs-target="#replyModal"
+                                        data-id="<%= t.id %>"
+                                        data-desc="<%= t.descripcion %>"
+                                        data-resp="<%= t.respuesta_admin || '' %>"
+                                        data-tenant="<%= t.tenant_nombre %>">
+                                    <i class="bi bi-reply-fill"></i> Responder
+                                </button>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="7" class="text-center py-4">No hay tickets de soporte registrados.</td></tr>
+                <% } %>
+            </tbody>
+        </table>
     </div>
 
     <!-- Modal Responder -->
@@ -86,7 +68,7 @@
                 <div class="modal-body">
                     <h6>Mensaje del Usuario:</h6>
                     <div class="p-3 bg-light rounded mb-3" style="white-space: pre-wrap;" id="modalTicketDesc"></div>
-                    
+
                     <form id="replyForm">
                         <input type="hidden" id="replyTicketId">
                         <div class="mb-3">
@@ -105,8 +87,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/js/admin/soporte.js"></script>
-</body>
-</html>
+<%- include('../_shell/_close', {
+    extraScripts: '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script><script src="/js/admin/soporte.js"></script>'
+}) %>

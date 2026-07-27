@@ -12,6 +12,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Quill Rich Text Editor CSS -->
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+    <!-- Shell del panel superadmin (sidebar + header): el editor conserva su propio
+         tema oscuro interno (glass-card) y solo adopta el chrome exterior. -->
+    <link rel="stylesheet" href="/css/admin/shell.css">
 
     <style>
         body {
@@ -261,10 +264,13 @@
     </style>
 </head>
 
-<body>
-    <%- include('../../partials/navbar', { user, tenant: null, currentAdminPage: 'landing' }) %>
+<body class="admin-shell-body">
+<div class="admin-shell">
+    <%- include('../_shell/_sidebar') %>
+    <div class="admin-shell-main">
+        <%- include('../_shell/_header', { pageTitle: 'Landing Page' }) %>
+        <main class="admin-shell-content">
 
-    <div class="editor-container">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
             <div class="d-flex align-items-center gap-3">
                 <div class="header-icon-box">
@@ -788,12 +794,16 @@
                 </button>
             </div>
         </form>
+
+        </main>
     </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/admin/shell.js"></script>
     <!-- Quill Library -->
     <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-    
+
     <script>
         // Initialize Quill editors
         const quillPrivacy = new Quill('#editor_privacy', {

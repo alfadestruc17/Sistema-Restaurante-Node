@@ -1,82 +1,23 @@
 /* ==========================================================================
-   admin-ventas.css — Rediseño Premium GastroFlow Superadmin
+   admin/ventas.ejs — reglas específicas de esta página.
+   Paleta y componentes genéricos (.admin-page-header, .stats-grid, .stat-card,
+   .premium-card) viven en shell.css — acá solo lo propio de "Eliminar ventas".
    ========================================================================== */
 
-:root {
-    --accent: #5b5bd6;
-    --accent-dark: #3a3ab0;
-    --accent-soft: #f0f0fd;
-    
-    --bg-main: #eef0f4;
-    --card-bg: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #8a94a6;
-    --border-color: #e9ebef;
-    
-    --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+/* Tarjeta estadística especial de facturas eliminadas */
+.stat-card.danger-stat {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.3);
 }
 
-body {
-    background-color: var(--bg-main);
-    font-family: var(--font-primary);
-    color: var(--text-primary);
-    min-height: 100vh;
+.stat-card.danger-stat .stat-icon {
+    background: rgba(248, 113, 113, 0.18);
+    color: var(--sa-danger);
 }
 
-/* Header */
-.admin-page-header {
-    background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-    border-left: 4px solid var(--accent);
-}
-
-.admin-page-header h1 {
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    font-size: 25px;
-    margin: 0;
-}
-
-.admin-page-header p {
-    font-size: 13.5px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-top: 6px;
-}
-
-/* Grid de Estadísticas */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 16px;
-    margin-bottom: 1.5rem;
-}
-
-@media (min-width: 576px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 992px) {
-    .stats-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-.stat-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 18px 20px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-    display: flex;
-    flex-direction: column;
+.stat-card.danger-stat .stat-title,
+.stat-card.danger-stat .stat-val {
+    color: var(--sa-danger);
 }
 
 .stat-card-header {
@@ -90,8 +31,8 @@ body {
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--sa-accent-soft);
+    color: var(--sa-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -103,42 +44,22 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
 }
 
 .stat-val {
     font-size: 24px;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
     font-variant-numeric: tabular-nums;
-}
-
-/* Tarjeta estadística especial de facturas eliminadas */
-.stat-card.danger-stat {
-    background: #fdf0f0;
-    border-color: #f6d4d4;
-}
-
-.stat-card.danger-stat .stat-icon {
-    background: #fbdcdc;
-    color: #dc2626;
-}
-
-.stat-card.danger-stat .stat-title {
-    color: #b91c1c;
-}
-
-.stat-card.danger-stat .stat-val {
-    color: #b91c1c;
 }
 
 /* Barra de Filtros */
 .filter-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
     padding: 16px 18px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     margin-bottom: 1.5rem;
 }
 
@@ -168,36 +89,35 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    border: 1px solid #e2e5ea;
-    background: #fff;
-    color: #5b6573;
+    border: 1px solid var(--sa-border);
+    background: var(--sa-surface);
+    color: var(--sa-text-secondary);
     transition: all 0.15s ease;
     text-decoration: none;
 }
 
 .btn-chip:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #334155;
+    background: var(--sa-surface-3);
+    border-color: var(--sa-accent);
+    color: var(--sa-text-primary);
 }
 
 .btn-chip.active {
-    background: var(--accent);
-    color: #fff;
+    background: var(--sa-accent);
+    color: var(--sa-accent-text);
     border-color: transparent;
-    box-shadow: 0 4px 10px -6px var(--accent);
 }
 
 .btn-chip .dot-indicator {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #cbd5e1;
+    background: var(--sa-text-muted);
     display: inline-block;
 }
 
 .btn-chip.active .dot-indicator {
-    background: #fff !important;
+    background: var(--sa-accent-text) !important;
 }
 
 /* Segmentador de pago */
@@ -205,9 +125,9 @@ body {
     display: inline-flex;
     gap: 3px;
     padding: 4px;
-    background: #eceff2;
+    background: var(--sa-surface);
     border-radius: 11px;
-    border: none;
+    border: 1px solid var(--sa-border);
 }
 
 .segmented-control button {
@@ -219,18 +139,17 @@ body {
     font-weight: 700;
     font-family: inherit;
     background: transparent;
-    color: #5b6573;
+    color: var(--sa-text-secondary);
     transition: all 0.1s ease;
 }
 
 .segmented-control button:hover {
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
 }
 
 .segmented-control button.active {
-    background: #fff;
-    color: var(--accent);
-    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.14);
+    background: var(--sa-surface-3);
+    color: var(--sa-accent);
 }
 
 /* Buscador */
@@ -238,10 +157,10 @@ body {
     display: flex;
     align-items: center;
     gap: 9px;
-    border: 1px solid #e2e5ea;
+    border: 1px solid var(--sa-border);
     border-radius: 10px;
     padding: 9px 13px;
-    background: #fff;
+    background: var(--sa-surface);
     width: 230px;
 }
 
@@ -251,17 +170,16 @@ body {
     font-family: inherit;
     font-size: 13.5px;
     font-weight: 600;
-    color: #1e2733;
+    color: var(--sa-text-primary);
     background: transparent;
     width: 100%;
 }
 
 /* Contenedor de la Tabla */
 .table-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     overflow: hidden;
 }
 
@@ -271,27 +189,27 @@ body {
     justify-content: space-between;
     gap: 10px;
     padding: 15px 22px;
-    border-bottom: 1px solid #eceef1;
+    border-bottom: 1px solid var(--sa-border);
 }
 
 .table-card-header h3 {
     margin: 0;
     font-size: 15px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
     display: flex;
     align-items: center;
     gap: 9px;
 }
 
 .table-card-header h3 i {
-    color: var(--accent);
+    color: var(--sa-accent);
 }
 
 .table-card-header span {
     font-size: 12.5px;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
 }
 
 /* Tabla de Facturas */
@@ -299,23 +217,27 @@ body {
     margin: 0;
 }
 
+.table-ventas .text-dark {
+    color: var(--sa-text-primary) !important;
+}
+
 .table-ventas thead th {
-    background: #f8f9fb;
-    border-bottom: 1px solid #eceef1;
+    background: var(--sa-surface-3);
+    border-bottom: 1px solid var(--sa-border);
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     padding: 12px 22px;
 }
 
 .table-ventas tbody td {
     padding: 14px 22px;
     vertical-align: middle;
-    border-bottom: 1px solid #f2f4f7;
+    border-bottom: 1px solid var(--sa-border);
     font-size: 13.5px;
-    color: var(--text-secondary);
+    color: var(--sa-text-secondary);
 }
 
 .table-ventas tbody tr:last-child td {
@@ -323,7 +245,7 @@ body {
 }
 
 .table-ventas tbody tr:hover td {
-    background-color: #fafbfc;
+    background-color: var(--sa-surface-3);
 }
 
 /* Badges de Pago */
@@ -342,9 +264,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    border: 1px solid #f6d4d4;
-    background: #fff;
-    color: #dc2626;
+    border: 1px solid rgba(248, 113, 113, 0.35);
+    background: transparent;
+    color: var(--sa-danger);
     border-radius: 9px;
     padding: 7px 13px;
     font-size: 12.5px;
@@ -354,7 +276,7 @@ body {
 }
 
 .btn-eliminar-venta-row:hover {
-    background: #fdecec;
+    background: rgba(248, 113, 113, 0.12);
 }
 
 .restaurant-dot {
@@ -368,7 +290,7 @@ body {
 .no-results-card {
     padding: 52px 20px;
     text-align: center;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     font-size: 14px;
     font-weight: 600;
 }

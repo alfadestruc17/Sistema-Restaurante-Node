@@ -1,44 +1,7 @@
 /* ==========================================================================
-   Superadmin Dashboard Stylesheet (GastroFlow Branding)
+   admin/dashboard.ejs — reglas específicas de esta página.
+   Paleta, .premium-card y .admin-page-header genéricos viven en shell.css.
    ========================================================================== */
-
-:root {
-    --accent: #2e7d46;
-    --accentDark: #1b4d2b;
-    --accentSoft: #eaf5ed;
-    --accentSofter: #f4faf6;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #7a8499;
-    --border-color: #e9ebef;
-    --bg-body: #eef0f4;
-    --font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-}
-
-body {
-    background-color: var(--bg-body) !important;
-    font-family: var(--font-family) !important;
-    color: var(--text-primary);
-}
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-::-webkit-scrollbar-thumb {
-    background: #d4d8df;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-}
-
-/* Core Layout Containers */
-.dashboard-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 24px 26px 60px;
-}
 
 /* Page Header */
 .dashboard-header {
@@ -48,12 +11,12 @@ body {
     font-weight: 800;
     font-size: 26px;
     letter-spacing: -.02em;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
     margin: 0;
 }
 .dashboard-header p {
     font-size: 13.5px;
-    color: var(--text-muted);
+    color: var(--sa-text-secondary);
     font-weight: 500;
     margin: 4px 0 0 0;
 }
@@ -66,27 +29,12 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 11px;
-    background: var(--accentSoft);
-    color: var(--accent);
+    background: var(--sa-accent-soft);
+    color: var(--sa-accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
-}
-
-/* Card Basics */
-.premium-card {
-    background: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 1px 2px rgba(16,24,40,.04);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    height: 100%;
-}
-.premium-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16,24,40,.06);
 }
 
 /* Status Ring Card */
@@ -102,12 +50,12 @@ body {
 .status-ring-text-val {
     font-size: 18px;
     font-weight: 800;
-    fill: var(--text-primary);
+    fill: var(--sa-text-primary);
 }
 .status-ring-text-label {
     font-size: 9px;
     font-weight: 700;
-    fill: var(--text-muted);
+    fill: var(--sa-text-muted);
 }
 .dot {
     display: inline-block;
@@ -116,34 +64,34 @@ body {
     border-radius: 3px;
 }
 .dot.bg-accent {
-    background-color: var(--accent);
+    background-color: var(--sa-accent);
 }
 .dot.bg-neutral {
-    background-color: #dbe0e7;
+    background-color: var(--sa-surface-3);
 }
 .dot.bg-neutral-dark {
-    background-color: #9aa7bd;
+    background-color: var(--sa-text-muted);
 }
 .stat-meta-label {
     font-size: 11.5px;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
 }
 .stat-big-val {
     font-size: 34px;
     font-weight: 800;
     letter-spacing: -.02em;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
     line-height: 1;
 }
 .stat-icon-wrapper {
     width: 34px;
     height: 34px;
     border-radius: 9px;
-    background: var(--accentSoft);
-    color: var(--accent);
+    background: var(--sa-accent-soft);
+    color: var(--sa-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -151,7 +99,7 @@ body {
 }
 .stat-detail-text {
     font-size: 13px;
-    color: #46505f;
+    color: var(--sa-text-secondary);
     font-weight: 600;
 }
 
@@ -163,7 +111,7 @@ body {
     margin: 30px 0 14px;
 }
 .section-header i {
-    color: var(--accent);
+    color: var(--sa-accent);
     font-size: 16px;
 }
 .section-header h2 {
@@ -172,23 +120,22 @@ body {
     font-weight: 800;
     letter-spacing: .04em;
     text-transform: uppercase;
-    color: #5b6573;
+    color: var(--sa-text-secondary);
 }
 
 /* Leaderboard */
 .leaderboard-container {
-    background: #fff;
-    border: 1px solid var(--border-color);
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
     padding: 10px 20px;
-    box-shadow: 0 1px 2px rgba(16,24,40,.04);
 }
 .leaderboard-row {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 13px 0;
-    border-bottom: 1px solid #f1f3f6;
+    border-bottom: 1px solid var(--sa-border);
     transition: background-color 0.15s ease;
 }
 .leaderboard-row:last-child {
@@ -199,8 +146,8 @@ body {
     height: 24px;
     flex: 0 0 24px;
     border-radius: 7px;
-    background: #f1f3f6;
-    color: var(--text-muted);
+    background: var(--sa-surface-3);
+    color: var(--sa-text-muted);
     font-size: 12px;
     font-weight: 800;
     display: flex;
@@ -208,8 +155,8 @@ body {
     justify-content: center;
 }
 .leaderboard-rank.top-rank {
-    background: var(--accent);
-    color: #fff;
+    background: var(--sa-accent);
+    color: var(--sa-accent-text);
 }
 .leaderboard-dot {
     width: 10px;
@@ -220,11 +167,11 @@ body {
 .leaderboard-tenant-name {
     font-size: 13.5px;
     font-weight: 700;
-    color: #1e2733;
+    color: var(--sa-text-primary);
 }
 .leaderboard-tenant-subtext {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     font-weight: 600;
     margin-top: 2px;
 }
@@ -240,7 +187,7 @@ body {
 }
 .leaderboard-progress-bg {
     height: 8px;
-    background: #f0f2f5;
+    background: var(--sa-surface-3);
     border-radius: 6px;
     overflow: hidden;
 }
@@ -253,7 +200,7 @@ body {
     text-align: right;
     font-size: 14px;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
     font-variant-numeric: tabular-nums;
 }
 @media (min-width: 768px) {
@@ -276,7 +223,7 @@ body {
 }
 .event-progress-bg {
     height: 9px;
-    background: #f0f2f5;
+    background: var(--sa-surface-3);
     border-radius: 6px;
     overflow: hidden;
 }
@@ -287,44 +234,30 @@ body {
 
 /* Plans List Item */
 .list-plan-item {
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--sa-border);
     padding: 12px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 13.5px;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--sa-text-secondary);
     transition: background-color 0.2s ease;
 }
 .list-plan-item:hover {
-    background: #f8fafc;
+    background: var(--sa-surface-3);
 }
 .list-plan-item:last-child {
     border-bottom: none;
 }
 .list-plan-item .badge {
-    background-color: var(--accent) !important;
+    background-color: var(--sa-accent) !important;
+    color: var(--sa-accent-text) !important;
 }
 
-/* Quick Links Button Links */
-.quick-link {
-    text-decoration: none;
-    color: var(--text-secondary);
-    border-radius: 12px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13.5px;
-    font-weight: 600;
-    transition: background-color 0.2s, color 0.2s;
-}
-.quick-link:hover {
-    background: var(--accentSoft);
-    color: var(--accent);
-}
-.quick-link i {
-    font-size: 18px;
-    color: var(--accent);
+/* Badge "Total hoy" / etiquetas sueltas dentro de gráficos */
+.dashboard-soft-badge {
+    background: var(--sa-surface-3) !important;
+    color: var(--sa-text-primary) !important;
+    border-color: var(--sa-border) !important;
 }

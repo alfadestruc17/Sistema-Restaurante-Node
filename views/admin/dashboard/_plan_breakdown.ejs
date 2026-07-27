@@ -1,0 +1,29 @@
+<div class="row g-4">
+    <!-- Planes list -->
+    <div class="col-12">
+        <div class="premium-card d-flex flex-column">
+            <div class="d-flex align-items-center gap-2 mb-3 border-bottom pb-3">
+                <i class="bi bi-layers text-success"></i>
+                <h5 class="m-0 fw-bold" style="font-size: 15px; color: var(--sa-text-secondary);">DETALLE DE RESTAURANTES POR PLAN</h5>
+            </div>
+            <div class="flex-grow-1">
+                <% if (stats.porPlan && stats.porPlan.length) { %>
+                    <div class="row">
+                        <% stats.porPlan.forEach(function(item) { %>
+                            <div class="col-md-6">
+                                <div class="list-plan-item">
+                                    <span><%= item.plan_nombre %></span>
+                                    <span class="badge rounded-pill px-3 py-1.5 fw-bold"><%= item.cantidad %></span>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="py-4 text-center text-muted small">
+                        <i class="bi bi-info-circle me-1"></i> No hay datos de planes.
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>

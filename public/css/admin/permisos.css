@@ -1,75 +1,30 @@
 /* ==========================================================================
-   admin-permisos.css — Rediseño Premium GastroFlow Superadmin
+   admin/permisos.ejs — reglas específicas de esta página.
+   Paleta y .admin-page-header genéricos viven en shell.css.
    ========================================================================== */
 
-:root {
-    --accent: #5b5bd6;
-    --accent-dark: #3a3ab0;
-    --accent-soft: #f0f0fd;
-    --accent-softer: #f8f8fe;
-    
-    --bg-main: #eef0f4;
-    --card-bg: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #8a94a6;
-    --border-color: #e9ebef;
-    
-    --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-}
-
-body {
-    background-color: var(--bg-main);
-    font-family: var(--font-primary);
-    color: var(--text-primary);
-    min-height: 100vh;
+body.admin-shell-body {
     padding-bottom: 90px; /* Espacio para la barra fija inferior */
-}
-
-/* Header */
-.admin-page-header {
-    background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-    border-left: 4px solid var(--accent);
-}
-
-.admin-page-header h1 {
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-    font-size: 25px;
-    margin: 0;
-}
-
-.admin-page-header p {
-    font-size: 13.5px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-top: 6px;
 }
 
 /* Cards de Selector */
 .selector-card {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
-    background: var(--card-bg);
+    background: var(--sa-surface-2);
     margin-bottom: 1.5rem;
     padding: 18px 20px;
 }
 
 .selector-card .card-header {
     background: transparent;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--sa-border);
     font-weight: 700;
     padding: 0 0 12px 0;
     font-size: 14px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     display: flex;
     align-items: center;
 }
@@ -90,9 +45,9 @@ body {
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
-    color: #1e2733;
-    background: #fff;
-    border: 1px solid #e2e5ea;
+    color: var(--sa-text-primary);
+    background: var(--sa-surface);
+    border: 1px solid var(--sa-border);
     border-radius: 11px;
     padding: 12px 38px 12px 14px;
     cursor: pointer;
@@ -101,7 +56,7 @@ body {
 }
 
 .form-select-wrapper select:focus {
-    border-color: var(--accent);
+    border-color: var(--sa-accent);
 }
 
 .form-select-wrapper .bi-chevron-down {
@@ -109,7 +64,7 @@ body {
     right: 14px;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     font-size: 13px;
     pointer-events: none;
 }
@@ -132,25 +87,25 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    border: 1px solid #dcdcef;
-    background: #f5f5fc;
-    color: var(--accent);
+    border: 1px solid var(--sa-border);
+    background: var(--sa-surface-3);
+    color: var(--sa-accent);
     transition: all 0.15s ease;
 }
 
 .preset-btn:hover {
-    background: var(--accent-soft);
-    border-color: var(--accent);
+    background: var(--sa-accent-soft);
+    border-color: var(--sa-accent);
 }
 
 .search-wrapper {
     display: flex;
     align-items: center;
     gap: 9px;
-    border: 1px solid #e2e5ea;
+    border: 1px solid var(--sa-border);
     border-radius: 10px;
     padding: 9px 13px;
-    background: #fff;
+    background: var(--sa-surface);
     width: 260px;
 }
 
@@ -160,7 +115,7 @@ body {
     font-family: inherit;
     font-size: 13.5px;
     font-weight: 600;
-    color: #1e2733;
+    color: var(--sa-text-primary);
     background: transparent;
     width: 100%;
 }
@@ -188,10 +143,9 @@ body {
 
 /* Tarjetas de Sección (Grupo de permisos) */
 .section-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
     overflow: hidden;
     height: 100%;
     display: flex;
@@ -203,19 +157,19 @@ body {
     align-items: center;
     gap: 11px;
     padding: 14px 16px;
-    border-bottom: 1px solid #f2f4f7;
+    border-bottom: 1px solid var(--sa-border);
     cursor: pointer;
-    background: #fafbfc;
+    background: var(--sa-surface);
     user-select: none;
     transition: background-color 0.15s ease;
 }
 
 .section-card-header.all-checked {
-    background: var(--accent-softer);
+    background: var(--sa-accent-soft);
 }
 
 .section-card-header:hover {
-    background: #f8fafc;
+    background: var(--sa-surface-3);
 }
 
 .section-icon-container {
@@ -223,8 +177,8 @@ body {
     height: 32px;
     flex: 0 0 32px;
     border-radius: 9px;
-    background: #eef0f3;
-    color: var(--text-muted);
+    background: var(--sa-surface-3);
+    color: var(--sa-text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -233,25 +187,25 @@ body {
 }
 
 .section-card-header.all-checked .section-icon-container {
-    background: var(--accent);
-    color: #ffffff;
+    background: var(--sa-accent);
+    color: var(--sa-accent-text);
 }
 
 .section-card-header.some-checked .section-icon-container {
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--sa-accent-soft);
+    color: var(--sa-accent);
 }
 
 .section-header-title {
     font-size: 14px;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
 }
 
 .section-header-subtitle {
     font-size: 11.5px;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     margin-top: 1px;
 }
 
@@ -266,8 +220,8 @@ body {
     height: 19px;
     flex: 0 0 19px;
     border-radius: 6px;
-    border: 2px solid #cfd5de;
-    background: #fff;
+    border: 2px solid var(--sa-text-muted);
+    background: var(--sa-surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -277,7 +231,7 @@ body {
 }
 
 .custom-checkbox i {
-    color: #fff;
+    color: var(--sa-accent-text);
     font-size: 13px;
     font-weight: 800;
     display: none;
@@ -293,8 +247,8 @@ body {
 }
 
 .hidden-checkbox:checked + .custom-checkbox {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--sa-accent);
+    border-color: var(--sa-accent);
 }
 
 .hidden-checkbox:checked + .custom-checkbox i {
@@ -302,15 +256,15 @@ body {
 }
 
 .hidden-checkbox:indeterminate + .custom-checkbox {
-    background: #cfd5de;
-    border-color: #cfd5de;
+    background: var(--sa-text-muted);
+    border-color: var(--sa-text-muted);
 }
 
 .hidden-checkbox:indeterminate + .custom-checkbox::after {
     content: '';
     width: 9px;
     height: 3px;
-    background: #fff;
+    background: var(--sa-surface);
     border-radius: 1px;
 }
 
@@ -327,20 +281,20 @@ body {
 }
 
 .permiso-item-row:hover {
-    background: #f8f9fb;
+    background: var(--sa-surface-3);
 }
 
 .permiso-item-row span {
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--sa-text-secondary);
     line-height: 1.35;
     transition: color 0.1s ease;
 }
 
 .permiso-item-row.active span {
     font-weight: 600;
-    color: #1e2733;
+    color: var(--sa-text-primary);
 }
 
 /* Barra Fija de Guardado Inferior */
@@ -350,11 +304,11 @@ body {
     right: 0;
     bottom: 0;
     z-index: 30;
-    background: rgba(255, 255, 255, 0.86);
+    background: rgba(17, 32, 26, 0.9);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid #e4e7ec;
-    box-shadow: 0 -6px 24px -16px rgba(16, 24, 40, 0.4);
+    border-top: 1px solid var(--sa-border);
+    box-shadow: 0 -6px 24px -16px rgba(0, 0, 0, 0.5);
     padding: 13px 0;
     animation: gffade .15s ease;
 }
@@ -380,8 +334,8 @@ body {
     width: 34px;
     height: 34px;
     border-radius: 9px;
-    background: var(--accent-soft);
-    color: var(--accent);
+    background: var(--sa-accent-soft);
+    color: var(--sa-accent);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -391,13 +345,13 @@ body {
 .save-bar-title {
     font-size: 14.5px;
     font-weight: 800;
-    color: var(--text-primary);
+    color: var(--sa-text-primary);
 }
 
 .save-bar-subtitle {
     font-size: 12px;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
 }
 
 /* Badges de Estado */
@@ -413,22 +367,22 @@ body {
 }
 
 .status-badge.saved {
-    color: #15803d;
-    background: #e7f6ec;
+    color: var(--sa-success);
+    background: rgba(52, 211, 153, 0.15);
 }
 
 .status-badge.unsaved {
-    color: #b45309;
-    background: #fef3e2;
+    color: var(--sa-warning);
+    background: rgba(251, 191, 36, 0.15);
 }
 
 /* Botones de Barra */
 .btn-reset-bar {
     padding: 11px 16px;
     border-radius: 11px;
-    border: 1px solid #e2e5ea;
-    background: #fff;
-    color: #46505f;
+    border: 1px solid var(--sa-border);
+    background: var(--sa-surface);
+    color: var(--sa-text-secondary);
     font-size: 13.5px;
     font-weight: 700;
     cursor: pointer;
@@ -436,31 +390,31 @@ body {
 }
 
 .btn-reset-bar:hover {
-    background: #f8fafc;
+    background: var(--sa-surface-3);
 }
 
 .btn-save-bar {
     padding: 11px 20px;
     border-radius: 11px;
     border: none;
-    background: var(--accent);
-    color: #fff;
+    background: var(--sa-accent);
+    color: var(--sa-accent-text);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 6px 14px -8px var(--accent);
     transition: all 0.15s ease;
 }
 
 .btn-save-bar:hover {
-    background: var(--accent-dark);
+    background: var(--sa-accent-strong);
 }
 
 .btn-save-bar:disabled {
-    background: #cbd2dc;
+    background: var(--sa-surface-3);
+    color: var(--sa-text-muted);
     box-shadow: none;
     cursor: default;
 }
@@ -469,11 +423,11 @@ body {
 .no-results-card {
     padding: 52px 20px;
     text-align: center;
-    color: var(--text-muted);
+    color: var(--sa-text-muted);
     font-size: 14px;
     font-weight: 600;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: var(--sa-surface-2);
+    border: 1px solid var(--sa-border);
     border-radius: 16px;
 }
 
