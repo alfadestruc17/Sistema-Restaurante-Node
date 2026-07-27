@@ -52,6 +52,27 @@ body.admin-shell-body {
     min-width: 0;
     display: flex;
     flex-direction: column;
+
+    /* Solo el sidebar queda oscuro/azul — el header y el contenido usan una paleta clara propia */
+    --sa-bg: #eef1f5;
+    --sa-surface: #ffffff;
+    --sa-surface-2: #ffffff;
+    --sa-surface-3: #f1f5f9;
+    --sa-border: #e2e8f0;
+
+    --sa-accent-soft: rgba(59, 130, 246, 0.12);
+
+    --sa-text-primary: #0f172a;
+    --sa-text-secondary: #475569;
+    --sa-text-muted: #7a8499;
+
+    --sa-danger: #dc2626;
+    --sa-warning: #d97706;
+    --sa-info: #0284c7;
+    --sa-success: #059669;
+
+    background: var(--sa-bg);
+    color: var(--sa-text-primary);
 }
 
 /* ---- Sidebar ---- */
@@ -296,7 +317,7 @@ body.admin-shell-body {
 .admin-shell-content .table {
     --bs-table-bg: transparent;
     --bs-table-color: var(--sa-text-primary);
-    --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
+    --bs-table-striped-bg: rgba(15, 23, 42, 0.03);
     --bs-table-striped-color: var(--sa-text-primary);
     --bs-table-active-bg: var(--sa-surface-3);
     --bs-table-active-color: var(--sa-text-primary);
@@ -332,9 +353,6 @@ body.admin-shell-body {
     background-color: var(--sa-surface);
     color: var(--sa-text-primary);
     border-color: var(--sa-border);
-}
-.modal .btn-close {
-    filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 /* ---- Responsive: sidebar como offcanvas en mobile ---- */

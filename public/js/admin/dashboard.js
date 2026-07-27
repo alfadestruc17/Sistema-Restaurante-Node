@@ -5,6 +5,21 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+    // ─── Colores de Chart.js leídos de las variables --sa-* del área de contenido ──
+    const contentEl = document.querySelector('.admin-shell-content') || document.body;
+    const contentStyles = getComputedStyle(contentEl);
+    const cssVar = (name, fallback) => (contentStyles.getPropertyValue(name).trim() || fallback);
+    const chartTextColor = cssVar('--sa-text-secondary', '#475569');
+    const chartTitleColor = cssVar('--sa-text-primary', '#0f172a');
+    const chartGridColor = 'rgba(15, 23, 42, 0.06)';
+    const chartBorderColor = cssVar('--sa-border', '#e2e8f0');
+    const chartTooltipBg = cssVar('--sa-surface-2', '#ffffff');
+
+    if (window.Chart) {
+        Chart.defaults.color = chartTextColor;
+        Chart.defaults.borderColor = chartBorderColor;
+    }
+
     // ─── Helpers & Colors ──────────────────────────────────────────────────────
     const colorsMap = {
         'Principal': '#2e7d46',
@@ -97,10 +112,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: '#fff',
-                        bodyColor: '#475569',
-                        titleColor: '#0f172a',
-                        borderColor: '#e9ebef',
+                        backgroundColor: chartTooltipBg,
+                        bodyColor: chartTextColor,
+                        titleColor: chartTitleColor,
+                        borderColor: chartBorderColor,
                         borderWidth: 1,
                         displayColors: true,
                         caretPadding: 10,
@@ -120,13 +135,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     x: {
                         grid: { display: false },
                         ticks: {
+                            color: chartTextColor,
                             font: { family: 'Plus Jakarta Sans', size: 11 }
                         }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f3f6' },
+                        grid: { color: chartGridColor },
                         ticks: {
+                            color: chartTextColor,
                             font: { family: 'Plus Jakarta Sans', size: 11 },
                             callback: v => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v)
                         }
@@ -181,16 +198,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         display: true,
                         position: 'bottom',
                         labels: {
+                            color: chartTextColor,
                             boxWidth: 10,
                             padding: 15,
                             font: { family: 'Plus Jakarta Sans', weight: '600', size: 12 }
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#fff',
-                        bodyColor: '#475569',
-                        titleColor: '#0f172a',
-                        borderColor: '#e9ebef',
+                        backgroundColor: chartTooltipBg,
+                        bodyColor: chartTextColor,
+                        titleColor: chartTitleColor,
+                        borderColor: chartBorderColor,
                         borderWidth: 1,
                         displayColors: true,
                         caretPadding: 10,
@@ -211,12 +229,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { family: 'Plus Jakarta Sans', size: 11 } }
+                        ticks: { color: chartTextColor, font: { family: 'Plus Jakarta Sans', size: 11 } }
                     },
                     y: {
                         beginAtZero: true,
-                        grid: { color: '#f1f3f6' },
+                        grid: { color: chartGridColor },
                         ticks: {
+                            color: chartTextColor,
                             font: { family: 'Plus Jakarta Sans', size: 11 },
                             callback: v => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v)
                         }
