@@ -8,9 +8,9 @@
     /* Paleta base */
     --sa-bg: #0b1220;
     --sa-surface: #0f172a;
-    --sa-surface-2: #1e293b;
-    --sa-surface-3: #27374d;
-    --sa-border: #334155;
+    --sa-surface-2: #243247;
+    --sa-surface-3: #2f4058;
+    --sa-border: #3c4d63;
 
     --sa-accent: #3b82f6;
     --sa-accent-strong: #2563eb;
@@ -257,11 +257,11 @@ body.admin-shell-body {
 
 /* ---- Componentes compartidos entre páginas (reemplazan duplicados por-página) ---- */
 .premium-card, .admin-card {
-    background: var(--sa-surface-2);
+    background: var(--sa-surface-3);
     border: 1px solid var(--sa-border);
     border-radius: var(--sa-radius-md);
     padding: 20px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
 }
 .admin-page-header h1 {
     font-weight: 800; font-size: 24px; color: var(--sa-text-primary); margin: 0;
@@ -277,8 +277,9 @@ body.admin-shell-body {
 
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .stat-card {
-    background: var(--sa-surface-2); border: 1px solid var(--sa-border);
+    background: var(--sa-surface-3); border: 1px solid var(--sa-border);
     border-radius: var(--sa-radius-md); padding: 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
 }
 .stat-card .stat-label {
     font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
