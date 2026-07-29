@@ -6,6 +6,11 @@ window.POS_API = {
         return r.ok ? r.json() : { productos: [], categorias: [] };
     },
 
+    async getModificadoresProducto(productoId) {
+        const r = await fetch(`/pos/productos/${productoId}/modificadores`);
+        return r.ok ? r.json() : [];
+    },
+
     async getStats() {
         const r = await fetch('/pos/stats');
         return r.ok ? r.json() : { num_ordenes: 0, total_hoy: 0 };

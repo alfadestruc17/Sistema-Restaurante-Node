@@ -102,7 +102,8 @@ window.POS_PAGO = {
                     precio_original: item.precio_original,
                     unidad: item.unidad || 'UND',
                     subtotal: POS.itemSubtotal(item),
-                    descuento_porcentaje: item.descuento_porcentaje || null
+                    descuento_porcentaje: item.descuento_porcentaje || null,
+                    modificadores_seleccion: item.modificadores_seleccion || []
                 }))
             };
 

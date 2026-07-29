@@ -63,11 +63,18 @@ window.POS = {
     },
 
     // ─── Carrito ──────────────────────────────────────────────────
+    // Punto de entrada al hacer click en una tarjeta de producto: si tiene grupos
+    // de modificadores/toppings configurados, POS_MODIFICADORES abre el modal de
+    // selección; si no, agrega directo (ver agregarSimple), sin fricción extra.
     addToCart(productoId) {
         const producto = this.state.productosMap?.get(productoId);
         if (!producto) return;
+        POS_MODIFICADORES.abrir(producto);
+    },
 
-        const existing = this.state.cart.find(i => i.producto_id === producto.id);
+    // Agrega un producto sin modificadores (comportamiento de siempre).
+    agregarSimple(producto) {
+        const existing = this.state.cart.find(i => i.producto_id === producto.id && !i.modificadores_hash);
         if (existing) {
             existing.cantidad++;
         } else {
@@ -80,7 +87,40 @@ window.POS = {
                 cantidad: 1,
                 descuento_porcentaje: 0,
                 categoria_id: producto.categoria_id,
-                unidad: 'UND'
+                unidad: 'UND',
+                modificadores_seleccion: [],
+                modificadores_preview: [],
+                modificadores_total: 0,
+                modificadores_hash: null
+            });
+        }
+        POS_UI.renderCart();
+        POS_UI.flashCard(producto.id);
+    },
+
+    // Agrega un producto con toppings elegidos. Dos líneas del mismo producto con
+    // distintos toppings NO se fusionan (distinto modificadores_hash); con los
+    // mismos toppings sí suman cantidad.
+    addToCartConModificadores(producto, seleccion, preview, totalAdicional) {
+        const hash = seleccion.flatMap(s => s.opciones).sort((a, b) => a - b).join(',') || null;
+        const existing = this.state.cart.find(i => i.producto_id === producto.id && i.modificadores_hash === hash);
+        if (existing) {
+            existing.cantidad++;
+        } else {
+            const precio = Number.parseFloat(producto.precio_unidad) || 0;
+            this.state.cart.push({
+                producto_id: producto.id,
+                nombre: producto.nombre,
+                precio,
+                precio_original: precio,
+                cantidad: 1,
+                descuento_porcentaje: 0,
+                categoria_id: producto.categoria_id,
+                unidad: 'UND',
+                modificadores_seleccion: seleccion,
+                modificadores_preview: preview,
+                modificadores_total: totalAdicional,
+                modificadores_hash: hash
             });
         }
         POS_UI.renderCart();
@@ -126,7 +166,9 @@ window.POS = {
 
     // ─── Totales ──────────────────────────────────────────────────
     itemSubtotal(item) {
-        return item.cantidad * item.precio * (1 - (item.descuento_porcentaje || 0) / 100);
+        const base = item.cantidad * item.precio * (1 - (item.descuento_porcentaje || 0) / 100);
+        const adicionales = item.cantidad * (item.modificadores_total || 0);
+        return base + adicionales;
     },
 
     getTotal() {

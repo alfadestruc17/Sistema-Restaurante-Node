@@ -72,9 +72,9 @@ window.POS_UI = {
             paletteMap[cat.id] = CAT_PALETTE[idx % CAT_PALETTE.length];
         });
 
-        // Cantidad en carrito por producto
+        // Cantidad en carrito por producto (suma todas las líneas, incl. variantes con distintos toppings)
         const cartMap = {};
-        POS.state.cart.forEach(item => { cartMap[item.producto_id] = item.cantidad; });
+        POS.state.cart.forEach(item => { cartMap[item.producto_id] = (cartMap[item.producto_id] || 0) + item.cantidad; });
 
         if (!filtrados.length) {
             grid.innerHTML = `<div class="pos-catalog-empty">
@@ -137,11 +137,14 @@ window.POS_UI = {
                 const isOne = item.cantidad === 1;
                 const descBadge = item.descuento_porcentaje > 0
                     ? `<span class="pci-disc-badge">-${item.descuento_porcentaje}%</span>` : '';
+                const modText = (item.modificadores_preview && item.modificadores_preview.length)
+                    ? `<div class="pci-mods">${item.modificadores_preview.map(m => m.opcion_nombre).join(', ')}</div>` : '';
                 return `<div class="pos-cart-item">
                     <div class="pci-body">
                         <div class="pci-info">
                             <div class="pci-name">${item.nombre}${descBadge}</div>
-                            <div class="pci-unit">${money(item.precio)} c/u</div>
+                            ${modText}
+                            <div class="pci-unit">${money(item.precio + (item.modificadores_total || 0))} c/u</div>
                         </div>
                         <div class="pci-controls">
                             <div class="pci-qty-group">

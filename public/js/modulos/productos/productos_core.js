@@ -176,7 +176,7 @@ class ProductManager {
             <input class="form-check-input mt-1 producto-grupo-modificador-cb" type="checkbox" value="${g.id}" ${asignadosSet.has(g.id) ? 'checked' : ''}>
             <span>
               <strong>${g.nombre}</strong>
-              <span class="badge bg-light text-dark ms-1">${g.tipo_seleccion === 'multiple' ? 'Múltiple' : 'Única'}</span>
+              <span class="badge bg-light text-dark ms-1">${g.tipo_seleccion === 'multiple' ? 'Elige varias' : 'Elige 1'}</span>
               ${g.obligatorio ? '<span class="badge bg-warning text-dark ms-1">Obligatorio</span>' : ''}
               <br><small class="text-muted">${(g.opciones || []).map(o => o.nombre).join(', ') || 'Sin opciones'}</small>
             </span>`;

@@ -30,8 +30,15 @@ jest.mock('../../../repositories/Tenant/ProductRepository', () => ({
     findById: jest.fn().mockResolvedValue(null)
 }));
 
+jest.mock('../../../services/Tenant/ModificadorService', () => ({
+    validarYCalcularSeleccion: jest
+        .fn()
+        .mockResolvedValue({ precioAdicionalTotal: 0, lineasSnapshot: [], modificadoresHash: null })
+}));
+
 const FacturaService = require('../../../services/Tenant/FacturaService');
 const FacturaRepository = require('../../../repositories/Tenant/FacturaRepository');
+const ModificadorService = require('../../../services/Tenant/ModificadorService');
 
 describe('FacturaService', () => {
     beforeEach(() => {
@@ -85,6 +92,74 @@ describe('FacturaService', () => {
                 tenantId,
                 expect.objectContaining({ evento_id: 5 })
             );
+        });
+
+        describe('con modificadores/toppings', () => {
+            it('recalcula precio y subtotal sumando el precioAdicionalTotal que devuelve el catálogo (ignora lo que "mandó" el frontend)', async () => {
+                ModificadorService.validarYCalcularSeleccion.mockResolvedValueOnce({
+                    precioAdicionalTotal: 5000,
+                    lineasSnapshot: [
+                        {
+                            opcion_modificador_id: 1,
+                            grupo_nombre: 'Salsa',
+                            opcion_nombre: 'BBQ',
+                            precio_adicional: 5000
+                        }
+                    ],
+                    modificadoresHash: '1'
+                });
+                FacturaRepository.createWithDetails.mockResolvedValue({ insertId: 1 });
+
+                const productoConModificador = {
+                    producto_id: 1,
+                    cantidad: 2,
+                    precio: 10000, // precio base que ya mandó el frontend (sin modificadores)
+                    subtotal: 20000,
+                    modificadores_seleccion: [{ grupo_id: 100, opciones: [1] }]
+                };
+
+                await FacturaService.create(tenantId, { ...facturaValida, productos: [productoConModificador] });
+
+                expect(ModificadorService.validarYCalcularSeleccion).toHaveBeenCalledWith(
+                    tenantId,
+                    1,
+                    productoConModificador.modificadores_seleccion
+                );
+                // 10000 (base) + 5000 (adicional del catálogo) = 15000 por unidad; subtotal = 15000 * 2
+                expect(productoConModificador.precio).toBe(15000);
+                expect(productoConModificador.subtotal).toBe(30000);
+                expect(productoConModificador._modificadoresSnapshot).toEqual([
+                    { opcion_modificador_id: 1, grupo_nombre: 'Salsa', opcion_nombre: 'BBQ', precio_adicional: 5000 }
+                ]);
+            });
+
+            it('no modifica precio/subtotal cuando el producto no tiene modificadores seleccionados', async () => {
+                FacturaRepository.createWithDetails.mockResolvedValue({ insertId: 1 });
+                const producto = { producto_id: 1, cantidad: 2, precio: 10000, subtotal: 20000 };
+
+                await FacturaService.create(tenantId, { ...facturaValida, productos: [producto] });
+
+                expect(producto.precio).toBe(10000);
+                expect(producto.subtotal).toBe(20000);
+            });
+
+            it('propaga el error y no crea la factura si la selección de modificadores es inválida', async () => {
+                ModificadorService.validarYCalcularSeleccion.mockRejectedValueOnce(
+                    new Error('Debes elegir al menos 1 opción en "Elige tu salsa"')
+                );
+                const productoConModificador = {
+                    producto_id: 1,
+                    cantidad: 1,
+                    precio: 10000,
+                    subtotal: 10000,
+                    modificadores_seleccion: []
+                };
+
+                await expect(
+                    FacturaService.create(tenantId, { ...facturaValida, productos: [productoConModificador] })
+                ).rejects.toThrow('Debes elegir al menos 1 opción');
+                expect(FacturaRepository.createWithDetails).not.toHaveBeenCalled();
+            });
         });
     });
 

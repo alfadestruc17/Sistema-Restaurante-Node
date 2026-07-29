@@ -150,10 +150,35 @@ class FacturaRepository {
                 ];
             });
 
-            await connection.query(
+            const [detalleResult] = await connection.query(
                 'INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, precio_original, unidad_medida, subtotal, descuento_porcentaje, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?',
                 [detallesValues]
             );
+
+            // Snapshot de toppings/modificadores elegidos (si aplica). Un INSERT ... VALUES
+            // multi-fila en una sola sentencia genera ids contiguos a partir de insertId
+            // (comportamiento estándar de MySQL/InnoDB para auto_increment en un solo statement),
+            // así que el detalle_factura_id de la fila i es insertId + i.
+            const primerDetalleId = detalleResult.insertId;
+            const modificadoresValues = [];
+            facturaData.productos.forEach((p, i) => {
+                (p._modificadoresSnapshot || []).forEach(m => {
+                    modificadoresValues.push([
+                        primerDetalleId + i,
+                        m.opcion_modificador_id,
+                        m.grupo_nombre,
+                        m.opcion_nombre,
+                        m.precio_adicional,
+                        m.cantidad || 1
+                    ]);
+                });
+            });
+            if (modificadoresValues.length > 0) {
+                await connection.query(
+                    'INSERT INTO detalle_factura_modificadores (detalle_factura_id, opcion_modificador_id, grupo_nombre, opcion_nombre, precio_adicional, cantidad) VALUES ?',
+                    [modificadoresValues]
+                );
+            }
 
             await connection.query(
                 'UPDATE facturas SET subtotal = ?, descuento = ?, total_impuestos = ? WHERE id = ?',
@@ -207,7 +232,7 @@ class FacturaRepository {
     static async getDetailsByFacturaId(facturaId) {
         const [detalles] = await db.query(
             `
-            SELECT d.*, 
+            SELECT d.*,
                    COALESCE(p.nombre, s.nombre) as producto_nombre
             FROM detalle_factura d
             LEFT JOIN productos p ON d.producto_id = p.id
@@ -216,6 +241,17 @@ class FacturaRepository {
         `,
             [facturaId]
         );
+        if (detalles.length === 0) {
+            return detalles;
+        }
+        const detalleIds = detalles.map(d => d.id);
+        const [modificadores] = await db.query(
+            'SELECT detalle_factura_id, opcion_nombre, precio_adicional, cantidad FROM detalle_factura_modificadores WHERE detalle_factura_id IN (?)',
+            [detalleIds]
+        );
+        detalles.forEach(d => {
+            d.modificadores = modificadores.filter(m => m.detalle_factura_id === d.id);
+        });
         return detalles;
     }
 

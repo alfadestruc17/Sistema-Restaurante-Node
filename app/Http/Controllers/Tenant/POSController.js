@@ -1,6 +1,7 @@
 const POSService = require('../../../../services/Tenant/POSService');
 const FacturaService = require('../../../../services/Tenant/FacturaService');
 const CajaService = require('../../../../services/Tenant/CajaService');
+const ModificadorService = require('../../../../services/Tenant/ModificadorService');
 const logger = require('../../../../utils/logger');
 
 class POSController {
@@ -92,6 +93,17 @@ class POSController {
         } catch (err) {
             logger.error('POS getConsumidorFinal error', { err: err.message });
             res.status(500).json({ error: 'Error al obtener consumidor final' });
+        }
+    }
+
+    static async getModificadoresProducto(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            const grupos = await ModificadorService.getGruposParaProducto(req.params.id, tenantId);
+            res.json(grupos || []);
+        } catch (err) {
+            logger.error('POS getModificadoresProducto error', { err: err.message });
+            res.status(500).json({ error: 'Error al obtener modificadores del producto' });
         }
     }
 

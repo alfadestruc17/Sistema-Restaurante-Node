@@ -9,6 +9,9 @@ router.get('/', POSController.index);
 // API: Productos para la grilla
 router.get('/productos', POSController.getProductos);
 
+// API: Grupos de modificadores/toppings de un producto
+router.get('/productos/:id/modificadores', POSController.getModificadoresProducto);
+
 // API: Estadísticas del día
 router.get('/stats', POSController.getStats);
 

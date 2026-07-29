@@ -6,6 +6,7 @@
 
 const FacturaRepository = require('../../repositories/Tenant/FacturaRepository');
 const InventarioService = require('./InventarioService');
+const ModificadorService = require('./ModificadorService');
 
 class FacturaService {
     /**
@@ -30,6 +31,26 @@ class FacturaService {
                 p.producto_id = await AgregarItemService._getOrCreateMirrorProduct(tenantId, insumoId, p.precio);
             }
         }
+
+        // Precio de toppings/modificadores: el catálogo en BD es la fuente de verdad,
+        // nunca el precio que calculó el frontend. Se suma al precio base (que ya puede
+        // traer descuento aplicado) y se recalcula el subtotal de la línea.
+        await Promise.all(
+            productos
+                .filter(p => !p.es_servicio && p.producto_id)
+                .map(async p => {
+                    const { precioAdicionalTotal, lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
+                        tenantId,
+                        p.producto_id,
+                        p.modificadores_seleccion || []
+                    );
+                    if (precioAdicionalTotal > 0) {
+                        p.precio = (parseFloat(p.precio) || 0) + precioAdicionalTotal;
+                        p.subtotal = p.precio * (parseFloat(p.cantidad) || 1);
+                    }
+                    p._modificadoresSnapshot = lineasSnapshot;
+                })
+        );
 
         // Chequeo de stock en paralelo (cada producto es independiente) en vez de
         // secuencial: para una venta de N productos evita N round-trips en serie.
