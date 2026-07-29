@@ -17,6 +17,8 @@ window.MesasModule.renderItems = function() {
     const descBadge = (this.descuentosPorItem[it.id] != null && this.descuentosPorItem[it.id] > 0)
       ? ' <span class="badge bg-success">-' + this.descuentosPorItem[it.id] + '%</span>' : '';
     const badgePagado = it.pagado ? '<br><span class="badge bg-success mt-1"><i class="bi bi-check2-circle me-1"></i>Pagado</span>' : '';
+    const modsTexto = (it.modificadores && it.modificadores.length)
+      ? '<div class="pedido-item-mods">' + it.modificadores.map(m => m.opcion_nombre).join(', ') + '</div>' : '';
 
     const buttonsHtml = it.pagado
       ? `<div class="text-success text-center px-1" title="Este ítem ya está pago"><i class="bi bi-check2-all fs-5"></i></div>`
@@ -32,7 +34,7 @@ window.MesasModule.renderItems = function() {
 
     tbody.append(`
       <tr>
-        <td class="td-producto align-middle">${(it.producto_nombre || it.nombre || it.producto_id) + descBadge + badgePagado}</td>
+        <td class="td-producto align-middle">${(it.producto_nombre || it.nombre || it.producto_id) + descBadge + badgePagado + modsTexto}</td>
         <td class="text-center align-middle">${inputHtml}</td>
         <td class="text-end d-none d-sm-table-cell align-middle">${this.formatear(precio)}</td>
         <td class="text-end td-subtotal align-middle">${it.pagado ? '<span class="text-muted text-decoration-line-through small">' + this.formatear(subtotal) + '</span>' : this.formatear(subtotal)}</td>
@@ -83,9 +85,18 @@ window.MesasModule.seleccionarProducto = async function(p) {
       if (!notaRes.isConfirmed) return;
       nota = (notaRes.value || '').trim();
     }
+
+    // Si el producto tiene toppings/modificadores configurados, pedirlos ahora (después
+    // de la nota); si no tiene ninguno configurado, esto resuelve de inmediato sin fricción.
+    const resultadoMods = await MESAS_MODIFICADORES.elegir(p);
+    if (!resultadoMods) return; // el usuario canceló la selección de toppings
+
     const unidad = 'UND';
     const precio = Number(p.precio_unidad != null ? p.precio_unitario || p.precio_unidad : (p.precio || 0));
-    const body = { producto_id: p.id, cantidad: 1, unidad, precio: Number(precio), nota };
+    const body = {
+      producto_id: p.id, cantidad: 1, unidad, precio: Number(precio), nota,
+      modificadores_seleccion: resultadoMods.seleccion
+    };
     const resp = await fetch(`/api/mesas/pedidos/${this.pedidoActual.id}/items`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const data = await resp.json();
     if (!resp.ok) return Swal.fire({ icon: 'error', title: data.error || 'Error al agregar' });
@@ -335,8 +346,13 @@ $(function () {
     try {
       const r = await fetch(`/api/mesas/items/${itemId}`, { method: 'DELETE' });
       if (!r.ok) { const d = await r.json(); throw new Error(d.error || 'Error'); }
-      await mod.cargarPedido(mod.pedidoActual.id);
-      Swal.fire({ icon: 'success', title: 'Item eliminado' });
+      // Si era el último item, el backend cancela el pedido y libera la mesa; el evento SSE
+      // 'cancelled' puede llegar antes de este punto y ya dejó pedidoActual en null (con su
+      // propio aviso), así que solo recargamos si el pedido sigue abierto en este cliente.
+      if (mod.pedidoActual) {
+        await mod.cargarPedido(mod.pedidoActual.id);
+        Swal.fire({ icon: 'success', title: 'Item eliminado' });
+      }
     } catch (e) { Swal.fire({ icon: 'error', title: e.message }); }
   });
 

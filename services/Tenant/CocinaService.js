@@ -37,13 +37,13 @@ class CocinaService {
         return { message: 'Estado actualizado' };
     }
 
-    static async updateGroupEstado(tenantId, productoNombre, nota, estado) {
+    static async updateGroupEstado(tenantId, productoNombre, nota, estado, modificadoresHash) {
         const permitidos = ['preparando', 'listo'];
         if (!permitidos.includes(estado)) {
             throw new Error('Estado inválido');
         }
 
-        return await CocinaRepository.updateGroupEstado(tenantId, productoNombre, nota, estado);
+        return await CocinaRepository.updateGroupEstado(tenantId, productoNombre, nota, estado, modificadoresHash);
     }
 }
 

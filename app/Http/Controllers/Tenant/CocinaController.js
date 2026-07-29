@@ -100,12 +100,18 @@ class CocinaController {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
 
-            const { productoNombre, nota, estado } = req.body || {};
+            const { productoNombre, nota, estado, modificadoresHash } = req.body || {};
             if (!productoNombre || !estado) {
                 return res.status(400).json({ error: 'productoNombre y estado son requeridos' });
             }
 
-            const result = await CocinaService.updateGroupEstado(tenantId, productoNombre, nota, estado);
+            const result = await CocinaService.updateGroupEstado(
+                tenantId,
+                productoNombre,
+                nota,
+                estado,
+                modificadoresHash
+            );
             res.json(result);
         } catch (error) {
             console.error('Error al actualizar lote en cocina:', error);

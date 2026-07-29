@@ -21,8 +21,8 @@ class GetPedidoDetailsService {
         const pedido = pedidos[0];
         const [items] = await db.query(
             `
-            SELECT i.*, 
-                   COALESCE(p.nombre, s.nombre) AS producto_nombre 
+            SELECT i.*,
+                   COALESCE(p.nombre, s.nombre) AS producto_nombre
             FROM pedido_items i
             LEFT JOIN productos p ON p.id = i.producto_id
             LEFT JOIN servicios s ON s.id = i.servicio_id
@@ -31,6 +31,17 @@ class GetPedidoDetailsService {
         `,
             [pedidoId]
         );
+
+        if (items.length > 0) {
+            const itemIds = items.map(i => i.id);
+            const [modificadores] = await db.query(
+                'SELECT pedido_item_id, opcion_nombre, precio_adicional, cantidad FROM pedido_item_modificadores WHERE pedido_item_id IN (?)',
+                [itemIds]
+            );
+            items.forEach(i => {
+                i.modificadores = modificadores.filter(m => m.pedido_item_id === i.id);
+            });
+        }
 
         return { pedido, items };
     }

@@ -12,8 +12,17 @@ class PedidoItemsController {
         try {
             const tenantId = req.tenant?.id;
             const { pedidoId } = req.params;
-            const { producto_id, cantidad, unidad, precio, nota } = req.body;
-            const resultado = await AgregarItemService.execute({ tenantId, pedidoId, producto_id, cantidad, unidad, precio, nota });
+            const { producto_id, cantidad, unidad, precio, nota, modificadores_seleccion } = req.body;
+            const resultado = await AgregarItemService.execute({
+                tenantId,
+                pedidoId,
+                producto_id,
+                cantidad,
+                unidad,
+                precio,
+                nota,
+                modificadores_seleccion
+            });
             return res.status(201).json(resultado);
         } catch (error) {
             return res.status(400).json({ error: error.message });
@@ -26,7 +35,14 @@ class PedidoItemsController {
             const tenantId = req.tenant?.id;
             const { pedidoId } = req.params;
             const { servicio_id, cantidad, precio, nota } = req.body;
-            const resultado = await AgregarServicioService.execute({ tenantId, pedidoId, servicio_id, cantidad, precio, nota });
+            const resultado = await AgregarServicioService.execute({
+                tenantId,
+                pedidoId,
+                servicio_id,
+                cantidad,
+                precio,
+                nota
+            });
             return res.status(201).json(resultado);
         } catch (error) {
             return res.status(400).json({ error: error.message });

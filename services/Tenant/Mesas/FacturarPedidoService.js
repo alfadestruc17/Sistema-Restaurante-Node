@@ -164,10 +164,41 @@ class FacturarPedidoService {
                 l.valor_impuesto
             ]);
 
-            await connection.query(
+            const [detalleResult] = await connection.query(
                 `INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, unidad_medida, subtotal, descuento_porcentaje, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?`,
                 [detallesValuesFinal]
             );
+
+            // Traslada el snapshot de toppings/modificadores elegidos por ítem (ya fijado
+            // al agregar el producto al pedido) hacia la factura. El precio ya está incluido
+            // en pedido_items.precio_unitario, aquí solo se copia el detalle para impresión/histórico.
+            const itemIds = items.map(i => i.id);
+            const [modificadoresPedido] = await connection.query(
+                'SELECT * FROM pedido_item_modificadores WHERE pedido_item_id IN (?)',
+                [itemIds]
+            );
+            if (modificadoresPedido.length > 0) {
+                const primerDetalleId = detalleResult.insertId;
+                const modificadoresValuesFinal = [];
+                items.forEach((item, i) => {
+                    modificadoresPedido
+                        .filter(m => m.pedido_item_id === item.id)
+                        .forEach(m => {
+                            modificadoresValuesFinal.push([
+                                primerDetalleId + i,
+                                m.opcion_modificador_id,
+                                m.grupo_nombre,
+                                m.opcion_nombre,
+                                m.precio_adicional,
+                                m.cantidad
+                            ]);
+                        });
+                });
+                await connection.query(
+                    'INSERT INTO detalle_factura_modificadores (detalle_factura_id, opcion_modificador_id, grupo_nombre, opcion_nombre, precio_adicional, cantidad) VALUES ?',
+                    [modificadoresValuesFinal]
+                );
+            }
 
             for (const l of lineasFactura) {
                 try {

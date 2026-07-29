@@ -16,6 +16,7 @@ const Items = require('../../app/Http/Controllers/Tenant/Mesas/PedidoItemsContro
 // --- DASHBOARD ---
 router.get('/', Dashboard.index);
 router.get('/listar', Dashboard.list);
+router.get('/productos/:id/modificadores', Dashboard.getModificadoresProducto);
 
 // --- GESTIÓN DE MESAS (CRUD) ---
 router.post('/crear', requirePermission('mesas.gestionar'), BaseRequest.validate(StoreMesaRequest), Management.store);

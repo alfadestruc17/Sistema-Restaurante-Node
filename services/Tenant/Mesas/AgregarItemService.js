@@ -1,8 +1,9 @@
 const db = require('../../../config/database');
 const InventarioService = require('../InventarioService');
+const ModificadorService = require('../ModificadorService');
 
 class AgregarItemService {
-    static async execute({ tenantId, pedidoId, producto_id, cantidad, unidad, precio, nota }) {
+    static async execute({ tenantId, pedidoId, producto_id, cantidad, unidad, precio, nota, modificadores_seleccion }) {
         if (!producto_id || cantidad === null || cantidad === undefined || precio === null || precio === undefined) {
             throw new Error('producto_id, cantidad y precio son requeridos');
         }
@@ -38,14 +39,45 @@ class AgregarItemService {
             console.warn('[Inventario] Vendiendo sin stock suficiente: ' + msg);
         }
 
-        const subtotal = Number(cantidad) * Number(precio);
+        // Precio de toppings/modificadores: el catálogo en BD es la fuente de verdad,
+        // nunca el precio que calculó el frontend.
+        const { precioAdicionalTotal, lineasSnapshot, modificadoresHash } =
+            await ModificadorService.validarYCalcularSeleccion(tenantId, realProductId, modificadores_seleccion || []);
+        const precioFinal = Number(precio) + precioAdicionalTotal;
+        const subtotal = Number(cantidad) * precioFinal;
         const mesaId = pedidoRow.mesa_id;
 
         const [result] = await db.query(
-            `INSERT INTO pedido_items (tenant_id, pedido_id, producto_id, cantidad, unidad_medida, precio_unitario, subtotal, estado, nota)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?)`,
-            [tenantId, pedidoId, realProductId, cantidad, unidad || 'UND', precio, subtotal, nota || null]
+            `INSERT INTO pedido_items (tenant_id, pedido_id, producto_id, cantidad, unidad_medida, precio_unitario, subtotal, estado, nota, modificadores_hash)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'pendiente', ?, ?)`,
+            [
+                tenantId,
+                pedidoId,
+                realProductId,
+                cantidad,
+                unidad || 'UND',
+                precioFinal,
+                subtotal,
+                nota || null,
+                modificadoresHash
+            ]
         );
+
+        if (lineasSnapshot.length > 0) {
+            const pedidoItemId = result.insertId;
+            const modificadoresValues = lineasSnapshot.map(m => [
+                pedidoItemId,
+                m.opcion_modificador_id,
+                m.grupo_nombre,
+                m.opcion_nombre,
+                m.precio_adicional,
+                m.cantidad || 1
+            ]);
+            await db.query(
+                'INSERT INTO pedido_item_modificadores (pedido_item_id, opcion_modificador_id, grupo_nombre, opcion_nombre, precio_adicional, cantidad) VALUES ?',
+                [modificadoresValues]
+            );
+        }
 
         if (mesaId) {
             await db.query("UPDATE mesas SET estado = 'ocupada' WHERE id = ? AND tenant_id = ?", [mesaId, tenantId]);

@@ -634,4 +634,13 @@ body {
 
 .pill-libre { background: #dcfce7; color: #166534; }
 .pill-ocupada { background: #fecaca; color: #991b1b; }
-.pill-reservada { background: #fef3c7; color: #92400e; }
+.pill-reservada { background: #fef3c7; color: #92400e; }
+
+/* Selección de toppings/modificadores al agregar un producto */
+.pos-mod-opcion {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 8px;
+    margin-bottom: 6px; cursor: pointer; font-size: 14px;
+}
+.pos-mod-opcion:hover { background: #f8f9fa; }
+.pedido-item-mods { font-size: 11.5px; color: #b45309; margin-top: 1px; }

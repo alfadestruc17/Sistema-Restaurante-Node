@@ -2,6 +2,7 @@ const db = require('../../../../../config/database');
 const CategoryService = require('../../../../../services/Admin/CategoryService');
 const ProductRepository = require('../../../../../repositories/Tenant/ProductRepository');
 const CajaService = require('../../../../../services/Tenant/CajaService');
+const ModificadorService = require('../../../../../services/Tenant/ModificadorService');
 
 class MesaDashboardController {
     // GET /mesas
@@ -75,6 +76,18 @@ class MesaDashboardController {
         } catch (error) {
             console.error('Error al listar mesas:', error);
             res.status(500).json({ error: 'Error al listar mesas' });
+        }
+    }
+
+    // GET /mesas/productos/:id/modificadores
+    static async getModificadoresProducto(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            const grupos = await ModificadorService.getGruposParaProducto(req.params.id, tenantId);
+            res.json(grupos || []);
+        } catch (error) {
+            console.error('Error al obtener modificadores del producto:', error);
+            res.status(500).json({ error: 'Error al obtener modificadores del producto' });
         }
     }
 }

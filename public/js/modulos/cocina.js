@@ -87,6 +87,11 @@ $(function () {
                                 <strong>Instrucciones Especiales:</strong>
                                 <span>${it.nota}</span>
                             </div>` : ''}
+                            ${it.modificadores && it.modificadores.length ? `
+                            <div class="nota-especial">
+                                <strong>Toppings:</strong>
+                                <span>${it.modificadores.map(m => m.opcion_nombre).join(', ')}</span>
+                            </div>` : ''}
                             <div class="small text-muted">
                                 <i class="bi bi-clock"></i> ${new Date(it.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                                 ${it.enviado_at ? ` • Enviado: ${new Date(it.enviado_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ''}
@@ -212,11 +217,18 @@ $(function () {
             pData.total += Number(it.cantidad);
             pData.unidades.add(it.unidad_medida || 'UND');
 
-            const notaKey = it.nota || '';
-            if (!pData.variaciones.has(notaKey)) {
-                pData.variaciones.set(notaKey, { total: 0, enviado: 0, preparando: 0 });
+            // La clave de variación combina nota + toppings elegidos: dos líneas del mismo
+            // producto con distinta nota o distintos toppings no deben agruparse/marcarse juntas.
+            const modsTexto = (it.modificadores && it.modificadores.length)
+                ? it.modificadores.map(m => m.opcion_nombre).join(', ') : '';
+            const varKey = (it.nota || '') + '||' + (it.modificadores_hash || '');
+            if (!pData.variaciones.has(varKey)) {
+                pData.variaciones.set(varKey, {
+                    total: 0, enviado: 0, preparando: 0,
+                    nota: it.nota || '', modificadoresHash: it.modificadores_hash || '', modsTexto
+                });
             }
-            const vData = pData.variaciones.get(notaKey);
+            const vData = pData.variaciones.get(varKey);
             vData.total += Number(it.cantidad);
             if (it.estado === 'enviado') vData.enviado += Number(it.cantidad);
             if (it.estado === 'preparando') vData.preparando += Number(it.cantidad);
@@ -247,9 +259,9 @@ $(function () {
                             <div class="variaciones-list border-top pt-2">
             `;
 
-            pData.variaciones.forEach((vData, nota) => {
-                const label = nota || 'Estándar';
-                const isNota = !!nota;
+            pData.variaciones.forEach((vData) => {
+                const label = [vData.nota, vData.modsTexto].filter(Boolean).join(' · ') || 'Estándar';
+                const isNota = !!(vData.nota || vData.modsTexto);
 
                 html += `
                     <div class="mb-3 p-2 rounded ${isNota ? 'nota-resumen border border-warning' : 'bg-white border text-muted md-light'} shadow-none">
@@ -259,12 +271,13 @@ $(function () {
                             </span>
                             <span class="badge ${isNota ? 'bg-warning text-dark' : 'bg-secondary'} rounded-pill">${vData.total}</span>
                         </div>
-                        
+
                         <div class="d-flex flex-column flex-sm-row gap-1">
                         ${vData.enviado > 0 ? `
-                            <button class="btn btn-xs btn-primary flex-fill px-1 py-1 btn-preparar-lote" 
-                                data-nombre="${pNombre}" 
-                                data-nota="${nota}"
+                            <button class="btn btn-xs btn-primary flex-fill px-1 py-1 btn-preparar-lote"
+                                data-nombre="${pNombre}"
+                                data-nota="${vData.nota}"
+                                data-mods-hash="${vData.modificadoresHash}"
                                 data-estado="preparando"
                                 title="Iniciar preparación">
                                 <i class="bi bi-play-fill"></i> Iniciar (${vData.enviado})
@@ -272,9 +285,10 @@ $(function () {
                         ` : ''}
 
                         ${vData.preparando > 0 ? `
-                            <button class="btn btn-xs btn-success flex-fill px-1 py-1 btn-preparar-lote" 
-                                data-nombre="${pNombre}" 
-                                data-nota="${nota}"
+                            <button class="btn btn-xs btn-success flex-fill px-1 py-1 btn-preparar-lote"
+                                data-nombre="${pNombre}"
+                                data-nota="${vData.nota}"
+                                data-mods-hash="${vData.modificadoresHash}"
                                 data-estado="listo"
                                 title="Marcar todos como listos">
                                 <i class="bi bi-check-all"></i> Listo (${vData.preparando})
@@ -312,6 +326,7 @@ $(function () {
         const btn = $(this);
         const productoNombre = btn.data('nombre');
         const nota = btn.data('nota');
+        const modificadoresHash = btn.data('mods-hash') || null;
         const estado = btn.data('estado'); // nuevo: tomamos el estado del botón (preparando o listo)
 
         const oldHtml = btn.html();
@@ -324,7 +339,8 @@ $(function () {
                 body: JSON.stringify({
                     productoNombre,
                     nota,
-                    estado
+                    estado,
+                    modificadoresHash
                 })
             });
 
