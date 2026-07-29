@@ -66,6 +66,7 @@ class ProductManager {
     this.searchManager = null;
     this._costeoProductoId = null;
     this._costeoData = null;
+    this._modificadoresProductoId = null;
     this.init();
   }
 
@@ -135,6 +136,81 @@ class ProductManager {
       errorEl.textContent = err.message || 'No se pudo cargar el costeo.';
       errorEl.classList.remove('d-none');
       footerEl.classList.remove('d-none');
+    }
+  }
+
+  async showModificadoresModal(productoId) {
+    const modalEl = document.getElementById('productoModificadoresModal');
+    const loadingEl = document.getElementById('productoModificadoresLoading');
+    const contentEl = document.getElementById('productoModificadoresContent');
+    const errorEl = document.getElementById('productoModificadoresError');
+    const listaEl = document.getElementById('productoModificadoresLista');
+    const vacioEl = document.getElementById('productoModificadoresVacio');
+    if (!modalEl || !loadingEl || !contentEl) return;
+
+    loadingEl.classList.remove('d-none');
+    contentEl.classList.add('d-none');
+    errorEl.classList.add('d-none');
+    errorEl.textContent = '';
+    this._modificadoresProductoId = productoId;
+
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+
+    try {
+      const [grupos, asignados] = await Promise.all([
+        fetch('/modificadores/api/grupos', { credentials: 'same-origin' }).then(r => r.json()),
+        fetch(`/modificadores/api/productos/${productoId}/grupos`, { credentials: 'same-origin' }).then(r => r.json())
+      ]);
+      const asignadosSet = new Set(asignados || []);
+
+      listaEl.innerHTML = '';
+      if (!grupos || grupos.length === 0) {
+        vacioEl.classList.remove('d-none');
+      } else {
+        vacioEl.classList.add('d-none');
+        grupos.forEach(g => {
+          const label = document.createElement('label');
+          label.className = 'list-group-item d-flex align-items-start gap-2';
+          label.innerHTML = `
+            <input class="form-check-input mt-1 producto-grupo-modificador-cb" type="checkbox" value="${g.id}" ${asignadosSet.has(g.id) ? 'checked' : ''}>
+            <span>
+              <strong>${g.nombre}</strong>
+              <span class="badge bg-light text-dark ms-1">${g.tipo_seleccion === 'multiple' ? 'Múltiple' : 'Única'}</span>
+              ${g.obligatorio ? '<span class="badge bg-warning text-dark ms-1">Obligatorio</span>' : ''}
+              <br><small class="text-muted">${(g.opciones || []).map(o => o.nombre).join(', ') || 'Sin opciones'}</small>
+            </span>`;
+          listaEl.appendChild(label);
+        });
+      }
+      loadingEl.classList.add('d-none');
+      contentEl.classList.remove('d-none');
+    } catch (err) {
+      loadingEl.classList.add('d-none');
+      errorEl.textContent = err.message || 'No se pudieron cargar los grupos de modificadores.';
+      errorEl.classList.remove('d-none');
+    }
+  }
+
+  async guardarModificadoresProducto() {
+    const productoId = this._modificadoresProductoId;
+    if (!productoId) return;
+    const grupoIds = Array.from(document.querySelectorAll('.producto-grupo-modificador-cb:checked')).map(cb => Number.parseInt(cb.value, 10));
+    try {
+      const r = await fetch(`/modificadores/api/productos/${productoId}/grupos`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ grupo_ids: grupoIds })
+      });
+      if (!r.ok) {
+        const e = await r.json();
+        throw new Error(e.error || 'No se pudo guardar la asignación');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('productoModificadoresModal'))?.hide();
+      AlertManager.success('Modificadores actualizados');
+    } catch (error) {
+      AlertManager.error(error.message || 'Error al guardar modificadores');
     }
   }
 

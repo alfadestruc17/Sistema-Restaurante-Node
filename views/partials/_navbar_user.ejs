@@ -14,7 +14,19 @@
                 <li>
                     <hr class="dropdown-divider">
                 </li>
-                <% for (var _pi=0; _pi < plans.length; _pi++) { var _pl=plans[_pi]; %>
+                <% var _labelFor = function (slug) {
+                        return (typeof moduleLabels !== 'undefined' && moduleLabels && moduleLabels[slug]) || slug;
+                    };
+                    for (var _pi = 0; _pi < plans.length; _pi++) {
+                        var _pl = plans[_pi];
+                        var _prevPl = _pi > 0 ? plans[_pi - 1] : null;
+                        var _prevSet = _prevPl ? new Set(_prevPl.caracteristicas || []) : null;
+                        var _extra = _prevPl
+                            ? (_pl.caracteristicas || []).filter(function (s) { return !_prevSet.has(s); })
+                            : [];
+                        var _isDiff = !!_prevPl && _extra.length > 0;
+                        var _items = _isDiff ? _extra : (_pl.caracteristicas || []);
+                %>
                     <li class="mb-2">
                         <div class="card border-0 shadow-sm">
                             <div class="card-body py-2 px-3">
@@ -24,16 +36,19 @@
                                 <% if ((tenant.plan && tenant.plan.id===_pl.id) || (tenant.plan_id==_pl.id)) { %><span
                                         class="badge bg-success ms-1">Actual</span>
                                     <% } %>
-                                        <ul class="list-unstyled small mb-0 mt-1 text-muted"
-                                            style="max-height:140px;overflow-y:auto;">
-                                            <% for (var _ci=0; _ci < (_pl.caracteristicas || []).length; _ci++) { %>
-                                                <li><i class="bi bi-check text-success"></i>
-                                                    <%= (typeof moduleLabels !=='undefined' && moduleLabels &&
-                                                        moduleLabels[_pl.caracteristicas[_ci]]) ||
-                                                        _pl.caracteristicas[_ci] %>
-                                                </li>
-                                                <% } %>
-                                        </ul>
+                                        <% if (_isDiff) { %>
+                                            <div class="small fw-bold text-muted mt-1">Todo lo de
+                                                <%= _prevPl.nombre %>, más:
+                                            </div>
+                                            <% } %>
+                                                <ul class="list-unstyled small mb-0 mt-1 text-muted"
+                                                    style="max-height:140px;overflow-y:auto;">
+                                                    <% for (var _ci=0; _ci < _items.length; _ci++) { %>
+                                                        <li><i class="bi bi-check text-success"></i>
+                                                            <%= _labelFor(_items[_ci]) %>
+                                                        </li>
+                                                        <% } %>
+                                                </ul>
                             </div>
                         </div>
                     </li>

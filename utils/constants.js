@@ -58,6 +58,9 @@ const PERMISSIONS = {
     // Recetas (vinculadas a productos)
     RECETAS_VER: 'recetas.ver',
     RECETAS_EDITAR: 'recetas.editar',
+    // Modificadores/Toppings (vinculados a productos)
+    MODIFICADORES_VER: 'modificadores.ver',
+    MODIFICADORES_EDITAR: 'modificadores.editar',
     // Plantillas Excel (descargas, exportaciones)
     PLANTILLAS_VER: 'plantillas.ver',
 
@@ -88,6 +91,7 @@ const PERMISSION_SECTIONS = {
     Costeo: ['costeo.ver', 'costeo.editar'],
     Inventario: ['inventario.ver', 'inventario.editar'],
     Recetas: ['recetas.ver', 'recetas.editar'],
+    Modificadores: ['modificadores.ver', 'modificadores.editar'],
     Usuarios: ['usuarios.ver', 'usuarios.gestionar'],
     Plantillas: ['plantillas.ver'],
     Eventos: ['eventos.ver', 'eventos.crear', 'eventos.editar', 'eventos.eliminar', 'ventas_evento.realizar'],

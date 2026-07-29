@@ -48,6 +48,7 @@ module.exports = function navbarLocals(req, res, next) {
                 clientes: hp('clientes.ver') && cs('clientes'),
                 inventario: hp('inventario.ver') && cs('inventario'),
                 recetas: hp('recetas.ver') && cs('recetas'),
+                modificadores: hp('modificadores.ver') && cs('productos'),
                 eventos: hp('eventos.ver') && cs('eventos'),
                 analitica: hp('analitica.ver') && cs('analitica'),
                 configuracion: hp('configuracion.ver') && cs('configuracion'),
@@ -62,7 +63,13 @@ module.exports = function navbarLocals(req, res, next) {
             };
 
             const hasMas =
-                can.recetas || can.eventos || can.analitica || can.whatsapp || can.proveedores || can.servicios;
+                can.recetas ||
+                can.modificadores ||
+                can.eventos ||
+                can.analitica ||
+                can.whatsapp ||
+                can.proveedores ||
+                can.servicios;
 
             let primaryColor = '#6366f1';
             let bgStart = '#1e3a5f';

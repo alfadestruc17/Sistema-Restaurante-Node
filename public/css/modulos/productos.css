@@ -328,6 +328,25 @@ body {
     background: #dbeafe;
 }
 
+.btn-premium-modificadores {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid #fde8c8;
+    background: #fff8ec;
+    color: #b45309;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.btn-premium-modificadores:hover {
+    background: #fde8c8;
+}
+
 /* Category Badge chip */
 .category-badge-chip {
     display: inline-flex;

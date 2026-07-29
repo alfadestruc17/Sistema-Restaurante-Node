@@ -15,6 +15,7 @@ class TableManager {
             onEdit: config.onEdit,
             onDelete: config.onDelete,
             onCosteo: config.onCosteo,
+            onModificadores: config.onModificadores,
             deleteConfirmMessage: config.deleteConfirmMessage || '¿Está seguro de que desea eliminar este elemento?',
             ...config
         };
@@ -57,6 +58,8 @@ class TableManager {
                     await this.config.onDelete(id);
                 } else if (action === 'costeo' && this.config.onCosteo) {
                     await this.config.onCosteo(id);
+                } else if (action === 'modificadores' && this.config.onModificadores) {
+                    await this.config.onModificadores(id);
                 }
             } finally {
                 // Restaurar si el botón sigue en el DOM

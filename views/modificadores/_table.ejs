@@ -1,0 +1,113 @@
+<!-- Vista tabla (desktop) -->
+<div class="card d-none d-md-block">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="tablaGrupos">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Selección</th>
+                        <th>Obligatorio</th>
+                        <th>Opciones</th>
+                        <th>Activo</th>
+                        <% if (user && user.permisos && user.permisos.includes('modificadores.editar')) { %>
+                            <th class="text-center">Acciones</th>
+                            <% } %>
+                    </tr>
+                </thead>
+                <tbody id="tbodyGrupos">
+                    <% (grupos || []).forEach(function(g) { %>
+                        <tr class="fila-grupo">
+                            <td data-field="nombre">
+                                <%= g.nombre %>
+                                <% if (g.descripcion) { %>
+                                    <br><small class="text-muted"><%= g.descripcion %></small>
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    <%= g.tipo_seleccion==='multiple' ? 'Múltiple' : 'Única' %>
+                                </span>
+                            </td>
+                            <td>
+                                <% if (g.obligatorio) { %>
+                                    <span class="badge bg-warning text-dark">Obligatorio</span>
+                                <% } else { %>
+                                    <span class="badge bg-light text-dark">Opcional</span>
+                                <% } %>
+                            </td>
+                            <td><small>
+                                    <%= (g.opciones && g.opciones.length) ? g.opciones.map(o=> o.nombre + (o.precio_adicional > 0 ? ' (+$' + Number(o.precio_adicional).toLocaleString('es-CO') + ')' : '')).join(', ') : '-' %>
+                                </small></td>
+                            <td>
+                                <% if (g.activo) { %>
+                                    <span class="badge bg-success">Sí</span>
+                                <% } else { %>
+                                    <span class="badge bg-secondary">No</span>
+                                <% } %>
+                            </td>
+                            <% if (user && user.permisos && user.permisos.includes('modificadores.editar')) { %>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex flex-nowrap justify-content-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-editar-grupo"
+                                            data-id="<%= g.id %>">Editar</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-grupo"
+                                            data-id="<%= g.id %>" data-nombre="<%= g.nombre %>">Eliminar</button>
+                                    </div>
+                                </td>
+                                <% } %>
+                        </tr>
+                        <% }); %>
+                            <% if (!grupos || grupos.length===0) { %>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">No hay grupos de modificadores.
+                                        Crea uno y asígnalo a un producto desde su ficha.</td>
+                                </tr>
+                                <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Vista tarjetas (móvil) -->
+<div class="d-block d-md-none mt-3" id="listaGruposMobile">
+    <% (grupos || []).forEach(function(g) { %>
+        <div class="grupo-card grupo-card-item" data-nombre="<%= (g.nombre || '').toLowerCase() %>">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="titulo">
+                        <%= g.nombre %>
+                    </div>
+                    <% if (g.descripcion) { %>
+                        <div class="text-muted small"><%= g.descripcion %></div>
+                    <% } %>
+                </div>
+                <span class="badge bg-light text-dark">
+                    <%= g.tipo_seleccion==='multiple' ? 'Múltiple' : 'Única' %>
+                </span>
+            </div>
+            <div class="opciones mt-2">
+                <span class="text-muted small d-block mb-1">Opciones:</span>
+                <span>
+                    <%= (g.opciones && g.opciones.length) ? g.opciones.map(o=> o.nombre).join(', ') : '-' %>
+                </span>
+            </div>
+            <% if (user && user.permisos && user.permisos.includes('modificadores.editar')) { %>
+                <div class="mt-2 d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-fill btn-editar-grupo"
+                        data-id="<%= g.id %>">
+                        <i class="bi bi-pencil"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger flex-fill btn-eliminar-grupo"
+                        data-id="<%= g.id %>" data-nombre="<%= g.nombre %>">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+                <% } %>
+        </div>
+        <% }); %>
+            <% if (!grupos || grupos.length===0) { %>
+                <div class="text-center text-muted py-4">No hay grupos de modificadores.</div>
+                <% } %>
+</div>

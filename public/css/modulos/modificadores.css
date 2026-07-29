@@ -1,0 +1,28 @@
+/* ========================================
+   modificadores.css
+   ======================================== */
+
+body { background: #f8f9fa; }
+.card { border: none; box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05); }
+.grupo-card {
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+    margin-bottom: 0.75rem;
+}
+.grupo-card .titulo {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+.grupo-card .opciones {
+    font-size: 0.8rem;
+}
+.search-box {
+    max-width: 320px;
+}
+#tablaGrupos th:last-child,
+#tablaGrupos td:last-child {
+    min-width: 140px;
+    white-space: nowrap;
+}

@@ -1,0 +1,35 @@
+<!-- Modal Asignación de Modificadores/Toppings -->
+<div class="modal fade" id="productoModificadoresModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-list-check me-2"></i>
+                    Modificadores / Toppings del producto
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="productoModificadoresBody">
+                <div class="text-center py-3" id="productoModificadoresLoading">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2 mb-0 small text-muted">Cargando grupos...</p>
+                </div>
+                <div id="productoModificadoresContent" class="d-none">
+                    <p class="text-muted small">Selecciona los grupos de modificadores que aplican a este producto.
+                        Se mostrarán en ese orden al agregarlo en POS o Mesas.</p>
+                    <div id="productoModificadoresLista" class="list-group"></div>
+                    <div id="productoModificadoresVacio" class="text-muted small text-center py-3 d-none">
+                        No hay grupos de modificadores creados. <a href="/modificadores">Crea uno aquí</a>.
+                    </div>
+                </div>
+                <div id="productoModificadoresError" class="alert alert-warning d-none mb-0"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarProductoModificadores">
+                    <i class="bi bi-check-lg me-1"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

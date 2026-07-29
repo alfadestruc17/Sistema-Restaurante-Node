@@ -114,6 +114,8 @@
                                                                                                     <% if
                                                                                                         (nav.can.recetas
                                                                                                         ||
+                                                                                                        nav.can.modificadores
+                                                                                                        ||
                                                                                                         (nav.can.inventario
                                                                                                         &&
                                                                                                         (nav.can.proveedores
@@ -147,8 +149,17 @@
                                                                                                                     </li>
                                                                                                                     <% }
                                                                                                                         %>
-                                                                                                                        <% }
-                                                                                                                            %>
+                                                                                                                        <% if
+                                                                                                                            (nav.can.modificadores)
+                                                                                                                            { %>
+                                                                                                                            <li><a class="dropdown-item"
+                                                                                                                                    href="/modificadores"><i
+                                                                                                                                        class="bi bi-list-check text-warning"></i>Modificadores</a>
+                                                                                                                            </li>
+                                                                                                                            <% }
+                                                                                                                                %>
+                                                                                                                                <% }
+                                                                                                                                    %>
 
                                                                                                                             <% if
                                                                                                                                 (nav.can.proveedores)

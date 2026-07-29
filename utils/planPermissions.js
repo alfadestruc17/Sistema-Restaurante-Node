@@ -32,6 +32,8 @@ const PERMISSION_TO_MODULE = {
     'inventario.editar': 'inventario',
     'recetas.ver': 'recetas',
     'recetas.editar': 'recetas',
+    'modificadores.ver': 'productos',
+    'modificadores.editar': 'productos',
     'usuarios.ver': 'configuracion',
     'usuarios.gestionar': 'configuracion',
     'plantillas.ver': 'plantillas',

@@ -20,6 +20,7 @@ ProductManager.prototype.init = function() {
     onEdit: (id) => this.editProduct(id),
     onDelete: (id) => this.deleteProduct(id),
     onCosteo: (id) => this.showCosteoModal(id),
+    onModificadores: (id) => this.showModificadoresModal(id),
     deleteConfirmMessage: '¿Está seguro de eliminar este producto?'
   });
 
@@ -152,6 +153,12 @@ ProductManager.prototype.init = function() {
   const btnAplicar = document.getElementById('btnAplicarPrecioSugerido');
   if (btnAplicar) {
     btnAplicar.addEventListener('click', () => this.aplicarPrecioSugerido());
+  }
+
+  // Modal de modificadores/toppings: guardar asignación
+  const btnGuardarModificadores = document.getElementById('btnGuardarProductoModificadores');
+  if (btnGuardarModificadores) {
+    btnGuardarModificadores.addEventListener('click', () => this.guardarModificadoresProducto());
   }
 
   // Favoritos: toggle

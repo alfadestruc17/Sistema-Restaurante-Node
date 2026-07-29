@@ -45,6 +45,7 @@ const LandingSettingsService = require('../services/Admin/LandingSettingsService
 const eventosRoutes = require('./tenant/eventos');
 const inventarioRoutes = require('./tenant/inventario');
 const recetasRoutes = require('./tenant/recetas');
+const modificadoresRoutes = require('./tenant/modificadores');
 const perfilRoutes = require('./tenant/perfil');
 const whatsappRoutes = require('./tenant/whatsapp');
 const proveedoresRoutes = require('./tenant/proveedores');
@@ -120,6 +121,13 @@ router.use(
     proveedoresRoutes
 );
 router.use('/recetas', requireAuthWithTenant, requirePlanFeature('recetas'), recetasRoutes);
+router.use(
+    '/modificadores',
+    requireAuthWithTenant,
+    requirePlanFeature('productos'),
+    requirePermission('modificadores.ver'),
+    modificadoresRoutes
+);
 router.use('/dashboard', requireAuthWithTenant, requirePlanFeature('dashboard'), dashboardRoutes);
 router.use('/analitica', requireAuthWithTenant, requirePlanFeature('analitica'), analiticaRoutes);
 router.use(
