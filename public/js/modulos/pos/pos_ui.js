@@ -269,17 +269,19 @@ window.POS_UI = {
 
     renderBorradoresModal() {
         const tbody = document.getElementById('posBorradoresTbody');
-        if (!tbody) return;
+        const cards = document.getElementById('posBorradoresCards');
+        if (!tbody || !cards) return;
         const { borradores } = POS.state;
 
+        const vacioHtml = `<i class="bi bi-inbox me-2"></i>No hay órdenes guardadas`;
         if (!borradores.length) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">
-                <i class="bi bi-inbox me-2"></i>No hay órdenes guardadas
-            </td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">${vacioHtml}</td></tr>`;
+            cards.innerHTML = `<div class="text-center text-muted py-4">${vacioHtml}</div>`;
             return;
         }
 
         POS_UI._borradoresCache = borradores;
+
         tbody.innerHTML = borradores.map((b, idx) => {
             const n = b.items.length;
             const total = money(b.total || 0);
@@ -300,14 +302,37 @@ window.POS_UI = {
             </tr>`;
         }).join('');
 
-        tbody.querySelectorAll('[data-bor-idx]').forEach(btn => {
+        cards.innerHTML = borradores.map((b, idx) => {
+            const n = b.items.length;
+            const total = money(b.total || 0);
+            const hora = new Date(b.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+            return `<div class="pos-borrador-card">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="pos-borrador-card-info">
+                        <div class="fw-semibold">${b.nombre_cliente || 'Consumidor final'}</div>
+                        <div class="text-muted small">${hora} · ${n} ítem${n !== 1 ? 's' : ''}</div>
+                    </div>
+                    <span class="fw-bold text-nowrap">${total}</span>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-primary flex-fill" data-bor-idx="${idx}">
+                        <i class="bi bi-arrow-up-circle me-1"></i>Cargar
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" data-bor-del="${b.id}">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+
+        document.querySelectorAll('#posBorradoresModal [data-bor-idx]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const b = POS_UI._borradoresCache[Number.parseInt(btn.dataset.borIdx)];
                 if (b) POS.cargarBorrador(b);
             });
         });
 
-        tbody.querySelectorAll('[data-bor-del]').forEach(btn => {
+        document.querySelectorAll('#posBorradoresModal [data-bor-del]').forEach(btn => {
             btn.addEventListener('click', () => POS_UI._eliminarBorrador(Number.parseInt(btn.dataset.borDel), btn));
         });
     },
