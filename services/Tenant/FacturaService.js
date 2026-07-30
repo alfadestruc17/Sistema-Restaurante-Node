@@ -15,7 +15,7 @@ class FacturaService {
      * @returns {Promise<Object>} Created invoice result
      */
     static async create(tenantId, facturaData) {
-        const { cliente_id, total, forma_pago, productos, evento_id } = facturaData;
+        const { cliente_id, total, forma_pago, productos, evento_id, puedeUsarModificadores = true } = facturaData;
 
         if (!cliente_id || !productos || productos.length === 0) {
             throw new Error('Datos incompletos');
@@ -42,7 +42,8 @@ class FacturaService {
                     const { precioAdicionalTotal, lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
                         tenantId,
                         p.producto_id,
-                        p.modificadores_seleccion || []
+                        p.modificadores_seleccion || [],
+                        { permitido: puedeUsarModificadores }
                     );
                     if (precioAdicionalTotal > 0) {
                         p.precio = (parseFloat(p.precio) || 0) + precioAdicionalTotal;

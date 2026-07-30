@@ -158,4 +158,17 @@ describe('ModificadorService.validarYCalcularSeleccion', () => {
         expect(resultado.lineasSnapshot).toEqual([]);
         expect(resultado.modificadoresHash).toBeNull();
     });
+
+    it('con permitido=false ignora el catálogo por completo (ni exige el obligatorio ni cobra el adicional)', async () => {
+        ModificadorRepository.findGruposByProductoId.mockResolvedValue([grupoObligatorioUnico]);
+
+        const resultado = await ModificadorService.validarYCalcularSeleccion(tenantId, productoId, [], {
+            permitido: false
+        });
+
+        expect(resultado.precioAdicionalTotal).toBe(0);
+        expect(resultado.lineasSnapshot).toEqual([]);
+        expect(resultado.modificadoresHash).toBeNull();
+        expect(ModificadorRepository.findGruposByProductoId).not.toHaveBeenCalled();
+    });
 });

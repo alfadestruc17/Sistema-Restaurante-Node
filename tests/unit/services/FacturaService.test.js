@@ -123,7 +123,8 @@ describe('FacturaService', () => {
                 expect(ModificadorService.validarYCalcularSeleccion).toHaveBeenCalledWith(
                     tenantId,
                     1,
-                    productoConModificador.modificadores_seleccion
+                    productoConModificador.modificadores_seleccion,
+                    { permitido: true }
                 );
                 // 10000 (base) + 5000 (adicional del catálogo) = 15000 por unidad; subtotal = 15000 * 2
                 expect(productoConModificador.precio).toBe(15000);
@@ -159,6 +160,21 @@ describe('FacturaService', () => {
                     FacturaService.create(tenantId, { ...facturaValida, productos: [productoConModificador] })
                 ).rejects.toThrow('Debes elegir al menos 1 opción');
                 expect(FacturaRepository.createWithDetails).not.toHaveBeenCalled();
+            });
+
+            it('pasa permitido=false a validarYCalcularSeleccion cuando el usuario no tiene modificadores.ver (no debe poder quedar bloqueado por un grupo obligatorio que nunca vio)', async () => {
+                FacturaRepository.createWithDetails.mockResolvedValue({ insertId: 1 });
+                const producto = { producto_id: 1, cantidad: 1, precio: 10000, subtotal: 10000 };
+
+                await FacturaService.create(tenantId, {
+                    ...facturaValida,
+                    productos: [producto],
+                    puedeUsarModificadores: false
+                });
+
+                expect(ModificadorService.validarYCalcularSeleccion).toHaveBeenCalledWith(tenantId, 1, [], {
+                    permitido: false
+                });
             });
         });
     });

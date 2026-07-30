@@ -3,7 +3,17 @@ const InventarioService = require('../InventarioService');
 const ModificadorService = require('../ModificadorService');
 
 class AgregarItemService {
-    static async execute({ tenantId, pedidoId, producto_id, cantidad, unidad, precio, nota, modificadores_seleccion }) {
+    static async execute({
+        tenantId,
+        pedidoId,
+        producto_id,
+        cantidad,
+        unidad,
+        precio,
+        nota,
+        modificadores_seleccion,
+        puedeUsarModificadores = true
+    }) {
         if (!producto_id || cantidad === null || cantidad === undefined || precio === null || precio === undefined) {
             throw new Error('producto_id, cantidad y precio son requeridos');
         }
@@ -42,7 +52,9 @@ class AgregarItemService {
         // Precio de toppings/modificadores: el catálogo en BD es la fuente de verdad,
         // nunca el precio que calculó el frontend.
         const { precioAdicionalTotal, lineasSnapshot, modificadoresHash } =
-            await ModificadorService.validarYCalcularSeleccion(tenantId, realProductId, modificadores_seleccion || []);
+            await ModificadorService.validarYCalcularSeleccion(tenantId, realProductId, modificadores_seleccion || [], {
+                permitido: puedeUsarModificadores
+            });
         const precioFinal = Number(precio) + precioAdicionalTotal;
         const subtotal = Number(cantidad) * precioFinal;
         const mesaId = pedidoRow.mesa_id;

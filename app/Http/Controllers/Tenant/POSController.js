@@ -2,6 +2,7 @@ const POSService = require('../../../../services/Tenant/POSService');
 const FacturaService = require('../../../../services/Tenant/FacturaService');
 const CajaService = require('../../../../services/Tenant/CajaService');
 const ModificadorService = require('../../../../services/Tenant/ModificadorService');
+const AuthService = require('../../../../services/Shared/AuthService');
 const logger = require('../../../../utils/logger');
 
 class POSController {
@@ -99,6 +100,12 @@ class POSController {
     static async getModificadoresProducto(req, res) {
         try {
             const tenantId = req.tenant?.id;
+            // Si al usuario le quitaron el permiso de modificadores, no debe ver ni poder
+            // elegir toppings al vender (aunque el producto sí los tenga configurados):
+            // se responde como si el producto no tuviera grupos, sin abrir el modal.
+            if (!AuthService.hasPermission(req.user?.permisos, 'modificadores.ver')) {
+                return res.json([]);
+            }
             const grupos = await ModificadorService.getGruposParaProducto(req.params.id, tenantId);
             res.json(grupos || []);
         } catch (err) {
@@ -118,12 +125,14 @@ class POSController {
                 cliente_id = await POSService.findOrCreateCliente(tenantId, nombre);
             }
 
+            const puedeUsarModificadores = AuthService.hasPermission(req.user?.permisos, 'modificadores.ver');
             const result = await FacturaService.create(tenantId, {
                 cliente_id,
                 total,
                 forma_pago,
                 productos,
-                usuario_id: req.user.id
+                usuario_id: req.user.id,
+                puedeUsarModificadores
             });
             res.status(201).json(result);
         } catch (err) {

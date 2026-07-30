@@ -120,9 +120,17 @@ class ModificadorService {
      * @param {number} tenantId
      * @param {number} productoId
      * @param {Array<{grupo_id:number, opciones:number[]}>} seleccion
+     * @param {{permitido?: boolean}} [opciones] - permitido=false si el usuario no tiene el
+     *   permiso modificadores.ver: el producto se trata como si no tuviera grupos configurados
+     *   (no se exige nada, no suma precio), en vez de rechazar la venta por un obligatorio
+     *   que el usuario nunca pudo ver ni completar.
      * @returns {{precioAdicionalTotal:number, lineasSnapshot:Array, modificadoresHash:string}}
      */
-    static async validarYCalcularSeleccion(tenantId, productoId, seleccion) {
+    static async validarYCalcularSeleccion(tenantId, productoId, seleccion, { permitido = true } = {}) {
+        if (!permitido) {
+            return { precioAdicionalTotal: 0, lineasSnapshot: [], modificadoresHash: null };
+        }
+
         const gruposProducto = await ModificadorRepository.findGruposByProductoId(productoId, tenantId);
 
         if ((!seleccion || seleccion.length === 0) && gruposProducto.length === 0) {

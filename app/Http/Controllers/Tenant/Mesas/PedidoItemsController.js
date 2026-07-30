@@ -5,6 +5,7 @@ const UpdateItemCantidadService = require('../../../../../services/Tenant/Mesas/
 const UpdateItemEstadoService = require('../../../../../services/Tenant/Mesas/UpdateItemEstadoService');
 const PagarItemIndividualService = require('../../../../../services/Tenant/Mesas/PagarItemIndividualService');
 const PagarMultiplesItemsService = require('../../../../../services/Tenant/Mesas/PagarMultiplesItemsService');
+const AuthService = require('../../../../../services/Shared/AuthService');
 
 class PedidoItemsController {
     // POST /mesas/pedidos/:pedidoId/items
@@ -13,6 +14,7 @@ class PedidoItemsController {
             const tenantId = req.tenant?.id;
             const { pedidoId } = req.params;
             const { producto_id, cantidad, unidad, precio, nota, modificadores_seleccion } = req.body;
+            const puedeUsarModificadores = AuthService.hasPermission(req.user?.permisos, 'modificadores.ver');
             const resultado = await AgregarItemService.execute({
                 tenantId,
                 pedidoId,
@@ -21,7 +23,8 @@ class PedidoItemsController {
                 unidad,
                 precio,
                 nota,
-                modificadores_seleccion
+                modificadores_seleccion,
+                puedeUsarModificadores
             });
             return res.status(201).json(resultado);
         } catch (error) {

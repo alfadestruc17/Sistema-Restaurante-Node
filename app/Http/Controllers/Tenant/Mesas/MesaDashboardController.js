@@ -3,6 +3,7 @@ const CategoryService = require('../../../../../services/Admin/CategoryService')
 const ProductRepository = require('../../../../../repositories/Tenant/ProductRepository');
 const CajaService = require('../../../../../services/Tenant/CajaService');
 const ModificadorService = require('../../../../../services/Tenant/ModificadorService');
+const AuthService = require('../../../../../services/Shared/AuthService');
 
 class MesaDashboardController {
     // GET /mesas
@@ -83,6 +84,12 @@ class MesaDashboardController {
     static async getModificadoresProducto(req, res) {
         try {
             const tenantId = req.tenant?.id;
+            // Si al usuario le quitaron el permiso de modificadores, no debe ver ni poder
+            // elegir toppings al vender (aunque el producto sí los tenga configurados):
+            // se responde como si el producto no tuviera grupos, sin abrir el modal.
+            if (!AuthService.hasPermission(req.user?.permisos, 'modificadores.ver')) {
+                return res.json([]);
+            }
             const grupos = await ModificadorService.getGruposParaProducto(req.params.id, tenantId);
             res.json(grupos || []);
         } catch (error) {
