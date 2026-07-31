@@ -36,7 +36,7 @@ app.use(idempotency);
 // Route specifically for sitemap.xml
 app.get('/sitemap.xml', (req, res) => {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host || 'gatroflow.digital';
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'gastroflow.digital';
     const domain = `${protocol}://${host}`;
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

@@ -1,29 +1,4 @@
-User-agent: Googlebot
-Disallow: /
-
-User-agent: Googlebot-Image
-Disallow: /
-
-User-agent: Googlebot-Mobile
-Disallow: /
-
-User-agent: Googlebot-News
-Disallow: /
-
-User-agent: Googlebot-Video
-Disallow: /
-
-User-agent: AdsBot-Google
-Disallow: /
-
-User-agent: AdsBot-Google-Mobile
-Disallow: /
-
-User-agent: Mediapartners-Google
-Disallow: /
-
-# Permitir otros buscadores
 User-agent: *
 Allow: /
 
-Sitemap: https://gatroflow.digital/sitemap.xml
+Sitemap: https://gastroflow.digital/sitemap.xml
