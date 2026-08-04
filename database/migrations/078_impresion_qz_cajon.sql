@@ -2,6 +2,8 @@
 -- Soporte de impresión térmica (QZ Tray) y apertura de cajón físico por tenant.
 -- imprimir_auto y abrir_cajon_auto son toggles independientes: un tenant puede
 -- querer solo el cajón sin impresión automática, o viceversa.
+-- cajon_comando_hex es un override avanzado; si es NULL se usa el estándar
+-- ESC/POS 1B 70 00 19 FA (ver public/js/modulos/pos/pos_qz.js).
 
 USE restaurante;
 
@@ -10,4 +12,4 @@ ALTER TABLE configuracion_impresion
     ADD COLUMN impresora_nombre  VARCHAR(150) NULL     DEFAULT NULL,
     ADD COLUMN imprimir_auto     TINYINT(1)   NOT NULL DEFAULT 1,
     ADD COLUMN abrir_cajon_auto  TINYINT(1)   NOT NULL DEFAULT 1,
-    ADD COLUMN cajon_comando_hex VARCHAR(60)  NULL     DEFAULT NULL COMMENT 'Override avanzado; si es NULL se usa el estándar ESC/POS 1B 70 00 19 FA';
+    ADD COLUMN cajon_comando_hex VARCHAR(60)  NULL     DEFAULT NULL;
