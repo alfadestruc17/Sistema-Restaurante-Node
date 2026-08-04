@@ -44,8 +44,21 @@ class ConfiguracionController {
     }
 
     // GET /configuracion/impresoras
+    // Devuelve la configuración de impresora/QZ Tray del tenant (no un listado de
+    // impresoras del sistema: la detección de impresoras físicas solo puede hacerse
+    // del lado del navegador, en la PC donde corre QZ Tray, vía qz.printers.find()).
     static async getPrinters(req, res) {
-        res.json([]);
+        try {
+            const tenantId = req.tenant?.id;
+            if (!tenantId) {
+                return res.status(403).json({ error: 'Contexto de tenant no disponible' });
+            }
+            const printer = await ConfiguracionService.getPrinterConfig(tenantId);
+            res.json(printer);
+        } catch (error) {
+            console.error('Error al obtener configuración de impresora:', error);
+            res.status(500).json({ error: 'Error al obtener configuración de impresora' });
+        }
     }
 
     // GET /configuracion/preview

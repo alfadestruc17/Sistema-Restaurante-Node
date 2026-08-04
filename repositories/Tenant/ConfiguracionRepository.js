@@ -13,7 +13,9 @@ class ConfiguracionRepository {
      * @returns {Promise<Object|null>} Configuration object or null
      */
     static async findOne(tenantId) {
-        const [config] = await db.query('SELECT * FROM configuracion_impresion WHERE tenant_id = ? LIMIT 1', [tenantId]);
+        const [config] = await db.query('SELECT * FROM configuracion_impresion WHERE tenant_id = ? LIMIT 1', [
+            tenantId
+        ]);
         return config[0] || null;
     }
 
@@ -23,12 +25,15 @@ class ConfiguracionRepository {
      * @returns {Promise<Object>} Created configuration with insertId
      */
     static async createInitial(tenantId) {
-        const [result] = await db.query(`
+        const [result] = await db.query(
+            `
             INSERT INTO configuracion_impresion 
             (tenant_id, nombre_negocio, direccion, telefono, pie_pagina) 
             VALUES 
             (?, 'Mi Negocio', 'Dirección del Negocio', 'Teléfono', '¡Gracias por su compra!')
-        `, [tenantId]);
+        `,
+            [tenantId]
+        );
         return result;
     }
 
@@ -40,15 +45,44 @@ class ConfiguracionRepository {
      */
     static async create(tenantId, configData) {
         const {
-            nombre_negocio, direccion, telefono, nit, pie_pagina,
-            ancho_papel, font_size, logo_data, logo_tipo, qr_data, qr_tipo
+            nombre_negocio,
+            direccion,
+            telefono,
+            nit,
+            pie_pagina,
+            ancho_papel,
+            font_size,
+            logo_data,
+            logo_tipo,
+            qr_data,
+            qr_tipo,
+            qz_habilitado,
+            impresora_nombre,
+            imprimir_auto,
+            abrir_cajon_auto,
+            cajon_comando_hex
         } = configData;
 
         let sql = `
-            INSERT INTO configuracion_impresion 
-            (tenant_id, nombre_negocio, direccion, telefono, nit, pie_pagina, ancho_papel, font_size
+            INSERT INTO configuracion_impresion
+            (tenant_id, nombre_negocio, direccion, telefono, nit, pie_pagina, ancho_papel, font_size,
+             qz_habilitado, impresora_nombre, imprimir_auto, abrir_cajon_auto, cajon_comando_hex
         `;
-        const values = [tenantId, nombre_negocio, direccion || null, telefono || null, nit || null, pie_pagina || null, ancho_papel || 80, font_size || 1];
+        const values = [
+            tenantId,
+            nombre_negocio,
+            direccion || null,
+            telefono || null,
+            nit || null,
+            pie_pagina || null,
+            ancho_papel || 80,
+            font_size || 1,
+            qz_habilitado ? 1 : 0,
+            impresora_nombre || null,
+            imprimir_auto ? 1 : 0,
+            abrir_cajon_auto ? 1 : 0,
+            cajon_comando_hex || null
+        ];
 
         if (logo_data) {
             sql += ', logo_data, logo_tipo';
@@ -73,16 +107,44 @@ class ConfiguracionRepository {
      */
     static async update(id, tenantId, configData) {
         const {
-            nombre_negocio, direccion, telefono, nit, pie_pagina,
-            ancho_papel, font_size, logo_data, logo_tipo, qr_data, qr_tipo
+            nombre_negocio,
+            direccion,
+            telefono,
+            nit,
+            pie_pagina,
+            ancho_papel,
+            font_size,
+            logo_data,
+            logo_tipo,
+            qr_data,
+            qr_tipo,
+            qz_habilitado,
+            impresora_nombre,
+            imprimir_auto,
+            abrir_cajon_auto,
+            cajon_comando_hex
         } = configData;
 
         let sql = `
-            UPDATE configuracion_impresion 
+            UPDATE configuracion_impresion
             SET nombre_negocio = ?, direccion = ?, telefono = ?, nit = ?,
-                pie_pagina = ?, ancho_papel = ?, font_size = ?
+                pie_pagina = ?, ancho_papel = ?, font_size = ?,
+                qz_habilitado = ?, impresora_nombre = ?, imprimir_auto = ?, abrir_cajon_auto = ?, cajon_comando_hex = ?
         `;
-        const values = [nombre_negocio, direccion || null, telefono || null, nit || null, pie_pagina || null, ancho_papel || 80, font_size || 1];
+        const values = [
+            nombre_negocio,
+            direccion || null,
+            telefono || null,
+            nit || null,
+            pie_pagina || null,
+            ancho_papel || 80,
+            font_size || 1,
+            qz_habilitado ? 1 : 0,
+            impresora_nombre || null,
+            imprimir_auto ? 1 : 0,
+            abrir_cajon_auto ? 1 : 0,
+            cajon_comando_hex || null
+        ];
 
         if (logo_data) {
             sql += ', logo_data = ?, logo_tipo = ?';
@@ -101,4 +163,3 @@ class ConfiguracionRepository {
 }
 
 module.exports = ConfiguracionRepository;
-

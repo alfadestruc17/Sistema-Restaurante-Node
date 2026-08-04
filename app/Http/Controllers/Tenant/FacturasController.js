@@ -83,6 +83,35 @@ class FacturasController {
         }
     }
 
+    // GET /facturas/:id/imprimir-json - Datos de la factura en JSON para impresión
+    // ESC/POS del lado del cliente (QZ Tray no puede recibir HTML renderizado).
+    static async imprimirJson(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            if (!tenantId) {
+                return res.status(403).json({ error: 'Contexto de tenant no disponible' });
+            }
+            const facturaId = parseInt(req.params.id);
+            const { factura, detalles } = await FacturaService.getByIdForPrint(facturaId, tenantId);
+
+            const config = await ConfiguracionService.getForPreview(tenantId);
+            const printer = await ConfiguracionService.getPrinterConfig(tenantId);
+            factura.fechaISO = toFechaISOUtc(factura.fecha);
+
+            res.json({ factura, detalles, config, tenant: req.tenant, printer });
+        } catch (error) {
+            console.error('Error al obtener datos de factura (JSON):', error);
+            if (
+                error.message === 'Factura no encontrada' ||
+                error.message.includes('detalles') ||
+                error.message.includes('configurado')
+            ) {
+                return res.status(404).json({ error: error.message });
+            }
+            return res.status(500).json({ error: 'Error al obtener datos de factura' });
+        }
+    }
+
     // GET /facturas/:id/detalles
     static async getDetalles(req, res) {
         try {

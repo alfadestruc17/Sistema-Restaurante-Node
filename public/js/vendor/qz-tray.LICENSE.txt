@@ -1,0 +1,8 @@
+qz-tray.js v2.2.4
+Source: https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js
+Project: https://qz.io
+License: LGPL-2.1-only
+
+Vendored locally (instead of loaded from a CDN) so it is served same-origin
+and does not require adding an external host to the Content-Security-Policy
+script-src directive.

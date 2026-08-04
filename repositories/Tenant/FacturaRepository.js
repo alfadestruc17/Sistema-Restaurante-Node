@@ -210,7 +210,7 @@ class FacturaRepository {
         const [facturas] = await db.query(
             `
             SELECT f.id, f.tenant_id, f.numero, f.cliente_id, f.total, f.forma_pago, f.propina, f.evento_id,
-                   f.subtotal, f.descuento, f.total_impuestos,
+                   f.subtotal, f.descuento, f.total_impuestos, f.monto_efectivo, f.monto_transferencia,
                    DATE_FORMAT(f.fecha, '%Y-%m-%d %H:%i:%s') AS fecha,
                    c.nombre AS cliente_nombre, c.direccion, c.telefono,
                    e.nombre AS evento_nombre

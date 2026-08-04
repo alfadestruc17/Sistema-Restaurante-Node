@@ -104,7 +104,9 @@ app.use((req, res, next) => {
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
         "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
-        "connect-src 'self' https://cdn.jsdelivr.net",
+        // wss/ws localhost: websocket local de QZ Tray (puente de impresión térmica
+        // y apertura de cajón — ver public/js/modulos/pos/pos_qz.js)
+        "connect-src 'self' https://cdn.jsdelivr.net wss://localhost:8181 wss://localhost:8282 ws://localhost:8182 ws://localhost:8283",
         "frame-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",

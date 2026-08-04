@@ -11,6 +11,9 @@ router.post('/', FacturasController.store);
 // GET /facturas/:id/imprimir - Vista de impresión
 router.get('/:id/imprimir', FacturasController.imprimir);
 
+// GET /facturas/:id/imprimir-json - Datos JSON para impresión ESC/POS (QZ Tray)
+router.get('/:id/imprimir-json', FacturasController.imprimirJson);
+
 // GET /facturas/:id/detalles - API: Detalles de factura
 router.get('/:id/detalles', FacturasController.getDetalles);
 

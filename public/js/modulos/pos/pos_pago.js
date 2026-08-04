@@ -111,7 +111,12 @@ window.POS_PAGO = {
 
             bootstrap.Modal.getInstance(document.getElementById('posPagoModal'))?.hide();
 
-            // Mostrar recibo en iframe
+            // Impresión térmica + apertura de cajón vía QZ Tray, best-effort:
+            // no se espera (no await) para no bloquear el resto del flujo si el
+            // tenant no tiene QZ Tray configurado o instalado.
+            POS_QZ.imprimirRecibo(result.id).catch(err => console.warn('QZ print falló', err));
+
+            // Mostrar recibo en iframe (respaldo manual, siempre disponible)
             document.getElementById('posReceiptFrame').src = `/facturas/${result.id}/imprimir`;
             new bootstrap.Modal(document.getElementById('posReceiptModal')).show();
 

@@ -311,6 +311,8 @@ window.POS = {
             new bootstrap.Modal(document.getElementById('posBorradoresModal')).show();
         });
 
+        document.getElementById('posBtnAbrirCajon')?.addEventListener('click', () => POS_QZ.abrirCajon());
+
         let clienteTimer;
         document.getElementById('posClienteInput')?.addEventListener('input', e => {
             const val = e.target.value.trim();

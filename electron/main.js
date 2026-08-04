@@ -46,6 +46,8 @@ const DEFAULT_SYNC_API_URL = 'https://gastroflow.digital';
 let mainWindow;
 let localDb;
 let appServer;
+let updateCheckInterval = null;
+let quitting = false;
 // Decidido en startBackend(): '/desktop/link' si este equipo todavía no se
 // vinculó con producción (sin sesión guardada); '/' si ya se vinculó antes.
 let initialPath = '/';
@@ -141,34 +143,92 @@ function createWindow() {
     });
 }
 
-function stopBackend() {
+// Actualizaciones silenciosas: se descargan solas y se instalan al cerrar el
+// programa con normalidad (autoInstallOnAppQuit), sin diálogos que interrumpan
+// al staff en medio de un turno. Deshabilitado en `electron:dev` (app.isPackaged
+// es false ahí) porque electron-updater necesita app-update.yml, que solo existe
+// en el build empaquetado.
+function setupAutoUpdater() {
+    if (!app.isPackaged) {
+        return;
+    }
+    try {
+        const { autoUpdater } = require('electron-updater');
+        autoUpdater.autoDownload = true;
+        autoUpdater.autoInstallOnAppQuit = true;
+
+        autoUpdater.on('checking-for-update', () => logToFile('autoUpdater: buscando actualizaciones'));
+        autoUpdater.on('update-available', info => logToFile(`autoUpdater: actualización disponible ${info.version}`));
+        autoUpdater.on('update-not-available', () => logToFile('autoUpdater: sin actualizaciones nuevas'));
+        autoUpdater.on('update-downloaded', info =>
+            logToFile(`autoUpdater: versión ${info.version} descargada, se instalará al cerrar la app`)
+        );
+        autoUpdater.on('error', err => logToFile(`autoUpdater: error - ${err.message}`));
+
+        const check = () =>
+            autoUpdater
+                .checkForUpdates()
+                .catch(err => logToFile(`autoUpdater: fallo al buscar actualización - ${err.message}`));
+
+        setTimeout(check, 10_000);
+        updateCheckInterval = setInterval(check, 4 * 60 * 60 * 1000);
+    } catch (err) {
+        logToFile(`No se pudo inicializar el auto-actualizador: ${err.message}`);
+    }
+}
+
+async function stopBackend() {
+    if (updateCheckInterval) {
+        clearInterval(updateCheckInterval);
+        updateCheckInterval = null;
+    }
     appServer?.stop();
-    localDb?.stop();
+    // Espera a que MariaDB realmente termine antes de dejar avanzar el quit,
+    // para que un instalador de auto-update no choque con archivos bloqueados.
+    await localDb?.stop();
+}
+
+// Único punto de salida de la app: antes de cerrar de verdad, detiene backend
+// + base de datos local. `before-quit` intercepta cualquier vía de cierre
+// (menú, Alt+F4, app.quit() programático, autoUpdater.quitAndInstall()) y la
+// hace pasar por acá una sola vez (guard `quitting`).
+async function quitApp() {
+    if (quitting) {
+        return;
+    }
+    quitting = true;
+    await stopBackend();
+    app.quit();
 }
 
 app.whenReady().then(async () => {
     try {
         await startBackend();
         createWindow();
+        setupAutoUpdater();
     } catch (err) {
         const detail = err.message.length > 1500 ? `${err.message.slice(0, 1500)}\n[...]` : err.message;
         dialog.showErrorBox(
             'Error al iniciar GastroFlow',
             `${detail}\n\nDetalle completo en: ${path.join(getUserDataDir(), 'electron-bootstrap.log')}`
         );
-        stopBackend();
-        app.quit();
+        quitApp();
     }
 });
 
 app.on('window-all-closed', () => {
-    stopBackend();
     if (process.platform !== 'darwin') {
-        app.quit();
+        quitApp();
     }
 });
 
-app.on('before-quit', stopBackend);
+app.on('before-quit', event => {
+    if (quitting) {
+        return;
+    }
+    event.preventDefault();
+    quitApp();
+});
 
 app.on('render-process-gone', (event, webContents, details) => {
     logToFile(`render-process-gone: ${JSON.stringify(details)}`);

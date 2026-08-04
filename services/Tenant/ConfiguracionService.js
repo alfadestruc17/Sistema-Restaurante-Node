@@ -87,13 +87,40 @@ class ConfiguracionService {
     }
 
     /**
+     * Get printer/QZ Tray configuration for tenant (used by /configuracion/impresoras
+     * and embedded into the print-JSON payload for the POS).
+     * @param {number} tenantId - Tenant ID
+     * @returns {Promise<Object>} Printer configuration
+     */
+    static async getPrinterConfig(tenantId) {
+        const config = await ConfiguracionRepository.findOne(tenantId);
+        return {
+            qz_habilitado: !!config?.qz_habilitado,
+            impresora_nombre: config?.impresora_nombre || null,
+            imprimir_auto: config ? !!config.imprimir_auto : true,
+            abrir_cajon_auto: config ? !!config.abrir_cajon_auto : true,
+            cajon_comando_hex: config?.cajon_comando_hex || null
+        };
+    }
+
+    /**
      * Save configuration
      * @param {Object} configData - Configuration data
      * @param {Object} files - Uploaded files (logo, qr)
      * @returns {Promise<void>}
      */
     static async save(tenantId, configData, files) {
-        const { nombre_negocio, direccion, telefono, nit, pie_pagina, ancho_papel, font_size } = configData;
+        const {
+            nombre_negocio,
+            direccion,
+            telefono,
+            nit,
+            pie_pagina,
+            ancho_papel,
+            font_size,
+            impresora_nombre,
+            cajon_comando_hex
+        } = configData;
 
         const existingConfig = await ConfiguracionRepository.findOne(tenantId);
 
@@ -104,7 +131,12 @@ class ConfiguracionService {
             nit: nit || null,
             pie_pagina: pie_pagina || null,
             ancho_papel: ancho_papel || 80,
-            font_size: font_size || 1
+            font_size: font_size || 1,
+            qz_habilitado: configData.qz_habilitado === 'on' || configData.qz_habilitado === true ? 1 : 0,
+            impresora_nombre: impresora_nombre?.trim() || null,
+            imprimir_auto: configData.imprimir_auto === 'on' || configData.imprimir_auto === true ? 1 : 0,
+            abrir_cajon_auto: configData.abrir_cajon_auto === 'on' || configData.abrir_cajon_auto === true ? 1 : 0,
+            cajon_comando_hex: cajon_comando_hex?.trim() || null
         };
 
         if (files?.logo) {

@@ -47,7 +47,19 @@ class StoreConfiguracionRequest extends BaseRequest {
             body('font_size')
                 .optional({ checkFalsy: true })
                 .isInt({ min: 1, max: 2 })
-                .withMessage('Tamaño de fuente inválido')
+                .withMessage('Tamaño de fuente inválido'),
+
+            body('impresora_nombre')
+                .optional({ checkFalsy: true })
+                .trim()
+                .isLength({ max: 150 })
+                .withMessage('El nombre de la impresora no puede exceder 150 caracteres'),
+
+            body('cajon_comando_hex')
+                .optional({ checkFalsy: true })
+                .trim()
+                .matches(/^([0-9A-Fa-f]{2}\s?)+$/)
+                .withMessage('El comando del cajón debe ser una secuencia hexadecimal (ej: 1B 70 00 19 FA)')
         ];
     }
 }

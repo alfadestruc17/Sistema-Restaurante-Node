@@ -117,12 +117,34 @@ class LocalDatabase {
         }
     }
 
+    // Devuelve una Promise que resuelve cuando el proceso de mariadbd terminó
+    // de verdad (evento 'exit'), no solo cuando el comando taskkill retornó.
+    // Necesario para que un auto-update (electron-updater) no dispare el
+    // instalador NSIS mientras el puerto/socket/archivos de datos todavía
+    // están en uso — el instalador fallaría al no poder sobrescribirlos.
     stop() {
-        if (this.process) {
-            this.stopping = true;
-            killProcessTree(this.process);
-            this.process = null;
+        if (!this.process) {
+            return Promise.resolve();
         }
+        this.stopping = true;
+        const proc = this.process;
+        this.process = null;
+
+        return new Promise(resolve => {
+            let settled = false;
+            const done = () => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                resolve();
+            };
+            proc.once('exit', done);
+            killProcessTree(proc);
+            // Salvavidas: no bloquear el cierre/actualización indefinidamente
+            // si por algún motivo el evento 'exit' nunca llega.
+            setTimeout(done, 5000);
+        });
     }
 }
 
