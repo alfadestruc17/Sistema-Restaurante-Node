@@ -156,18 +156,29 @@ async function confirmDeleteTenant(id, name) {
 }
 
 async function saveAllRoles(tenantId) {
-    const selects = document.querySelectorAll('.user-role-select');
+    const groups = document.querySelectorAll('.user-roles-group');
     const changes = [];
+    let sinRoles = false;
 
-    selects.forEach(select => {
-        const userId = select.getAttribute('data-user-id');
-        const newRole = select.value;
-        const originalRole = select.getAttribute('data-original-role');
+    groups.forEach(group => {
+        const userId = group.getAttribute('data-user-id');
+        const originalRoles = (group.getAttribute('data-original-roles') || '').split(',').filter(Boolean).sort();
+        const newRoles = Array.from(group.querySelectorAll('.user-role-checkbox:checked'))
+            .map(cb => cb.value)
+            .sort();
 
-        if (newRole !== originalRole) {
-            changes.push({ userId, rol_nombre: newRole });
+        if (newRoles.length === 0) {
+            sinRoles = true;
+            return;
+        }
+        if (JSON.stringify(newRoles) !== JSON.stringify(originalRoles)) {
+            changes.push({ userId, rol_nombres: newRoles });
         }
     });
+
+    if (sinRoles) {
+        return Swal.fire('Falta un rol', 'Cada usuario debe tener al menos un rol asignado.', 'warning');
+    }
 
     if (changes.length === 0) {
         return Swal.fire({

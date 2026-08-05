@@ -8,6 +8,38 @@ const logger = require('../../utils/logger');
 // Handles user authentication, token generation and password management
 
 /**
+ * Devuelve el conjunto completo de roles de un usuario (rol principal +
+ * adicionales en usuario_roles), sin duplicados. El rol principal siempre
+ * queda incluido aunque falte en usuario_roles (usuarios creados antes de
+ * la migración 079, o si la fila se borró por error).
+ * @param {number} userId - User ID
+ * @param {number} rolIdPrincipal - usuarios.rol_id
+ * @param {string} rolNombrePrincipal - Nombre del rol principal
+ * @returns {Promise<{ids: number[], names: string[]}>}
+ */
+async function getUserRoleIdsAndNames(userId, rolIdPrincipal, rolNombrePrincipal) {
+    const [rows] = await db
+        .query(
+            `
+            SELECT r.id, r.nombre FROM roles r
+            INNER JOIN usuario_roles ur ON ur.rol_id = r.id
+            WHERE ur.user_id = ?
+        `,
+            [userId]
+        )
+        .catch(() => [[]]);
+
+    const ids = new Set([rolIdPrincipal]);
+    const names = new Set([rolNombrePrincipal]);
+    (rows || []).forEach(r => {
+        ids.add(r.id);
+        names.add(r.nombre);
+    });
+
+    return { ids: [...ids], names: [...names] };
+}
+
+/**
  * Authenticate user with username and password
  * @param {string} username - Username
  * @param {string} password - Plain text password
@@ -41,7 +73,9 @@ async function authenticateUser(username, password) {
             return { success: false, message: 'Usuario o contraseña incorrectos' };
         }
 
-        // Permisos efectivos: si el Superadmin asignó user_permisos (aunque sea para quitar), solo esos; si no, los del rol
+        const userRoles = await getUserRoleIdsAndNames(user.id, user.rol_id, user.rol_nombre);
+
+        // Permisos efectivos: si el Superadmin asignó user_permisos (aunque sea para quitar), solo esos; si no, la unión de los roles del usuario
         let userPermissions = [];
         const isPremium =
             user.rol_nombre === 'admin' && (user.plan_slug === 'premium' || user.plan_slug === 'definitivo');
@@ -52,11 +86,11 @@ async function authenticateUser(username, password) {
         } else {
             const [rolePerms] = await db.query(
                 `
-                SELECT p.nombre FROM permisos p
+                SELECT DISTINCT p.nombre FROM permisos p
                 INNER JOIN rol_permisos rp ON p.id = rp.permiso_id
-                WHERE rp.rol_id = ?
+                WHERE rp.rol_id IN (?)
             `,
-                [user.rol_id]
+                [userRoles.ids]
             );
             const [userPermsRows] = await db
                 .query(
@@ -78,6 +112,7 @@ async function authenticateUser(username, password) {
             id: user.id,
             username: user.username,
             rol: user.rol_nombre,
+            roles: userRoles.names,
             permisos: userPermissions,
             tenant_id: user.tenant_id
         });
@@ -91,6 +126,7 @@ async function authenticateUser(username, password) {
                 email: user.email,
                 nombre_completo: user.nombre_completo,
                 rol: user.rol_nombre,
+                roles: userRoles.names,
                 permisos: userPermissions,
                 tenant_id: user.tenant_id
             },
@@ -153,6 +189,8 @@ async function getUserById(userId) {
 
         const user = users[0];
 
+        const userRoles = await getUserRoleIdsAndNames(user.id, user.rol_id, user.rol_nombre);
+
         let permisos = [];
         const isPremium =
             user.rol_nombre === 'admin' && (user.plan_slug === 'premium' || user.plan_slug === 'definitivo');
@@ -163,11 +201,11 @@ async function getUserById(userId) {
         } else {
             const [rolePerms] = await db.query(
                 `
-                SELECT p.nombre FROM permisos p
+                SELECT DISTINCT p.nombre FROM permisos p
                 INNER JOIN rol_permisos rp ON p.id = rp.permiso_id
-                WHERE rp.rol_id = ?
+                WHERE rp.rol_id IN (?)
             `,
-                [user.rol_id]
+                [userRoles.ids]
             );
             const [userPermsRows] = await db
                 .query(
@@ -190,6 +228,7 @@ async function getUserById(userId) {
             email: user.email,
             nombre_completo: user.nombre_completo,
             rol: user.rol_nombre,
+            roles: userRoles.names,
             permisos,
             tenant_id: user.tenant_id
         };

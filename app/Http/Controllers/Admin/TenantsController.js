@@ -76,7 +76,7 @@ class TenantsController {
                 password: admin_password,
                 email: admin_email || null,
                 nombre_completo: admin_nombre_completo || null,
-                rol_nombre: 'admin'
+                rol_nombres: ['admin']
             });
             await TenantAuditService.log({
                 tenantId,
@@ -188,19 +188,20 @@ class TenantsController {
     // POST /admin/tenants/:id/users
     static async storeUser(req, res) {
         try {
-            const { username, password, email, nombre_completo, rol_nombre } = req.body;
+            const { username, password, email, nombre_completo } = req.body;
+            const rol_nombres = [].concat(req.body.rol_nombres || []);
             const userId = await TenantUserService.createTenantUser(req.params.id, {
                 username,
                 password,
                 email,
                 nombre_completo,
-                rol_nombre
+                rol_nombres
             });
             await TenantAuditService.log({
                 tenantId: req.params.id,
                 userId: userId || null,
                 accion: 'crear_usuario',
-                detalles: `user=${username} rol=${rol_nombre}`
+                detalles: `user=${username} roles=${rol_nombres.join(',')}`
             });
             res.redirect('/admin/tenants');
         } catch (error) {
@@ -211,13 +212,13 @@ class TenantsController {
     // PATCH /admin/tenants/:tenantId/users/:userId/roles
     static async updateUserRole(req, res) {
         try {
-            const { rol_nombre } = req.body;
-            await TenantUserService.assignRoles(req.params.userId, req.params.tenantId, rol_nombre);
+            const rol_nombres = [].concat(req.body.rol_nombres || []);
+            await TenantUserService.assignRoles(req.params.userId, req.params.tenantId, rol_nombres);
             await TenantAuditService.log({
                 tenantId: req.params.tenantId,
                 userId: req.params.userId,
                 accion: 'asignar_rol',
-                detalles: `rol=${rol_nombre}`
+                detalles: `roles=${rol_nombres.join(',')}`
             });
             res.sendStatus(204);
         } catch (error) {
@@ -233,12 +234,13 @@ class TenantsController {
                 throw new Error('Formato de cambios inválido');
             }
             for (const change of changes) {
-                await TenantUserService.assignRoles(change.userId, Number(req.params.tenantId), change.rol_nombre);
+                const rol_nombres = [].concat(change.rol_nombres || []);
+                await TenantUserService.assignRoles(change.userId, Number(req.params.tenantId), rol_nombres);
                 await TenantAuditService.log({
                     tenantId: req.params.tenantId,
                     userId: req.user?.id || null,
                     accion: 'asignar_rol_batch',
-                    detalles: `usuario_id=${change.userId} rol=${change.rol_nombre}`
+                    detalles: `usuario_id=${change.userId} roles=${rol_nombres.join(',')}`
                 });
             }
             res.status(200).json({ success: true, message: 'Roles actualizados correctamente.' });

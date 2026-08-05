@@ -101,13 +101,23 @@
                         <input name="password" type="password" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Rol</label>
-                        <select name="rol_nombre" class="form-select">
-                            <option value="mesero">Mesero</option>
-                            <option value="cajero">Cajero</option>
-                            <option value="cocinero">Cocinero</option>
-                            <option value="admin">Administrador</option>
-                        </select>
+                        <label class="form-label">Roles (puedes marcar más de uno)</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="rol_nombres[]" value="mesero" id="createRolMesero" checked>
+                            <label class="form-check-label" for="createRolMesero">Mesero</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="rol_nombres[]" value="cajero" id="createRolCajero">
+                            <label class="form-check-label" for="createRolCajero">Cajero</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="rol_nombres[]" value="cocinero" id="createRolCocinero">
+                            <label class="form-check-label" for="createRolCocinero">Cocinero</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="rol_nombres[]" value="admin" id="createRolAdmin">
+                            <label class="form-check-label" for="createRolAdmin">Administrador</label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

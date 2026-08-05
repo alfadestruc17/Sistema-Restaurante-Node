@@ -252,6 +252,29 @@
     background: var(--sa-surface-3);
 }
 
+/* Grupo de checkboxes de roles por usuario: grid 2 columnas en vez de
+   apilarse en 4 líneas verticales (rompía el alto de la fila en mobile) */
+.user-roles-group {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: 2px 14px;
+    white-space: nowrap;
+}
+
+.user-roles-group .form-check {
+    margin: 0;
+    padding-left: 1.4em;
+    min-height: 0;
+}
+
+.user-roles-group .form-check-input {
+    margin-left: -1.4em;
+}
+
+.user-roles-group .form-check-label {
+    font-size: 0.78rem;
+}
+
 .btn-icon {
     width: 32px;
     height: 32px;
@@ -285,6 +308,14 @@
         max-height: none;
         position: static;
         display: flex;
+    }
+
+    /* Sin esto, flex:1 no gobierna el ancho en flex-direction:column + el
+       align-items:flex-start de .admin-layout: el panel se encoge a su
+       contenido en vez de ocupar el 100%, dejando ver el fondo oscuro del
+       shell a la derecha. */
+    .tenant-detail-container {
+        width: 100%;
     }
 
     .tenants-list {

@@ -117,8 +117,15 @@ class PermisoRepository {
         if (!userRows.length) {
             return [];
         }
-        const rolId = userRows[0].rol_id;
-        const [rolePerms] = await db.query('SELECT permiso_id FROM rol_permisos WHERE rol_id = ?', [rolId]);
+        // Unión de permisos de todos los roles asignados (principal + usuario_roles),
+        // no solo del rol principal.
+        const [rolRows] = await db
+            .query('SELECT rol_id FROM usuario_roles WHERE user_id = ?', [userId])
+            .catch(() => [[]]);
+        const rolIds = [...new Set([userRows[0].rol_id, ...(rolRows || []).map(r => r.rol_id)])];
+        const [rolePerms] = await db.query('SELECT DISTINCT permiso_id FROM rol_permisos WHERE rol_id IN (?)', [
+            rolIds
+        ]);
         const roleIds = (rolePerms || []).map(r => r.permiso_id);
         const userIds = await PermisoRepository.getPermisoIdsByUser(userId);
         if (userIds && userIds.length > 0) {

@@ -29,14 +29,20 @@
                                 </div>
                             </td>
                             <td>
-                                <select class="form-select form-select-sm user-role-select" data-user-id="<%= u.id %>"
-                                    data-original-role="<%= u.rol %>" style="width: 140px;">
-                                    <option value="admin" <%=u.rol==='admin' ? 'selected' : '' %>>Administrador</option>
-                                    <option value="mesero" <%=u.rol==='mesero' ? 'selected' : '' %>>Mesero</option>
-                                    <option value="cajero" <%=u.rol==='cajero' ? 'selected' : '' %>>Cajero</option>
-                                    <option value="cocinero" <%=u.rol==='cocinero' ? 'selected' : '' %>>Cocinero
-                                    </option>
-                                </select>
+                                <% const rolesUsuario = u.roles || [u.rol]; %>
+                                <div class="user-roles-group" data-user-id="<%= u.id %>"
+                                    data-original-roles="<%= rolesUsuario.join(',') %>">
+                                    <% ['mesero', 'cajero', 'cocinero', 'admin'].forEach(rolValor => { %>
+                                        <div class="form-check">
+                                            <input class="form-check-input user-role-checkbox" type="checkbox"
+                                                value="<%= rolValor %>" id="rol_<%= u.id %>_<%= rolValor %>"
+                                                <%= rolesUsuario.includes(rolValor) ? 'checked' : '' %>>
+                                            <label class="form-check-label small" for="rol_<%= u.id %>_<%= rolValor %>">
+                                                <%= rolValor === 'admin' ? 'Admin' : rolValor.charAt(0).toUpperCase() + rolValor.slice(1) %>
+                                            </label>
+                                        </div>
+                                    <% }) %>
+                                </div>
                             </td>
                             <td>
                                 <span
