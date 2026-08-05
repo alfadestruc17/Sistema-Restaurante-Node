@@ -74,12 +74,12 @@ document.getElementById('btnCrearInsumo').addEventListener('click', async () => 
         categoria_id: document.getElementById('nuevoCategoriaId').value || null,
         unidad_base: document.getElementById('nuevoUnidadBase').value,
         cantidad_compra: Number.parseFloat(document.getElementById('nuevoCantidadCompra').value) || 1,
-        precio_compra: Number.parseFloat(document.getElementById('nuevoPrecioCompra').value) || 0,
+        precio_compra: MoneyInput.parse(document.getElementById('nuevoPrecioCompra').value),
         rendimiento_pct: Number.parseFloat(document.getElementById('nuevoRendimiento').value) || 100,
         stock_minimo: Number.parseFloat(document.getElementById('nuevoStockMinimo').value) || 0,
         stock_inicial: Number.parseFloat(document.getElementById('nuevoStockInicial').value) || 0,
         proveedor_id: document.getElementById('nuevoProveedorId').value || null,
-        precio_venta: Number.parseFloat(document.getElementById('nuevoPrecioVenta').value) || 0
+        precio_venta: MoneyInput.parse(document.getElementById('nuevoPrecioVenta').value)
     };
     let valid = true;
     [fCodigo, fNombre].forEach(f => {
@@ -134,7 +134,7 @@ const AYUDA_UNIDAD_COMPRA = {
 };
 
 function actualizarPreviewCosto() {
-    const precio = Number.parseFloat(document.getElementById('nuevoPrecioCompra')?.value) || 0;
+    const precio = MoneyInput.parse(document.getElementById('nuevoPrecioCompra')?.value);
     const cantidad = Number.parseFloat(document.getElementById('nuevoCantidadCompra')?.value) || 1;
     const unidadBase = document.getElementById('nuevoUnidadBase')?.value || 'g';
     const preview = document.getElementById('previewCostoPorUnidad');
@@ -164,7 +164,7 @@ document.getElementById('nuevoUnidadBase')?.addEventListener('change', actualiza
 function actualizarPreviewCostoEntrada() {
     const preview = document.getElementById('entradaCostoUnitarioPreview');
     const cantidad = Number.parseFloat(document.getElementById('entradaCantidad').value);
-    const costoTotal = Number.parseFloat(document.getElementById('entradaCostoTotal').value);
+    const costoTotal = MoneyInput.parse(document.getElementById('entradaCostoTotal').value);
     if (cantidad > 0 && costoTotal > 0) {
         const unitario = costoTotal / cantidad;
         preview.textContent = '≈ $' + unitario.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' por unidad';
@@ -178,8 +178,8 @@ document.getElementById('entradaCostoTotal')?.addEventListener('input', actualiz
 document.getElementById('btnConfirmarEntrada').addEventListener('click', async () => {
     const id = document.getElementById('entradaInsumoId').value;
     const cantidad = Number.parseFloat(document.getElementById('entradaCantidad').value);
-    const costoTotal = document.getElementById('entradaCostoTotal').value;
-    const costo = costoTotal ? (Number.parseFloat(costoTotal) / cantidad) : null;
+    const costoTotalRaw = document.getElementById('entradaCostoTotal').value;
+    const costo = costoTotalRaw ? (MoneyInput.parse(costoTotalRaw) / cantidad) : null;
     const ref = document.getElementById('entradaRef').value;
     const fCant = document.getElementById('entradaCantidad');
     if (!cantidad || cantidad <= 0) {
@@ -342,7 +342,7 @@ document.getElementById('btnConfirmarAjuste').addEventListener('click', async ()
 });
 
 function actualizarPreviewEditCosto() {
-    const precio = Number.parseFloat(document.getElementById('editPrecioCompra')?.value) || 0;
+    const precio = MoneyInput.parse(document.getElementById('editPrecioCompra')?.value);
     const cantidad = Number.parseFloat(document.getElementById('editCantidadCompra')?.value) || 1;
     const unidadBase = document.getElementById('editUnidadBase')?.value || 'g';
     const preview = document.getElementById('previewEditCosto');
@@ -388,7 +388,7 @@ async function abrirEditarInsumo(id) {
         document.getElementById('editStockMinimo').value = item.stock_minimo || 0;
 
         document.getElementById('editCantidadCompra').value = item.cantidad_compra || 1;
-        document.getElementById('editPrecioCompra').value = item.precio_compra || 0;
+        document.getElementById('editPrecioCompra').value = MoneyInput.format(String(item.precio_compra || 0));
         document.getElementById('editRendimiento').value = item.rendimiento_pct != null ? item.rendimiento_pct : 100;
 
         const selectMedida = document.getElementById('editUnidadMedidaId');
@@ -399,7 +399,7 @@ async function abrirEditarInsumo(id) {
         const container = document.getElementById('editContainerPrecioVenta');
         if (item.categoria_nombre === 'Cerámicas') {
             container.classList.remove('d-none');
-            document.getElementById('editPrecioVenta').value = item.precio_venta || 0;
+            document.getElementById('editPrecioVenta').value = MoneyInput.format(String(item.precio_venta || 0));
         } else {
             container.classList.add('d-none');
         }
@@ -430,10 +430,10 @@ document.getElementById('btnActualizarInsumo').addEventListener('click', async (
         unidad_base: document.getElementById('editUnidadBase').value,
         stock_minimo: Number.parseFloat(document.getElementById('editStockMinimo').value) || 0,
         cantidad_compra: Number.parseFloat(document.getElementById('editCantidadCompra').value) || 1,
-        precio_compra: Number.parseFloat(document.getElementById('editPrecioCompra').value) || 0,
+        precio_compra: MoneyInput.parse(document.getElementById('editPrecioCompra').value),
         rendimiento_pct: Number.parseFloat(document.getElementById('editRendimiento').value) || 100,
         unidad_medida_id: document.getElementById('editUnidadMedidaId').value || null,
-        precio_venta: Number.parseFloat(document.getElementById('editPrecioVenta').value) || 0
+        precio_venta: MoneyInput.parse(document.getElementById('editPrecioVenta').value)
     };
 
     if (!payload.nombre || !payload.codigo) {

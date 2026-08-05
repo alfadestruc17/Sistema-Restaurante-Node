@@ -11,7 +11,7 @@
                 </small>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <input type="number" class="ap-input" id="ap-<%= a.id %>" value="<%= a.precio %>" min="0" step="100">
+                <input type="text" inputmode="decimal" class="ap-input money-input" id="ap-<%= a.id %>" value="<%= Number(a.precio || 0).toLocaleString('es-CO') %>">
                 <button class="btn-savea" onclick="saveAddon(<%= a.id %>)"><i class="bi bi-floppy"></i>
                     Guardar</button>
             </div>

@@ -202,7 +202,7 @@ $(function () {
     $('#descuentoModalProducto').text(it.nombre);
     $('#descuentoModalPrecioActual').text(it.precio.toLocaleString('es-CO'));
     $('#descuentoPorcentajeManual').val(it.descuento_porcentaje || '');
-    $('#nuevoPrecioManual').val(it.precio);
+    $('#nuevoPrecioManual').val(MoneyInput.format(String(it.precio)));
     new bootstrap.Modal(document.getElementById('descuentoModal')).show();
   };
 
@@ -210,7 +210,7 @@ $(function () {
   $('#btnAplicarPctManual').click(() => aplicarDescPct($('#descuentoPorcentajeManual').val()));
   $('#btnAplicarPrecioFijo').click(() => {
     const it = mod.productosFactura[window._descIdx];
-    it.precio = Number.parseFloat($('#nuevoPrecioManual').val()) || it.precio;
+    it.precio = MoneyInput.parse($('#nuevoPrecioManual').val()) || it.precio;
     it.descuento_porcentaje = 0;
     mod.actualizarTablaProductos();
     bootstrap.Modal.getInstance(document.getElementById('descuentoModal')).hide();

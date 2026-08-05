@@ -99,17 +99,17 @@ $(function () {
       Swal.fire({ icon: 'warning', title: 'No hay pedido abierto' });
       return;
     }
-    $('#propinaInputMesa').val(mod.propinaPedido > 0 ? mod.propinaPedido : '');
+    $('#propinaInputMesa').val(mod.propinaPedido > 0 ? MoneyInput.format(String(mod.propinaPedido)) : '');
     new bootstrap.Modal(document.getElementById('propinaModalMesa')).show();
   });
   
   $('.btn-propina-rapida').on('click', function () {
     const val = Number($(this).data('val')) || 0;
-    $('#propinaInputMesa').val(val);
+    $('#propinaInputMesa').val(MoneyInput.format(String(val)));
   });
   
   $('#aplicarPropinaMesaBtn').on('click', async function () {
-    const valor = Math.max(0, Number.parseFloat($('#propinaInputMesa').val()) || 0);
+    const valor = Math.max(0, MoneyInput.parse($('#propinaInputMesa').val()));
     try {
       const r = await fetch(`/api/mesas/pedidos/${mod.pedidoActual.id}/propina`, {
         method: 'PATCH',

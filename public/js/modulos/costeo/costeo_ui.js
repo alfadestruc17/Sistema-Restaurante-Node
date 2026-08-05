@@ -398,7 +398,7 @@ $(function () {
       const margenMinimo = document.getElementById('configMargenMinimoAlerta');
       if (margenMinimo) margenMinimo.value = config.margen_minimo_alerta ?? 30;
       const gananciaDeseada = document.getElementById('configGananciaDeseada');
-      if (gananciaDeseada) gananciaDeseada.value = config.ganancia_neta_deseada_mensual ?? 0;
+      if (gananciaDeseada) gananciaDeseada.value = MoneyInput.format(String(config.ganancia_neta_deseada_mensual ?? 0));
       toggleConfigRows(config.metodo_indirectos);
       togglePrecioRows(config.metodo_precio);
       if (config.metodo_indirectos === 'costo_fijo') loadCostosFijos();
@@ -477,7 +477,7 @@ $(function () {
   document.getElementById('btnNuevoCostoFijo')?.addEventListener('click', () => {
     document.getElementById('costoFijoId').value = '';
     document.getElementById('costoFijoNombre').value = '';
-    document.getElementById('costoFijoMonto').value = '0';
+    document.getElementById('costoFijoMonto').value = MoneyInput.format('0');
     document.getElementById('costoFijoActivo').checked = true;
     document.getElementById('modalCostoFijoTitle').textContent = 'Nuevo costo fijo';
     new bootstrap.Modal(document.getElementById('modalCostoFijo')).show();
@@ -492,7 +492,7 @@ $(function () {
         if (!cf) return;
         document.getElementById('costoFijoId').value = cf.id;
         document.getElementById('costoFijoNombre').value = cf.nombre || '';
-        document.getElementById('costoFijoMonto').value = cf.monto_mensual != null ? cf.monto_mensual : '0';
+        document.getElementById('costoFijoMonto').value = MoneyInput.format(String(cf.monto_mensual != null ? cf.monto_mensual : '0'));
         document.getElementById('costoFijoActivo').checked = cf.activo;
         document.getElementById('modalCostoFijoTitle').textContent = 'Editar costo fijo';
         new bootstrap.Modal(document.getElementById('modalCostoFijo')).show();
@@ -509,7 +509,7 @@ $(function () {
     const id = document.getElementById('costoFijoId').value;
     const payload = {
       nombre: document.getElementById('costoFijoNombre').value.trim(),
-      monto_mensual: Number.parseFloat(document.getElementById('costoFijoMonto').value) || 0,
+      monto_mensual: MoneyInput.parse(document.getElementById('costoFijoMonto').value),
       activo: document.getElementById('costoFijoActivo').checked
     };
     if (!payload.nombre) { mod.showToast('El nombre es obligatorio', 'warning'); return; }
@@ -546,7 +546,7 @@ $(function () {
       factor_carga: Number.parseFloat(document.getElementById('configFactor')?.value) || 2.5,
       margen_objetivo_default: Number.parseFloat(document.getElementById('configMargen')?.value) || 65,
       margen_minimo_alerta: Number.parseFloat(document.getElementById('configMargenMinimoAlerta')?.value) || 30,
-      ganancia_neta_deseada_mensual: Number.parseFloat(document.getElementById('configGananciaDeseada')?.value) || 0
+      ganancia_neta_deseada_mensual: MoneyInput.parse(document.getElementById('configGananciaDeseada')?.value)
     };
     mod.api('/api/costeo/config', { method: 'PUT', body: JSON.stringify(payload) })
       .then(() => mod.showToast('Configuración guardada', 'success'))

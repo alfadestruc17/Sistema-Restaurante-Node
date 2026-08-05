@@ -35,14 +35,14 @@
                                 </div>
                             </div>
                             <div class="section-lbl">Precio mensual por tamaño</div>
-                            <div class="price-row"><label>Pequeño</label><input type="number" class="price-input"
-                                    id="pp-<%= p.id %>-pequeno" value="<%= p.precio_pequeno %>" min="0" step="100">
+                            <div class="price-row"><label>Pequeño</label><input type="text" inputmode="decimal" class="price-input money-input"
+                                    id="pp-<%= p.id %>-pequeno" value="<%= Number(p.precio_pequeno || 0).toLocaleString('es-CO') %>">
                             </div>
-                            <div class="price-row"><label>Mediano</label><input type="number" class="price-input"
-                                    id="pp-<%= p.id %>-mediano" value="<%= p.precio_mediano %>" min="0" step="100">
+                            <div class="price-row"><label>Mediano</label><input type="text" inputmode="decimal" class="price-input money-input"
+                                    id="pp-<%= p.id %>-mediano" value="<%= Number(p.precio_mediano || 0).toLocaleString('es-CO') %>">
                             </div>
-                            <div class="price-row"><label>Grande</label> <input type="number" class="price-input"
-                                    id="pp-<%= p.id %>-grande" value="<%= p.precio_grande  %>" min="0" step="100"></div>
+                            <div class="price-row"><label>Grande</label> <input type="text" inputmode="decimal" class="price-input money-input"
+                                    id="pp-<%= p.id %>-grande" value="<%= Number(p.precio_grande || 0).toLocaleString('es-CO') %>"></div>
                             <button class="btn-savep mt-2" onclick="savePlanCompleto(<%= p.id %>)">
                                 <i class="bi bi-floppy me-1"></i>Guardar Cambios
                             </button>

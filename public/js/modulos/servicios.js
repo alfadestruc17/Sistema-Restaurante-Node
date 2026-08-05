@@ -28,7 +28,7 @@ $(function () {
         $('#service_id').val(s.id);
         $('#nombre').val(s.nombre);
         $('#descripcion').val(s.descripcion);
-        $('#precio').val(s.precio);
+        $('#precio').val(MoneyInput.format(String(s.precio ?? 0)));
         $('#es_externo').prop('checked', !!s.es_externo);
         $('#activo').prop('checked', !!s.activo);
         modal.show();

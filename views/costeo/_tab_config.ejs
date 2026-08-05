@@ -88,7 +88,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Ganancia neta deseada ($/mes)</label>
-                                    <input type="number" class="form-control" name="ganancia_neta_deseada_mensual" id="configGananciaDeseada" step="0.01" min="0" placeholder="0">
+                                    <input type="text" inputmode="decimal" class="form-control money-input" name="ganancia_neta_deseada_mensual" id="configGananciaDeseada" placeholder="0">
                                     <small class="text-muted">Meta de utilidad mensual para calcular ventas necesarias</small>
                                 </div>
                             </div>
@@ -142,7 +142,7 @@
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label">Monto mensual ($)</label>
-                                            <input type="number" class="form-control" id="costoFijoMonto" step="0.01" min="0" value="0">
+                                            <input type="text" inputmode="decimal" class="form-control money-input" id="costoFijoMonto" value="0">
                                         </div>
                                         <div class="form-check">
                                             <input type="checkbox" class="form-check-input" id="costoFijoActivo" checked>

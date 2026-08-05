@@ -232,7 +232,7 @@
                 <p class="small text-muted mb-2">Monto que deja el cliente como propina (se suma al total):</p>
                 <div class="mb-3">
                     <label class="form-label">Monto ($)</label>
-                    <input type="number" id="propinaInputMesa" class="form-control" min="0" step="100" placeholder="0"
+                    <input type="text" inputmode="decimal" id="propinaInputMesa" class="form-control money-input" placeholder="0"
                         value="0">
                 </div>
                 <div class="d-flex flex-wrap gap-2 justify-content-center mb-2">
@@ -313,8 +313,8 @@
                         <span class="input-group-text">
                             <i class="bi bi-keyboard"></i>
                         </span>
-                        <input type="number" id="montoManual" class="form-control"
-                            placeholder="Ingrese el monto recibido..." step="100" min="0">
+                        <input type="text" inputmode="decimal" id="montoManual" class="form-control money-input"
+                            placeholder="Ingrese el monto recibido...">
                         <button class="btn btn-success" id="btnUsarMontoManual">
                             <i class="bi bi-check-lg"></i> Usar
                         </button>

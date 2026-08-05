@@ -53,9 +53,12 @@ function addOpcionRow(nombre = '', precioAdicional = '', insumoId = null, cantid
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="form-control form-control-sm opcion-nombre-input" placeholder="Ej: Queso extra" value="${nombre}"></td>
-        <td><input type="number" step="0.01" min="0" class="form-control form-control-sm opcion-precio-input" placeholder="0.00" value="${precioAdicional}"></td>
+        <td><input type="text" inputmode="decimal" class="form-control form-control-sm opcion-precio-input money-input" placeholder="0" value="${MoneyInput.format(MoneyInput.digitsOnly(String(precioAdicional || '')))}"></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger quitar-opcion" title="Quitar"><i class="bi bi-trash"></i></button></td>
     `;
+    // Fila creada después del DOMContentLoaded inicial: money-input.js no la
+    // detectó automáticamente, hay que engancharla a mano.
+    MoneyInput.attach(tr.querySelector('.opcion-precio-input'));
     // No hay UI todavía para vincular insumo/inventario a una opción; si el grupo
     // ya tenía ese vínculo (creado por API u otra vía), se conserva tal cual al guardar.
     tr.dataset.insumoId = insumoId || '';
@@ -111,7 +114,7 @@ document.getElementById('btnGuardarGrupo').addEventListener('click', async () =>
         if (!opcionNombre) return;
         opciones.push({
             nombre: opcionNombre,
-            precio_adicional: Number.parseFloat(row.querySelector('.opcion-precio-input').value) || 0,
+            precio_adicional: MoneyInput.parse(row.querySelector('.opcion-precio-input').value),
             insumo_id: row.dataset.insumoId ? Number.parseInt(row.dataset.insumoId, 10) : null,
             cantidad_insumo: row.dataset.cantidadInsumo ? Number.parseFloat(row.dataset.cantidadInsumo) : null,
             unidad_insumo: row.dataset.unidadInsumo || null

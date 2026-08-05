@@ -213,13 +213,13 @@
     function recalcularCalc() {
         const totalIng = calcIngredientes.reduce(function (s, i) { return s + (i.costo || 0); }, 0);
         const horas = Number.parseFloat(document.getElementById('calcHorasTrabajo')?.value) || 0;
-        const valorHora = Number.parseFloat(document.getElementById('calcValorHora')?.value) || 0;
+        const valorHora = MoneyInput.parse(document.getElementById('calcValorHora')?.value);
         const manoObra = horas * valorHora;
         const desgaste = Math.round(totalIng * 0.02 * 100) / 100;
         document.getElementById('calcDesgaste').value = desgaste;
-        const servicios = Number.parseFloat(document.getElementById('calcServicios')?.value) || 0;
-        const empaque = Number.parseFloat(document.getElementById('calcEmpaque')?.value) || 0;
-        const envio = Number.parseFloat(document.getElementById('calcEnvio')?.value) || 0;
+        const servicios = MoneyInput.parse(document.getElementById('calcServicios')?.value);
+        const empaque = MoneyInput.parse(document.getElementById('calcEmpaque')?.value);
+        const envio = MoneyInput.parse(document.getElementById('calcEnvio')?.value);
         const otros = servicios + empaque + envio;
         const total = totalIng + manoObra + desgaste + otros;
         let porciones = Number.parseFloat(document.getElementById('calcPorciones')?.value) || 1;
@@ -266,7 +266,7 @@
         document.getElementById('calcNombreReceta').value = '';
         document.getElementById('calcPorciones').value = '1';
         document.getElementById('calcHorasTrabajo').value = '0';
-        document.getElementById('calcValorHora').value = '10000';
+        document.getElementById('calcValorHora').value = '10.000';
         document.getElementById('calcServicios').value = '0';
         document.getElementById('calcEmpaque').value = '0';
         document.getElementById('calcEnvio').value = '0';
@@ -287,10 +287,10 @@
                 document.getElementById('calcPorciones').value = rec.porciones || 1;
                 const costos = rec.costos_adicionales || {};
                 document.getElementById('calcHorasTrabajo').value = costos.horas_trabajo ?? 0;
-                document.getElementById('calcValorHora').value = costos.valor_hora ?? 10000;
-                document.getElementById('calcServicios').value = costos.servicios ?? 0;
-                document.getElementById('calcEmpaque').value = costos.empaque ?? 0;
-                document.getElementById('calcEnvio').value = costos.envio ?? 0;
+                document.getElementById('calcValorHora').value = MoneyInput.format(String(costos.valor_hora ?? 10000));
+                document.getElementById('calcServicios').value = MoneyInput.format(String(costos.servicios ?? 0));
+                document.getElementById('calcEmpaque').value = MoneyInput.format(String(costos.empaque ?? 0));
+                document.getElementById('calcEnvio').value = MoneyInput.format(String(costos.envio ?? 0));
                 calcIngredientes = (rec.ingredientes || []).map(function (ing) {
                     const ins = (window.COSTEO_insumosList || []).find(function (i) { return i.id === ing.insumo_id; });
                     let costo = 0;
@@ -398,10 +398,10 @@
             });
             const costosAdicionales = {
                 horas_trabajo: Number.parseFloat(document.getElementById('calcHorasTrabajo')?.value) || 0,
-                valor_hora: Number.parseFloat(document.getElementById('calcValorHora')?.value) || 0,
-                servicios: Number.parseFloat(document.getElementById('calcServicios')?.value) || 0,
-                empaque: Number.parseFloat(document.getElementById('calcEmpaque')?.value) || 0,
-                envio: Number.parseFloat(document.getElementById('calcEnvio')?.value) || 0
+                valor_hora: MoneyInput.parse(document.getElementById('calcValorHora')?.value),
+                servicios: MoneyInput.parse(document.getElementById('calcServicios')?.value),
+                empaque: MoneyInput.parse(document.getElementById('calcEmpaque')?.value),
+                envio: MoneyInput.parse(document.getElementById('calcEnvio')?.value)
             };
             const api = window.COSTEO_api;
             const showToast = window.COSTEO_showToast;

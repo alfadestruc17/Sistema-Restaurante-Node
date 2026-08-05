@@ -56,12 +56,12 @@ window.POS_PAGO = {
 
     _setRecibido(val) {
         const inp = document.getElementById('posEfectivoRecibido');
-        if (inp) { inp.value = val; this.calcularVuelto(); }
+        if (inp) { inp.value = MoneyInput.format(String(val)); this.calcularVuelto(); }
     },
 
     calcularVuelto() {
         const total = POS.getTotal();
-        const recibido = Number.parseFloat(document.getElementById('posEfectivoRecibido')?.value) || 0;
+        const recibido = MoneyInput.parse(document.getElementById('posEfectivoRecibido')?.value);
         const vuelto = Math.max(0, recibido - total);
         document.getElementById('posVueltoAmount').textContent = '$ ' + vuelto.toLocaleString('es-CO');
         document.getElementById('posConfirmarPagoBtn').disabled = (recibido < total);

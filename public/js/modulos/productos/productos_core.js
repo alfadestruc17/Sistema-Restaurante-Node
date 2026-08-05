@@ -232,7 +232,7 @@ class ProductManager {
       codigo: data.codigo || document.getElementById('codigo').value,
       nombre: data.nombre || document.getElementById('nombre').value,
       categoria_id: data.categoriaId || document.getElementById('categoriaId').value,
-      precio_unidad: Number.parseFloat(data.precioUnidad || document.getElementById('precioUnidad').value) || 0,
+      precio_unidad: MoneyInput.parse(data.precioUnidad || document.getElementById('precioUnidad').value),
       descripcion: document.getElementById('descripcion') ? document.getElementById('descripcion').value : '',
       imagen_url: document.getElementById('imagenUrl')?.value || null,
       tributo: document.getElementById('tributo')?.value || null
@@ -271,7 +271,7 @@ class ProductManager {
       document.getElementById('codigo').value = producto.codigo;
       document.getElementById('nombre').value = producto.nombre;
       document.getElementById('categoriaId').value = producto.categoria_id || '';
-      document.getElementById('precioUnidad').value = producto.precio_unidad;
+      document.getElementById('precioUnidad').value = MoneyInput.format(String(producto.precio_unidad ?? 0));
       if (document.getElementById('tributo')) {
         document.getElementById('tributo').value = producto.tributo || '';
       }

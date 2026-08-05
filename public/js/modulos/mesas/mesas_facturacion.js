@@ -534,13 +534,13 @@ $(function () {
       $('.denominacion-btn').removeClass('selected');
       $(this).addClass('selected');
       montoRecibido = Number.parseFloat($(this).data('valor'));
-      $('#montoManual').val(montoRecibido);
+      $('#montoManual').val(MoneyInput.format(String(montoRecibido)));
       calcularCambio(total, montoRecibido);
       $('#btnConfirmarPago').prop('disabled', false);
     });
 
     function usarMontoManual() {
-      const valor = Number.parseFloat($('#montoManual').val()) || 0;
+      const valor = MoneyInput.parse($('#montoManual').val());
       if (valor < total) {
         Swal.fire({ icon: 'warning', title: 'El monto debe ser mayor o igual al total' });
         return;
@@ -552,7 +552,7 @@ $(function () {
     }
 
     $('#montoManual').off('input keypress').on('input', function () {
-      const valor = Number.parseFloat($(this).val()) || 0;
+      const valor = MoneyInput.parse($(this).val());
       if (valor > 0) {
         $('.denominacion-btn').removeClass('selected');
         if (valor >= total) {

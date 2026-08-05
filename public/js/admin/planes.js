@@ -194,7 +194,7 @@
     }
 
     async function savePlanCompleto(planId) {
-        var sq = function (s) { return parseFloat(document.getElementById('pp-' + planId + '-' + s).value || 0); };
+        var sq = function (s) { return MoneyInput.parse(document.getElementById('pp-' + planId + '-' + s).value); };
         var nombre = document.getElementById('pn-' + planId).value;
         var descShort = document.getElementById('pd-' + planId).value;
         var descLong = document.getElementById('pdd-' + planId).value;
@@ -233,7 +233,7 @@
     }
 
     async function saveAddon(addonId) {
-        var precio = parseFloat(document.getElementById('ap-' + addonId).value || 0);
+        var precio = MoneyInput.parse(document.getElementById('ap-' + addonId).value);
         try {
             await localFetch('/admin/planes/api/addons/' + addonId, 'PUT', { precio: precio });
             var a = ALL_ADDONS.find(function (x) { return x.id === addonId; });
