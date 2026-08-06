@@ -2,6 +2,7 @@ const POSService = require('../../../../services/Tenant/POSService');
 const FacturaService = require('../../../../services/Tenant/FacturaService');
 const CajaService = require('../../../../services/Tenant/CajaService');
 const ModificadorService = require('../../../../services/Tenant/ModificadorService');
+const CocinaService = require('../../../../services/Tenant/CocinaService');
 const AuthService = require('../../../../services/Shared/AuthService');
 const logger = require('../../../../utils/logger');
 
@@ -52,7 +53,8 @@ class POSController {
         try {
             const tenantId = req.tenant?.id;
             const usuarioId = req.user.id;
-            const result = await POSService.saveBorrador(tenantId, usuarioId, req.body);
+            const puedeUsarModificadores = AuthService.hasPermission(req.user?.permisos, 'modificadores.ver');
+            const result = await POSService.saveBorrador(tenantId, usuarioId, req.body, puedeUsarModificadores);
             res.status(201).json(result);
         } catch (err) {
             logger.warn('POS saveBorrador error', { err: err.message });
@@ -64,7 +66,8 @@ class POSController {
         try {
             const tenantId = req.tenant?.id;
             const id = parseInt(req.params.id);
-            const deleted = await POSService.deleteBorrador(id, tenantId);
+            const skipCocina = req.query.skip_cocina === '1';
+            const deleted = await POSService.deleteBorrador(id, tenantId, { skipCocina });
             if (!deleted) {
                 return res.status(404).json({ error: 'Orden no encontrada' });
             }
@@ -117,7 +120,7 @@ class POSController {
     static async vender(req, res) {
         try {
             const tenantId = req.tenant?.id;
-            const { nombre_cliente, forma_pago, productos, total } = req.body;
+            const { nombre_cliente, forma_pago, productos, total, pedido_cocina_id } = req.body;
             let { cliente_id } = req.body;
 
             if (!cliente_id) {
@@ -134,6 +137,21 @@ class POSController {
                 usuario_id: req.user.id,
                 puedeUsarModificadores
             });
+
+            // Si esta venta viene de una orden que ya se había guardado (y por lo tanto
+            // ya se envió a cocina al hacer clic en "Guardar"), al cobrarla se completa
+            // y sale de la cola — best-effort, no debe tumbar la respuesta de la venta.
+            if (pedido_cocina_id) {
+                try {
+                    await CocinaService.completarPedidoPOS(parseInt(pedido_cocina_id), tenantId);
+                } catch (cocinaErr) {
+                    logger.warn('POS vender: no se pudo completar pedido de cocina', {
+                        pedido_cocina_id,
+                        err: cocinaErr.message
+                    });
+                }
+            }
+
             res.status(201).json(result);
         } catch (err) {
             logger.warn('POS vender error', { err: err.message });

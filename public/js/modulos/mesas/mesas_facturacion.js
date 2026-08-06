@@ -291,10 +291,15 @@ $(function () {
     const { value: recibido } = await Swal.fire({
       title: '<h4 class="mb-0 fw-bold text-success"><i class="bi bi-wallet2 me-2"></i> Pago en Efectivo</h4>',
       html: `<p class="mb-1 fs-5">Total a pagar: <strong class="text-success fw-bold">${mod.formatear(subtotalAPagar)}</strong></p><p class="text-muted small">Ingrese el monto recibido:</p>`,
-      input: 'number',
-      inputAttributes: { min: subtotalAPagar, step: 100, style: 'font-size: 1.25rem; text-align: center;' },
+      input: 'text',
+      inputAttributes: { inputmode: 'decimal', style: 'font-size: 1.25rem; text-align: center;' },
+      didOpen: (popup) => {
+        const inp = popup.querySelector('input');
+        if (inp) MoneyInput.attach(inp);
+      },
       inputValidator: (value) => {
-        if (!value || Number.parseFloat(value) < subtotalAPagar) return `El monto recibido debe ser mayor o igual a ${mod.formatear(subtotalAPagar)}`;
+        const monto = MoneyInput.parse(value);
+        if (!monto || monto < subtotalAPagar) return `El monto recibido debe ser mayor o igual a ${mod.formatear(subtotalAPagar)}`;
       },
       showCancelButton: true,
       confirmButtonText: 'Confirmar Pago <i class="bi bi-check-circle"></i>',
@@ -303,7 +308,7 @@ $(function () {
       cancelButtonColor: '#6c757d',
       customClass: { popup: 'rounded-4 shadow' }
     });
-    return recibido;
+    return recibido ? MoneyInput.parse(recibido) : null;
   }
 
   async function procesarPagoMultiple({ items, formaPago, keyIdemp, montoRecibido, cambioADevolver, subtotalAPagar }) {
@@ -361,7 +366,7 @@ $(function () {
       if (formaPago === 'efectivo') {
         const recibido = await pedirMontoEfectivoPorProducto(subtotalAPagar);
         if (!recibido) return;
-        montoRecibido = Number.parseFloat(recibido);
+        montoRecibido = recibido;
         cambioADevolver = montoRecibido - subtotalAPagar;
       }
 

@@ -34,8 +34,9 @@ window.POS_API = {
         return r.json();
     },
 
-    async deleteBorrador(id) {
-        const r = await fetch(`/pos/borradores/${id}`, { method: 'DELETE' });
+    async deleteBorrador(id, { skipCocina = false } = {}) {
+        const url = `/pos/borradores/${id}${skipCocina ? '?skip_cocina=1' : ''}`;
+        const r = await fetch(url, { method: 'DELETE' });
         return r.ok;
     },
 

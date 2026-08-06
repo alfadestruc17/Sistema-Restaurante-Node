@@ -93,6 +93,9 @@ window.POS_PAGO = {
                 // El servidor resuelve el cliente si no hay ID
                 cliente_id: clienteId ? Number.parseInt(clienteId) : null,
                 nombre_cliente: nombreCliente,
+                // Si la orden ya se había guardado (y por eso ya está en cocina), se
+                // completa allá al cobrarla en vez de crear un pedido de cocina nuevo.
+                pedido_cocina_id: POS.state.pedidoCocinaId || null,
                 total,
                 forma_pago: formaPago,
                 productos: POS.state.cart.map(item => ({

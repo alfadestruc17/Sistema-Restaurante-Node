@@ -45,6 +45,59 @@ class CocinaService {
 
         return await CocinaRepository.updateGroupEstado(tenantId, productoNombre, nota, estado, modificadoresHash);
     }
+
+    /**
+     * Completa (cierra) un pedido de mostrador del POS y lo saca de la cola de cocina.
+     * @throws {Error} Si el pedido no existe o no es un pedido de POS (origen='caja')
+     */
+    static async completarPedidoPOS(pedidoId, tenantId) {
+        const pedido = await CocinaRepository.completarPedidoPOS(pedidoId, tenantId);
+        if (!pedido) {
+            throw new Error('Pedido no encontrado');
+        }
+
+        try {
+            const WhatsAppService = require('./WhatsAppService');
+            WhatsAppService.events.emit('orderCreated', {
+                tenantId,
+                pedidoId: pedido.id,
+                mesaId: pedido.mesa_id,
+                action: 'billed'
+            });
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Error al emitir evento SSE al completar pedido POS:', err);
+        }
+
+        return { message: 'Pedido completado' };
+    }
+
+    /**
+     * Cancela (best-effort) el pedido de cocina de una orden del POS que se elimina.
+     * No lanza si el pedido no existe: quien llama (eliminar borrador) no debe fallar
+     * por esto — devuelve null en ese caso.
+     */
+    static async cancelarPedidoPOS(pedidoId, tenantId) {
+        const pedido = await CocinaRepository.cancelarPedidoPOS(pedidoId, tenantId);
+        if (!pedido) {
+            return null;
+        }
+
+        try {
+            const WhatsAppService = require('./WhatsAppService');
+            WhatsAppService.events.emit('orderCreated', {
+                tenantId,
+                pedidoId: pedido.id,
+                mesaId: pedido.mesa_id,
+                action: 'cancelled'
+            });
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Error al emitir evento SSE al cancelar pedido POS:', err);
+        }
+
+        return pedido;
+    }
 }
 
 module.exports = CocinaService;

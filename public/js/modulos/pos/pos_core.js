@@ -9,7 +9,11 @@ window.POS = {
         cliente: null,
         catActiva: 'all',
         borradores: [],
-        stats: { num_ordenes: 0, total_hoy: 0 }
+        stats: { num_ordenes: 0, total_hoy: 0 },
+        // Pedido/mesa "de cocina" ya creado para esta orden (si viene de un borrador
+        // que se guardó antes, ver guardarOrden/cargarBorrador). Se cierra al cobrar.
+        pedidoCocinaId: null,
+        mesaCocinaId: null
     },
 
     // ─── Inicialización ────────────────────────────────────────────
@@ -153,6 +157,8 @@ window.POS = {
     clearCart() {
         this.state.cart = [];
         this.state.cliente = null;
+        this.state.pedidoCocinaId = null;
+        this.state.mesaCocinaId = null;
         POS_UI.renderCart();
         // Restaurar cliente por defecto
         const inputEl = document.getElementById('posClienteInput');
@@ -224,19 +230,39 @@ window.POS = {
 
     async guardarOrden() {
         if (!this.state.cart.length) return;
-        const clienteNombre = document.getElementById('posClienteInput')?.value?.trim() || 'Consumidor final';
+
+        const nombreActual = document.getElementById('posClienteInput')?.value?.trim() || '';
+        const { value: nombreIngresado, isConfirmed } = await Swal.fire({
+            title: '<i class="bi bi-tag me-2"></i>Nombre del pedido',
+            html: '<p class="text-muted small mb-0">Se mostrará en cocina para identificar este pedido. Puedes dejarlo en blanco.</p>',
+            input: 'text',
+            inputValue: nombreActual,
+            inputPlaceholder: 'Ej: Juan Pérez',
+            showCancelButton: true,
+            confirmButtonText: 'Continuar <i class="bi bi-arrow-right-short"></i>',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        });
+        if (!isConfirmed) return;
+
+        const clienteNombre = (nombreIngresado || '').trim() || 'Consumidor final';
         const clienteId = this.state.cliente?.id || null;
 
         try {
+            // Al guardar, la orden se envía a cocina con el nombre del cliente (ver
+            // POSService.saveBorrador). Si el carrito ya venía de un borrador cargado
+            // (ya enviado antes), se reutiliza el mismo pedido en vez de duplicarlo.
             await POS_API.saveBorrador({
                 cliente_id: clienteId,
                 nombre_cliente: clienteNombre,
                 items: this.state.cart,
-                total: this.getTotal()
+                total: this.getTotal(),
+                pedido_cocina_id: this.state.pedidoCocinaId || null,
+                mesa_cocina_id: this.state.mesaCocinaId || null
             });
             this.clearCart();
             await this.recargarBorradores();
-            Swal.fire({ icon: 'success', title: 'Orden guardada', timer: 1300, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'Orden guardada y enviada a cocina', timer: 1500, showConfirmButton: false });
         } catch (err) {
             Swal.fire('Error', err.message || 'No se pudo guardar la orden', 'error');
         }
@@ -244,11 +270,15 @@ window.POS = {
 
     async cargarBorrador(borrador) {
         this.state.cart = borrador.items.map(i => ({ ...i }));
+        this.state.pedidoCocinaId = borrador.pedido_cocina_id || null;
+        this.state.mesaCocinaId = borrador.mesa_cocina_id || null;
         if (borrador.cliente_id) {
             this.setCliente({ id: borrador.cliente_id, nombre: borrador.nombre_cliente });
         }
         POS_UI.renderCart();
-        await POS_API.deleteBorrador(borrador.id);
+        // skipCocina: cargar la orden solo la mueve al carrito, el pedido en cocina
+        // sigue activo (se cierra al cobrar o se cancela si luego se elimina/vacía).
+        await POS_API.deleteBorrador(borrador.id, { skipCocina: true });
         await this.recargarBorradores();
         bootstrap.Modal.getInstance(document.getElementById('posBorradoresModal'))?.hide();
     },

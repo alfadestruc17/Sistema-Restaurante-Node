@@ -4,6 +4,15 @@
  */
 
 $(function () {
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     // Allow opening tab directly with ?tab=listos
     function activarTabDesdeQuery() {
         // For mesero role, always show "Listos" tab
@@ -108,16 +117,30 @@ $(function () {
      */
     function cardMesa(mesaNumero, items) {
         const itemsHtml = items.map(it => cardItem(it)).join('');
+        const esPOS = items[0]?.pedido_origen === 'caja';
+        const nombrePedido = (items[0]?.mesa_descripcion || '').trim();
+        const titulo = escapeHtml(esPOS ? (nombrePedido || 'Venta mostrador') : `Mesa ${mesaNumero}`);
+        const icono = esPOS ? 'bi-shop' : 'bi-table';
+        const headerClass = esPOS ? 'bg-info text-dark' : 'bg-primary text-white';
+        const btnCompletar = esPOS
+            ? `<button class="btn btn-sm btn-dark ms-2" data-action="completar-pos" data-pedido-id="${items[0].pedido_id}">
+                    <i class="bi bi-check2-all"></i> Completar pedido
+                </button>`
+            : '';
+
         return `
             <div class="card mb-3 mesa-card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header ${headerClass} d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
-                        <i class="bi bi-table me-2"></i>
-                        <strong>Mesa ${mesaNumero}</strong>
+                        <i class="bi ${icono} me-2"></i>
+                        <strong>${titulo}</strong>
                         <span class="badge bg-light text-dark ms-2">${items.length} ${items.length === 1 ? 'ítem' : 'ítems'}</span>
                     </div>
-                    <div class="badge bg-light text-dark">
-                        Pedido #${items[0]?.pedido_numero || ''}
+                    <div class="d-flex align-items-center">
+                        <div class="badge bg-light text-dark">
+                            Pedido #${items[0]?.pedido_numero || ''}
+                        </div>
+                        ${btnCompletar}
                     </div>
                 </div>
                 <div class="card-body">
@@ -381,6 +404,29 @@ $(function () {
         } catch (error) {
             console.error('Error:', error);
             alert('Error al actualizar estado');
+        }
+    });
+
+    $(document).on('click', '[data-action="completar-pos"]', async function () {
+        const pedidoId = this.dataset.pedidoId;
+        const confirm = await Swal.fire({
+            icon: 'question',
+            title: '¿Completar pedido?',
+            text: 'Se marcará como listo y saldrá de la cola de cocina.',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, completar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#198754'
+        });
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const resp = await fetch(`/api/cocina/pedidos/${pedidoId}/completar`, { method: 'PUT' });
+            if (!resp.ok) throw new Error('Error al completar pedido');
+            await cargarCola();
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({ icon: 'error', title: 'No se pudo completar el pedido' });
         }
     });
 

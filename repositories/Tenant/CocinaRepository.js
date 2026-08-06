@@ -19,7 +19,9 @@ class CocinaRepository {
     static async getQueue(tenantId) {
         const [items] = await db.query(
             `
-            SELECT i.*, p.numero AS pedido_numero, p.mesa_id, m.numero AS mesa_numero, pr.nombre AS producto_nombre
+            SELECT i.*, p.numero AS pedido_numero, p.mesa_id, p.origen AS pedido_origen,
+                   m.numero AS mesa_numero, m.tipo AS mesa_tipo, m.descripcion AS mesa_descripcion,
+                   pr.nombre AS producto_nombre
             FROM pedido_items i
             JOIN pedidos p ON p.id = i.pedido_id
             JOIN mesas m ON m.id = p.mesa_id
@@ -101,6 +103,51 @@ class CocinaRepository {
 
         const [result] = await db.query(query, params);
         return result;
+    }
+
+    /**
+     * Completa de una sola vez un pedido "de mostrador" (origen='caja', ver POSRepository.
+     * enviarPedidoACocina): la venta ya fue facturada al crearlo, así que aquí solo se
+     * cierra el pedido y se libera su mesa virtual dedicada para sacarlo de la cola.
+     * Restringido a origen='caja' para no poder cerrar por esta vía un pedido de mesa real.
+     */
+    static async completarPedidoPOS(pedidoId, tenantId) {
+        const [pedidos] = await db.query(
+            `SELECT id, mesa_id FROM pedidos WHERE id = ? AND tenant_id = ? AND origen = 'caja'`,
+            [pedidoId, tenantId]
+        );
+        if (pedidos.length === 0) {
+            return null;
+        }
+        const pedido = pedidos[0];
+
+        await db.query(`UPDATE pedidos SET estado = 'cerrado' WHERE id = ?`, [pedido.id]);
+        await db.query(`UPDATE mesas SET estado = 'libre' WHERE id = ?`, [pedido.mesa_id]);
+
+        return pedido;
+    }
+
+    /**
+     * Cancela un pedido "de mostrador" (origen='caja') y sus items, y libera su mesa
+     * virtual dedicada. Se usa al eliminar una orden guardada del POS que ya se había
+     * enviado a cocina (ver POSService.deleteBorrador) — mismo patrón que WhatsAppService
+     * usa para cancelaciones de pedidos.
+     */
+    static async cancelarPedidoPOS(pedidoId, tenantId) {
+        const [pedidos] = await db.query(
+            `SELECT id, mesa_id FROM pedidos WHERE id = ? AND tenant_id = ? AND origen = 'caja'`,
+            [pedidoId, tenantId]
+        );
+        if (pedidos.length === 0) {
+            return null;
+        }
+        const pedido = pedidos[0];
+
+        await db.query(`UPDATE pedidos SET estado = 'cancelado' WHERE id = ?`, [pedido.id]);
+        await db.query(`UPDATE pedido_items SET estado = 'cancelado' WHERE pedido_id = ?`, [pedido.id]);
+        await db.query(`UPDATE mesas SET estado = 'libre', descripcion = NULL WHERE id = ?`, [pedido.mesa_id]);
+
+        return pedido;
     }
 }
 

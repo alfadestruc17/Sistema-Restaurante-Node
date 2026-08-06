@@ -14,4 +14,7 @@ router.put('/item/:id/estado', CocinaController.updateItemEstado);
 // API Lote
 router.put('/preparar-lote', CocinaController.updateGroupEstado);
 
+// API Completar pedido de mostrador (POS)
+router.put('/pedidos/:pedidoId/completar', CocinaController.completarPedidoPOS);
+
 module.exports = router;

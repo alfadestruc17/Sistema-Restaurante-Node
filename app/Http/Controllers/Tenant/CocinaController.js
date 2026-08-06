@@ -118,6 +118,25 @@ class CocinaController {
             res.status(500).json({ error: 'Error al actualizar lote' });
         }
     }
+
+    // PUT /cocina/pedidos/:pedidoId/completar
+    static async completarPedidoPOS(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            if (!tenantId) {
+                return res.status(403).json({ error: 'Contexto de tenant no disponible' });
+            }
+            const pedidoId = parseInt(req.params.pedidoId);
+            const result = await CocinaService.completarPedidoPOS(pedidoId, tenantId);
+            res.json(result);
+        } catch (error) {
+            console.error('Error al completar pedido POS:', error);
+            if (error.message === 'Pedido no encontrado') {
+                return res.status(404).json({ error: error.message });
+            }
+            res.status(500).json({ error: 'Error al completar pedido' });
+        }
+    }
 }
 
 module.exports = CocinaController;
