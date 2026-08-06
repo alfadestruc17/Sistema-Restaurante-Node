@@ -35,10 +35,7 @@ class CosteoController {
             }
 
             const { productos } = await ProductService.getAllForView(tenantId);
-            const tipoNegocio =
-                req.tenant && req.tenant.config && req.tenant.config.tipo_negocio
-                    ? req.tenant.config.tipo_negocio
-                    : 'restaurante';
+            const tipoNegocio = req.tenant?.config?.tipo_negocio || 'restaurante';
             const costeoPlantillaReposteria = tipoNegocio === 'panaderia' || tipoNegocio === 'pasteleria';
 
             const TemaRepository = require('../../../../repositories/Shared/TemaRepository');
@@ -216,7 +213,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id, 10);
+            const id = Number.parseInt(req.params.id, 10);
             const insumo = await InsumoService.getById(id, tenantId);
             if (!insumo) {
                 return res.status(404).json({ error: 'Insumo no encontrado' });
@@ -234,7 +231,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id, 10);
+            const id = Number.parseInt(req.params.id, 10);
             await InsumoService.update(id, tenantId, req.body);
             res.json({ message: 'Insumo actualizado' });
         } catch (error) {
@@ -249,7 +246,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id, 10);
+            const id = Number.parseInt(req.params.id, 10);
             await InsumoService.delete(id, tenantId);
             res.json({ message: 'Insumo eliminado' });
         } catch (error) {
@@ -282,7 +279,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const receta = await RecetaService.getById(parseInt(req.params.id), tenantId);
+            const receta = await RecetaService.getById(Number.parseInt(req.params.id, 10), tenantId);
             if (!receta) {
                 return res.status(404).json({ error: 'Receta no encontrada' });
             }
@@ -311,7 +308,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id, 10);
+            const id = Number.parseInt(req.params.id, 10);
             await RecetaService.update(id, tenantId, req.body);
             res.json({ message: 'Receta actualizada' });
         } catch (error) {
@@ -326,7 +323,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id, 10);
+            const id = Number.parseInt(req.params.id, 10);
             await RecetaService.delete(id, tenantId);
             res.json({ message: 'Receta eliminada' });
         } catch (error) {
@@ -342,7 +339,10 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const costeo = await CosteoService.getCosteoByProductoId(parseInt(req.params.productoId), tenantId);
+            const costeo = await CosteoService.getCosteoByProductoId(
+                Number.parseInt(req.params.productoId, 10),
+                tenantId
+            );
             if (!costeo) {
                 return res.status(404).json({ error: 'Este producto no tiene receta asociada' });
             }
@@ -358,7 +358,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const costeo = await CosteoService.getCosteoReceta(parseInt(req.params.id), tenantId);
+            const costeo = await CosteoService.getCosteoReceta(Number.parseInt(req.params.id, 10), tenantId);
             if (!costeo) {
                 return res.status(404).json({ error: 'Receta no encontrada' });
             }
@@ -441,12 +441,12 @@ class CosteoController {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
             const { nombre, monto_mensual, activo } = req.body;
-            if (!nombre || !nombre.trim()) {
+            if (!nombre?.trim()) {
                 return res.status(400).json({ error: 'El nombre es obligatorio' });
             }
             const id = await CostosFijosRepository.create(tenantId, {
                 nombre: nombre.trim(),
-                monto_mensual: parseFloat(monto_mensual) || 0,
+                monto_mensual: Number.parseFloat(monto_mensual) || 0,
                 activo: activo !== false
             });
             res.status(201).json({ id, message: 'Costo fijo creado' });
@@ -461,7 +461,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id);
+            const id = Number.parseInt(req.params.id, 10);
             const existente = await CostosFijosRepository.findById(id, tenantId);
             if (!existente) {
                 return res.status(404).json({ error: 'Costo fijo no encontrado' });
@@ -479,7 +479,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const id = parseInt(req.params.id);
+            const id = Number.parseInt(req.params.id, 10);
             const existente = await CostosFijosRepository.findById(id, tenantId);
             if (!existente) {
                 return res.status(404).json({ error: 'Costo fijo no encontrado' });
@@ -511,7 +511,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const tema = await TemaService.getById(parseInt(req.params.id), tenantId);
+            const tema = await TemaService.getById(Number.parseInt(req.params.id, 10), tenantId);
             if (!tema) {
                 return res.status(404).json({ error: 'Tema no encontrado' });
             }
@@ -540,7 +540,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            await TemaService.update(parseInt(req.params.id), tenantId, req.body);
+            await TemaService.update(Number.parseInt(req.params.id, 10), tenantId, req.body);
             res.json({ message: 'Tema actualizado' });
         } catch (error) {
             const statusCode = error.message === 'Tema no encontrado' ? 404 : 400;
@@ -554,7 +554,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            await TemaService.delete(parseInt(req.params.id), tenantId);
+            await TemaService.delete(Number.parseInt(req.params.id, 10), tenantId);
             res.json({ message: 'Tema eliminado' });
         } catch (error) {
             const statusCode = error.message === 'Tema no encontrado' ? 404 : 500;
@@ -568,7 +568,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const list = await ParametroService.getByTemaId(parseInt(req.params.id), tenantId);
+            const list = await ParametroService.getByTemaId(Number.parseInt(req.params.id, 10), tenantId);
             res.json(list);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -581,7 +581,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            await TemaService.setParametros(parseInt(req.params.id), tenantId, req.body.parametro_ids || []);
+            await TemaService.setParametros(Number.parseInt(req.params.id, 10), tenantId, req.body.parametro_ids || []);
             res.json({ message: 'Parámetros del tema actualizados' });
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -607,7 +607,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const param = await ParametroService.getById(parseInt(req.params.id), tenantId);
+            const param = await ParametroService.getById(Number.parseInt(req.params.id, 10), tenantId);
             if (!param) {
                 return res.status(404).json({ error: 'Parámetro no encontrado' });
             }
@@ -636,7 +636,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            await ParametroService.update(parseInt(req.params.id), tenantId, req.body);
+            await ParametroService.update(Number.parseInt(req.params.id, 10), tenantId, req.body);
             res.json({ message: 'Parámetro actualizado' });
         } catch (error) {
             const statusCode = error.message === 'Parámetro no encontrado' ? 404 : 400;
@@ -650,7 +650,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            await ParametroService.delete(parseInt(req.params.id), tenantId);
+            await ParametroService.delete(Number.parseInt(req.params.id, 10), tenantId);
             res.json({ message: 'Parámetro eliminado' });
         } catch (error) {
             const statusCode = error.message === 'Parámetro no encontrado' ? 404 : 500;
@@ -664,7 +664,10 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const list = await ProductoParametroRepository.getParametrosByProductoId(parseInt(req.params.id), tenantId);
+            const list = await ProductoParametroRepository.getParametrosByProductoId(
+                Number.parseInt(req.params.id, 10),
+                tenantId
+            );
             res.json(list);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -677,7 +680,7 @@ class CosteoController {
             if (!tenantId) {
                 return res.status(403).json({ error: 'Contexto de tenant no disponible' });
             }
-            const productoId = parseInt(req.params.id);
+            const productoId = Number.parseInt(req.params.id, 10);
             const producto = await ProductService.getById(productoId, tenantId);
             if (!producto) {
                 return res.status(404).json({ error: 'Producto no encontrado' });

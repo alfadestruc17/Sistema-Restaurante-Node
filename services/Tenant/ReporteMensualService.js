@@ -1,5 +1,5 @@
 const ejs = require('ejs');
-const path = require('path');
+const path = require('node:path');
 const puppeteer = require('puppeteer');
 const MailerService = require('../Shared/MailerService');
 const StatsRepository = require('../../repositories/Tenant/StatsRepository');
@@ -16,26 +16,26 @@ function formatMoney(amount) {
 }
 
 class ReporteMensualService {
-    static async generarYEnviar(tenant, options = {}) {
+    /**
+     * Calcula las fechas de inicio, fin y el nombre del mes para el reporte.
+     */
+    static calcularRangoFechas(options = {}) {
         const date = new Date();
         let targetYear = date.getFullYear();
-        let targetMonth = date.getMonth(); // 0-11 (por defecto el mes actual para pruebas rápidas)
+        let targetMonth = date.getMonth();
 
         if (options.mes !== null && options.mes !== undefined && options.anio !== null && options.anio !== undefined) {
-            targetMonth = parseInt(options.mes) - 1; // Recibimos 1-12
-            targetYear = parseInt(options.anio);
+            targetMonth = Number.parseInt(options.mes, 10) - 1;
+            targetYear = Number.parseInt(options.anio, 10);
 
-            // Validar que no sea un mes futuro
             const requestDate = new Date(targetYear, targetMonth, 1);
             if (requestDate > date) {
                 throw new Error('No se puede generar un reporte de un mes futuro.');
             }
         } else if (options.finDeMes) {
-            // Producción normal (Cron último día): Cierre del MES ACTUAL
             targetMonth = date.getMonth();
             targetYear = date.getFullYear();
         } else if (!options.testMesActual) {
-            // Producción (Cron Antiguo): Cierre del MES ANTERIOR
             date.setMonth(date.getMonth() - 1);
             targetMonth = date.getMonth();
             targetYear = date.getFullYear();
@@ -44,57 +44,109 @@ class ReporteMensualService {
         const m = targetMonth + 1;
         const firstDay = `${targetYear}-${m.toString().padStart(2, '0')}-01`;
         const lastDayStr = `${targetYear}-${m.toString().padStart(2, '0')}-${new Date(targetYear, m, 0).getDate()}`;
-
-        // Nombre del mes en español
         const tempDate = new Date(targetYear, targetMonth, 1);
         const mesNombre = tempDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
 
-        console.log(`Generando reporte para ${tenant.nombre} - Rango: ${firstDay} a ${lastDayStr}...`);
+        return { firstDay, lastDayStr, mesNombre };
+    }
 
-        const totalMes = await StatsRepository.getTotalSales(tenant.id, { desde: firstDay, hasta: lastDayStr });
-        const facturasMes = await StatsRepository.getTotalInvoices(tenant.id, { desde: firstDay, hasta: lastDayStr });
-        const topProductos = await StatsRepository.getTopProducts(tenant.id, 5, { desde: firstDay, hasta: lastDayStr });
-        const porCategoria = await StatsRepository.getSalesByCategory(tenant.id, {
-            desde: firstDay,
-            hasta: lastDayStr
-        });
+    /**
+     * Obtiene en paralelo las estadísticas de ventas del tenant.
+     */
+    static async obtenerEstadisticas(tenantId, { firstDay, lastDayStr }) {
+        const filtro = { desde: firstDay, hasta: lastDayStr };
+        const [totalMes, facturasMes, topProductos, porCategoria] = await Promise.all([
+            StatsRepository.getTotalSales(tenantId, filtro),
+            StatsRepository.getTotalInvoices(tenantId, filtro),
+            StatsRepository.getTopProducts(tenantId, 5, filtro),
+            StatsRepository.getSalesByCategory(tenantId, filtro)
+        ]);
+        return { totalMes, facturasMes, topProductos, porCategoria };
+    }
 
+    /**
+     * Renderiza la plantilla EJS y genera el PDF mediante Puppeteer.
+     */
+    static async generarPdfReporte(tenant, mesNombre, stats) {
         const templatePath = path.join(__dirname, '../../views/reportes/mensual.ejs');
         const data = {
             tenant,
             mes: mesNombre.toUpperCase(),
-            totalMes,
-            facturasMes,
-            topProductos,
-            porCategoria,
+            ...stats,
             formatMoney
         };
 
         const html = await ejs.renderFile(templatePath, data);
 
-        // Render PDF usando Puppeteer
         const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
-        });
-        await browser.close();
+        try {
+            const page = await browser.newPage();
+            await page.setContent(html, { waitUntil: 'networkidle0' });
+            return await page.pdf({
+                format: 'A4',
+                printBackground: true,
+                margin: { top: '20px', bottom: '20px', left: '20px', right: '20px' }
+            });
+        } finally {
+            await browser.close();
+        }
+    }
 
-        // Determinar destinatario
-        let to = options.testEmail;
-        if (!to) {
-            to =
-                tenant.email ||
-                (tenant.config && tenant.config.correo) ||
-                process.env.ADMIN_EMAIL ||
-                'contacto@ejemplo.com';
+    /**
+     * Determina la dirección de correo destino para el reporte.
+     */
+    static obtenerEmailDestinatario(tenant, options) {
+        if (options.testEmail) {
+            return options.testEmail;
+        }
+        return tenant.email || tenant.config?.correo || process.env.ADMIN_EMAIL || 'contacto@ejemplo.com';
+    }
+
+    /**
+     * Intenta enviar la notificación por WhatsApp del PDF generado.
+     */
+    static async enviarNotificacionWhatsApp(tenant, pdfBuffer, mesNombre) {
+        if (!tenant.telefono) {
+            return false;
         }
 
-        const subject = `Reporte Mensual - ${tenant.nombre} - ${data.mes}`;
-        const bodyContent = `Hola,<br><br>Adjunto enviamos el reporte de resumen de ventas de <strong>${data.mes}</strong> para <strong>${tenant.nombre}</strong>.<br><br>Saludos cordiales,<br>Tu Sistema Ecl-Fruver`;
+        try {
+            const filename = `Reporte_${mesNombre.replaceAll(' ', '_')}_${tenant.nombre.replaceAll(' ', '_')}.pdf`;
+            const caption = `Hola *${tenant.nombre}*! 👋\n\nAquí tienes el resumen de ventas de *${mesNombre}*.\n\n_Tu Sistema Ecl-Fruver_`;
+
+            let waSent = await WhatsAppService.sendMediaMessage(
+                tenant.id,
+                tenant.telefono,
+                pdfBuffer,
+                filename,
+                caption
+            );
+
+            if (!waSent && tenant.id !== 1) {
+                waSent = await WhatsAppService.sendMediaMessage(1, tenant.telefono, pdfBuffer, filename, caption);
+            }
+
+            if (waSent) {
+                console.log(`[WhatsApp] Reporte mensual enviado a ${tenant.nombre} (${tenant.telefono})`);
+            }
+            return waSent;
+        } catch (waError) {
+            console.error('[WhatsApp] Error enviando reporte mensual:', waError.message);
+            return false;
+        }
+    }
+
+    static async generarYEnviar(tenant, options = {}) {
+        const rango = this.calcularRangoFechas(options);
+        console.log(`Generando reporte para ${tenant.nombre} - Rango: ${rango.firstDay} a ${rango.lastDayStr}...`);
+
+        const stats = await this.obtenerEstadisticas(tenant.id, rango);
+        const pdfBuffer = await this.generarPdfReporte(tenant, rango.mesNombre, stats);
+        const to = this.obtenerEmailDestinatario(tenant, options);
+
+        const mesUpper = rango.mesNombre.toUpperCase();
+        const subject = `Reporte Mensual - ${tenant.nombre} - ${mesUpper}`;
+        const bodyContent = `Hola,<br><br>Adjunto enviamos el reporte de resumen de ventas de <strong>${mesUpper}</strong> para <strong>${tenant.nombre}</strong>.<br><br>Saludos cordiales,<br>Tu Sistema Ecl-Fruver`;
 
         try {
             const mailResult = await MailerService.sendMail({
@@ -103,47 +155,13 @@ class ReporteMensualService {
                 html: bodyContent,
                 attachments: [
                     {
-                        filename: `Reporte_${data.mes.replace(/ /g, '_')}_${tenant.nombre.replace(/ /g, '_')}.pdf`,
+                        filename: `Reporte_${mesUpper.replaceAll(' ', '_')}_${tenant.nombre.replaceAll(' ', '_')}.pdf`,
                         content: pdfBuffer
                     }
                 ]
             });
 
-            let waSent = false;
-            // WhatsApp Notification
-            if (tenant.telefono) {
-                try {
-                    const filename = `Reporte_${data.mes.replace(/ /g, '_')}_${tenant.nombre.replace(/ /g, '_')}.pdf`;
-                    const caption = `Hola *${tenant.nombre}*! 👋\n\nAquí tienes el resumen de ventas de *${data.mes}*.\n\n_Tu Sistema Ecl-Fruver_`;
-
-                    // Intentamos enviar desde el propio bot del tenant si está conectado.
-                    // El servicio ahora maneja automáticamente el formato 57+numero.
-                    waSent = await WhatsAppService.sendMediaMessage(
-                        tenant.id,
-                        tenant.telefono,
-                        pdfBuffer,
-                        filename,
-                        caption
-                    );
-
-                    // Si no tiene bot conectado, intentamos desde el tenantPrincipal (id 1)
-                    if (!waSent && tenant.id !== 1) {
-                        waSent = await WhatsAppService.sendMediaMessage(
-                            1,
-                            tenant.telefono,
-                            pdfBuffer,
-                            filename,
-                            caption
-                        );
-                    }
-
-                    if (waSent) {
-                        console.log(`[WhatsApp] Reporte mensual enviado a ${tenant.nombre} (${tenant.telefono})`);
-                    }
-                } catch (waError) {
-                    console.error('[WhatsApp] Error enviando reporte mensual:', waError.message);
-                }
-            }
+            const waSent = await this.enviarNotificacionWhatsApp(tenant, pdfBuffer, mesUpper);
 
             return { ...mailResult, emailValido: to, whatsappEnviado: waSent, pdfBuffer };
         } catch (mailError) {
@@ -160,7 +178,7 @@ class ReporteMensualService {
         const tenants = await TenantService.getAllTenants();
 
         // 1. Filtrar declarativamente los inquilinos activos (Programación Funcional)
-        const tenantsActivos = (tenants || []).filter(t => t && t.activo);
+        const tenantsActivos = (tenants || []).filter(t => t?.activo);
 
         // 2. Procesar concurrentemente en paralelo todos los reportes usando .map() y Promise.all()
         await Promise.all(

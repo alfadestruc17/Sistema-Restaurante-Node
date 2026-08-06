@@ -3,31 +3,132 @@
  * Related to: views/cocina.ejs, routes/cocina.js
  */
 
-$(function () {
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
+function escapeHtml(str) {
+    return String(str)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+// Agrupa los modificadores/toppings de un ítem por su grupo (ej. "Elige tu salsa",
+// "Toppings") para que en la comanda se lea a qué corresponde cada selección, en vez
+// de una lista plana de nombres sin contexto (ej. "chocolate, chocolate").
+function formatModificadores(mods) {
+    if (!mods?.length) return '';
+    const porGrupo = new Map();
+    mods.forEach(m => {
+        const grupo = m.grupo_nombre || 'Opciones';
+        if (!porGrupo.has(grupo)) porGrupo.set(grupo, []);
+        porGrupo.get(grupo).push(m.opcion_nombre);
+    });
+    return [...porGrupo.entries()]
+        .map(([grupo, opciones]) => `${grupo}: ${opciones.join(', ')}`)
+        .join(' · ');
+}
+
+/**
+ * Create card for individual item (sub-card inside mesa card)
+ */
+function cardItem(it) {
+    let estadoBadge;
+    if (it.estado === 'preparando') {
+        estadoBadge = '<span class="badge bg-warning">Preparando</span>';
+    } else if (it.estado === 'listo') {
+        estadoBadge = '<span class="badge bg-success">Listo</span>';
+    } else {
+        estadoBadge = '<span class="badge bg-secondary">Enviado</span>';
     }
 
-    // Agrupa los modificadores/toppings de un ítem por su grupo (ej. "Elige tu salsa",
-    // "Toppings") para que en la comanda se lea a qué corresponde cada selección, en vez
-    // de una lista plana de nombres sin contexto (ej. "chocolate, chocolate").
-    function formatModificadores(mods) {
-        if (!mods || !mods.length) return '';
-        const porGrupo = new Map();
-        mods.forEach(m => {
-            const grupo = m.grupo_nombre || 'Opciones';
-            if (!porGrupo.has(grupo)) porGrupo.set(grupo, []);
-            porGrupo.get(grupo).push(m.opcion_nombre);
-        });
-        return [...porGrupo.entries()]
-            .map(([grupo, opciones]) => `${grupo}: ${opciones.join(', ')}`)
-            .join(' · ');
-    }
+    const actions = `
+        <div class="mt-2 d-flex gap-2 flex-wrap">
+            ${it.estado === 'enviado'
+            ? `<button class="btn btn-sm btn-primary" data-action="prep" data-id="${it.id}">
+                    <i class="bi bi-play"></i> Preparar
+                   </button>`
+            : ''}
+            ${it.estado === 'preparando'
+            ? `<button class="btn btn-sm btn-success" data-action="listo" data-id="${it.id}">
+                    <i class="bi bi-check2"></i> Listo
+                   </button>`
+            : ''}
+            ${it.estado === 'listo'
+            ? `<button class="btn btn-sm btn-outline-dark" data-action="servido" data-id="${it.id}">
+                    <i class="bi bi-box-seam"></i> Recogido
+                   </button>`
+            : ''}
+        </div>`;
+
+    return `
+        <div class="card mb-2 item-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="producto">${it.producto_nombre}</span>
+                            ${estadoBadge}
+                            <span class="badge bg-dark cantidad-badge">${it.cantidad} ${it.unidad_medida || 'UND'}</span>
+                        </div>
+                        ${it.nota ? `
+                        <div class="nota-especial">
+                            <strong>Instrucciones Especiales:</strong>
+                            <span>${it.nota}</span>
+                        </div>` : ''}
+                        ${it.modificadores?.length ? `
+                        <div class="nota-especial">
+                            <strong>Detalle:</strong>
+                            <span>${escapeHtml(formatModificadores(it.modificadores))}</span>
+                        </div>` : ''}
+                        <div class="small text-muted">
+                            <i class="bi bi-clock"></i> ${new Date(it.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                            ${it.enviado_at ? ` • Enviado: ${new Date(it.enviado_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ''}
+                        </div>
+                    </div>
+                </div>
+                ${actions}
+            </div>
+        </div>`;
+}
+
+/**
+ * Create card for mesa (parent card containing items)
+ */
+function cardMesa(mesaNumero, items) {
+    const itemsHtml = items.map(it => cardItem(it)).join('');
+    const esPOS = items[0]?.pedido_origen === 'caja';
+    const nombrePedido = (items[0]?.mesa_descripcion || '').trim();
+    const titulo = escapeHtml(esPOS ? (nombrePedido || 'Venta mostrador') : `Mesa ${mesaNumero}`);
+    const icono = esPOS ? 'bi-shop' : 'bi-table';
+    const headerClass = esPOS ? 'bg-info text-dark' : 'bg-primary text-white';
+    const btnCompletar = esPOS
+        ? `<button class="btn btn-sm btn-dark ms-2" data-action="completar-pos" data-pedido-id="${items[0].pedido_id}">
+                <i class="bi bi-check2-all"></i> Completar pedido
+            </button>`
+        : '';
+
+    return `
+        <div class="card mb-3 mesa-card">
+            <div class="card-header ${headerClass} d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <i class="bi ${icono} me-2"></i>
+                    <strong>${titulo}</strong>
+                    <span class="badge bg-light text-dark ms-2">${items.length} ${items.length === 1 ? 'ítem' : 'ítems'}</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="badge bg-light text-dark">
+                        Pedido #${items[0]?.pedido_numero || ''}
+                    </div>
+                    ${btnCompletar}
+                </div>
+            </div>
+            <div class="card-body">
+                ${itemsHtml}
+            </div>
+        </div>`;
+}
+
+$(function () {
 
     // Allow opening tab directly with ?tab=listos
     function activarTabDesdeQuery() {
@@ -66,103 +167,6 @@ $(function () {
         } catch (error) {
             console.error('Error al cargar cola:', error);
         }
-    }
-
-    /**
-     * Create card for individual item (sub-card inside mesa card)
-     */
-    function cardItem(it) {
-        const estadoBadge = it.estado === 'preparando'
-            ? '<span class="badge bg-warning">Preparando</span>'
-            : (it.estado === 'listo'
-                ? '<span class="badge bg-success">Listo</span>'
-                : '<span class="badge bg-secondary">Enviado</span>');
-
-        const actions = `
-            <div class="mt-2 d-flex gap-2 flex-wrap">
-                ${it.estado === 'enviado'
-                ? `<button class="btn btn-sm btn-primary" data-action="prep" data-id="${it.id}">
-                        <i class="bi bi-play"></i> Preparar
-                       </button>`
-                : ''}
-                ${it.estado === 'preparando'
-                ? `<button class="btn btn-sm btn-success" data-action="listo" data-id="${it.id}">
-                        <i class="bi bi-check2"></i> Listo
-                       </button>`
-                : ''}
-                ${it.estado === 'listo'
-                ? `<button class="btn btn-sm btn-outline-dark" data-action="servido" data-id="${it.id}">
-                        <i class="bi bi-box-seam"></i> Recogido
-                       </button>`
-                : ''}
-            </div>`;
-
-        return `
-            <div class="card mb-2 item-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span class="producto">${it.producto_nombre}</span>
-                                ${estadoBadge}
-                                <span class="badge bg-dark cantidad-badge">${it.cantidad} ${it.unidad_medida || 'UND'}</span>
-                            </div>
-                            ${it.nota ? `
-                            <div class="nota-especial">
-                                <strong>Instrucciones Especiales:</strong>
-                                <span>${it.nota}</span>
-                            </div>` : ''}
-                            ${it.modificadores && it.modificadores.length ? `
-                            <div class="nota-especial">
-                                <strong>Detalle:</strong>
-                                <span>${escapeHtml(formatModificadores(it.modificadores))}</span>
-                            </div>` : ''}
-                            <div class="small text-muted">
-                                <i class="bi bi-clock"></i> ${new Date(it.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                                ${it.enviado_at ? ` • Enviado: ${new Date(it.enviado_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    ${actions}
-                </div>
-            </div>`;
-    }
-
-    /**
-     * Create card for mesa (parent card containing items)
-     */
-    function cardMesa(mesaNumero, items) {
-        const itemsHtml = items.map(it => cardItem(it)).join('');
-        const esPOS = items[0]?.pedido_origen === 'caja';
-        const nombrePedido = (items[0]?.mesa_descripcion || '').trim();
-        const titulo = escapeHtml(esPOS ? (nombrePedido || 'Venta mostrador') : `Mesa ${mesaNumero}`);
-        const icono = esPOS ? 'bi-shop' : 'bi-table';
-        const headerClass = esPOS ? 'bg-info text-dark' : 'bg-primary text-white';
-        const btnCompletar = esPOS
-            ? `<button class="btn btn-sm btn-dark ms-2" data-action="completar-pos" data-pedido-id="${items[0].pedido_id}">
-                    <i class="bi bi-check2-all"></i> Completar pedido
-                </button>`
-            : '';
-
-        return `
-            <div class="card mb-3 mesa-card">
-                <div class="card-header ${headerClass} d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <div>
-                        <i class="bi ${icono} me-2"></i>
-                        <strong>${titulo}</strong>
-                        <span class="badge bg-light text-dark ms-2">${items.length} ${items.length === 1 ? 'ítem' : 'ítems'}</span>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="badge bg-light text-dark">
-                            Pedido #${items[0]?.pedido_numero || ''}
-                        </div>
-                        ${btnCompletar}
-                    </div>
-                </div>
-                <div class="card-body">
-                    ${itemsHtml}
-                </div>
-            </div>`;
     }
 
     /**
@@ -462,7 +466,7 @@ $(function () {
 
     // Real-time notifications (SSE)
     (function () {
-        if (!!window.EventSource) {
+        if (window.EventSource) {
             const source = new EventSource('/api/notifications/subscribe');
 
             source.addEventListener('message', function (e) {

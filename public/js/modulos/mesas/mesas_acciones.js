@@ -2,7 +2,6 @@
 
 // Extraída de la búsqueda de cliente: bajaba la anidación de callbacks a 5
 // niveles (input > setTimeout > forEach > click). No captura nada del
-// closure que la usaba, todo llega por parámetro (S7721).
 function crearItemResultadoCliente(mod, list, modalClienteMesa, c) {
   const docInfo = c.numero_documento ? `${c.tipo_documento || 'DOC'}: ${c.numero_documento}` : 'Sin documento';
   const item = $(`
@@ -29,8 +28,9 @@ function crearItemResultadoCliente(mod, list, modalClienteMesa, c) {
         });
         if (!r.ok) throw new Error('No se pudo asociar el cliente');
       } catch (err) {
+        console.error('Error al asociar cliente:', err);
         mod.clienteActual = originalCliente;
-        return Swal.fire({ icon: 'error', title: 'Error al asociar cliente' });
+        return Swal.fire({ icon: 'error', title: 'Error al asociar cliente', text: err.message || 'No se pudo completar la operación.' });
       }
     }
 
@@ -73,7 +73,12 @@ $(function () {
   function elegirProductoParaDescuento(itemId, nombre) {
     window._descuentoItemIdMesa = itemId;
     const it = mod.items.find(i => i.id === itemId);
-    const subtotal = it ? mod.formatear(mod.subtotalConDescuento(Number(it.cantidad || 0), Number((it.precio_unitario != null ? it.precio_unitario : it.precio) || 0), itemId)) : '$0';
+    let subtotal = '$0';
+    if (it) {
+      const precio = it.precio_unitario != null ? it.precio_unitario : it.precio;
+      const cantidad = Number(it.cantidad || 0);
+      subtotal = mod.formatear(mod.subtotalConDescuento(cantidad, Number(precio || 0), itemId));
+    }
     $('#descuentoModalProductoMesa').text(nombre + ' — ' + subtotal);
     $('#descuentoModalMesaTitulo').text('Aplicar descuento');
     $('#descuentoMesaPaso1').hide();
@@ -95,7 +100,7 @@ $(function () {
 
   // Botón "Propina"
   $('#btnPropinaMesa').on('click', function () {
-    if (!mod.pedidoActual || !mod.pedidoActual.id) {
+    if (!mod.pedidoActual?.id) {
       Swal.fire({ icon: 'warning', title: 'No hay pedido abierto' });
       return;
     }
@@ -212,7 +217,8 @@ $(function () {
             list.append(crearItemResultadoCliente(mod, list, modalClienteMesa, c));
           });
         }
-      } catch (_) {
+      } catch (error) {
+        console.error('Error al buscar clientes:', error);
         loader.hide();
         list.html('<div class="list-group-item text-danger text-center py-3">Error de red o servidor</div>').show();
       }
@@ -359,6 +365,7 @@ $(function () {
       await mod.cargarPedido(mod.pedidoActual.id);
       Swal.fire({ icon: 'success', title: 'Enviado a cocina' });
     } catch (err) {
+      console.error(err);
       Swal.fire({ icon: 'error', title: 'No se pudo enviar a cocina' });
     }
   });
@@ -366,7 +373,7 @@ $(function () {
   // Agregar servicios
   const modalServicios = new bootstrap.Modal('#modalServiciosMesa');
   $('#btnAgregarServicioMesa').on('click', async function() {
-    if (!mod.pedidoActual || !mod.pedidoActual.id) return;
+    if (!mod.pedidoActual?.id) return;
     modalServicios.show();
     await cargarServiciosDisponibles();
   });
@@ -398,6 +405,7 @@ $(function () {
         `);
       });
     } catch (e) {
+      console.error('Error al cargar servicios:', e);
       $('#listaServiciosDisponibles').html('<div class="p-4 text-center text-danger small">Error al cargar servicios</div>');
     }
   }

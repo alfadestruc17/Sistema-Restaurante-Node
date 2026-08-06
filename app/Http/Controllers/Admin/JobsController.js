@@ -4,8 +4,8 @@
  * financieros consolidados de todos los tenants.
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const JobQueueRepository = require('../../../../repositories/Shared/JobQueueRepository');
 const { JOB_RESULTS_DIR } = require('../../../../config/storage-paths');
 
@@ -18,7 +18,7 @@ class JobsController {
     // GET /admin/jobs/:id - estado del job (para polling desde el frontend)
     static async show(req, res) {
         try {
-            const job = await JobQueueRepository.findById(parseInt(req.params.id, 10));
+            const job = await JobQueueRepository.findById(Number.parseInt(req.params.id, 10));
             if (!job) {
                 return res.status(404).json({ error: 'Job no encontrado' });
             }
@@ -28,7 +28,8 @@ class JobsController {
                 estado: job.estado,
                 error: job.estado === 'error' ? job.error : null
             });
-        } catch (_error) {
+        } catch (error) {
+            console.error('Error al consultar el job:', error);
             res.status(500).json({ error: 'Error al consultar el job' });
         }
     }
@@ -36,8 +37,8 @@ class JobsController {
     // GET /admin/jobs/:id/download - descarga el resultado (solo si está completado)
     static async download(req, res) {
         try {
-            const job = await JobQueueRepository.findById(parseInt(req.params.id, 10));
-            if (!job || job.estado !== 'completado' || !job.resultado_path) {
+            const job = await JobQueueRepository.findById(Number.parseInt(req.params.id, 10));
+            if (job?.estado !== 'completado' || !job?.resultado_path) {
                 return res.status(404).send('El resultado todavía no está listo.');
             }
             const filePath = path.join(JOB_RESULTS_DIR, path.basename(job.resultado_path));
@@ -48,7 +49,8 @@ class JobsController {
             res.type('application/pdf');
             res.attachment(downloadName);
             fs.createReadStream(filePath).pipe(res);
-        } catch (_error) {
+        } catch (error) {
+            console.error('Error al descargar el resultado:', error);
             res.status(500).send('Error al descargar el resultado.');
         }
     }

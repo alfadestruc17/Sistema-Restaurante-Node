@@ -151,7 +151,7 @@ $(document).ready(function() {
             target.tagName === 'INPUT' ||
             target.tagName === 'TEXTAREA' ||
             target.isContentEditable ||
-            (target.classList && target.classList.contains('swal2-input'))
+            target.classList?.contains('swal2-input')
         );
         if (isEditable) return; // permitir copiar/pegar y escribir con normalidad
         if (e.ctrlKey || e.metaKey) {
@@ -198,24 +198,13 @@ $(document).ready(function() {
         });
     }
 
-    // Función para alertas de confirmación
-    function confirmarAccion(titulo, mensaje) {
-        return swalBootstrap.fire({
-            title: titulo,
-            text: mensaje,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar',
-            cancelButtonText: 'Cancelar'
-        });
-    }
 
     // Guardar nuevo cliente (facturación / venta para evento)
     $(document).on('click', '#guardarCliente', function(e) {
         e.preventDefault();
-        var nombre = ($('#nombreCliente').val() || '').trim();
-        var direccion = ($('#direccionNuevoCliente').val() || '').trim();
-        var telefono = ($('#telefonoNuevoCliente').val() || '').trim().replace(/\D/g, '');
+        const nombre = ($('#nombreCliente').val() || '').trim();
+        const direccion = ($('#direccionNuevoCliente').val() || '').trim();
+        const telefono = ($('#telefonoNuevoCliente').val() || '').trim().replace(/\D/g, '');
         if (!nombre) {
             mostrarAlerta('error', 'El nombre es requerido');
             return;
@@ -224,7 +213,7 @@ $(document).ready(function() {
             mostrarAlerta('error', 'El teléfono solo puede contener números');
             return;
         }
-        var $btn = $(this);
+        const $btn = $(this);
         $btn.prop('disabled', true);
         $.ajax({
             url: '/api/clientes',
@@ -232,21 +221,21 @@ $(document).ready(function() {
             contentType: 'application/json',
             data: JSON.stringify({ nombre: nombre, direccion: direccion || null, telefono: telefono || null }),
             success: function(response) {
-                var id = response && (response.id != null) ? response.id : null;
+                const id = response?.id ?? null;
                 if (id != null && $('#cliente').length) {
-                    var newOption = new Option(nombre, id, true, true);
+                    const newOption = new Option(nombre, id, true, true);
                     $('#cliente').append(newOption).trigger('change');
                     $('#direccionCliente').text(direccion || 'No especificada');
                     $('#telefonoCliente').text(telefono || 'No especificado');
                     $('#infoCliente').show();
                 }
-                var modal = bootstrap.Modal.getInstance(document.getElementById('nuevoClienteModal'));
+                const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoClienteModal'));
                 if (modal) modal.hide();
                 if (document.getElementById('formNuevoCliente')) document.getElementById('formNuevoCliente').reset();
                 mostrarAlerta('success', 'Cliente guardado exitosamente');
             },
             error: function(xhr) {
-                var error = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Error al guardar el cliente';
+                const error = xhr.responseJSON?.error || 'Error al guardar el cliente';
                 mostrarAlerta('error', error);
             },
             complete: function() {
@@ -464,7 +453,7 @@ $(document).ready(function() {
 
         const cantidad = 1;
         const unidadMedida = $('#unidadMedida').val();
-        const precio = parseFloat($('#precio').val()) || productoSeleccionado.precio_unidad || 0;
+        const precio = Number.parseFloat($('#precio').val()) || productoSeleccionado.precio_unidad || 0;
         
         if (!precio || precio <= 0) {
             mostrarAlerta('warning', 'Por favor ingrese un precio válido');
@@ -564,8 +553,8 @@ $(document).ready(function() {
 
     // Delegación: botones +/- cantidad en la tabla
     $(document).on('click', '.btn-mas-cantidad', function() {
-        const index = parseInt($(this).data('index'), 10);
-        if (isNaN(index) || index < 0 || index >= productosFactura.length) return;
+        const index = Number.parseInt($(this).data('index'), 10);
+        if (Number.isNaN(index) || index < 0 || index >= productosFactura.length) return;
         const item = productosFactura[index];
         item.cantidad = (item.cantidad || 1) + 1;
         item.subtotal = item.cantidad * item.precio_unitario;
@@ -573,8 +562,8 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.btn-menos-cantidad', function() {
-        const index = parseInt($(this).data('index'), 10);
-        if (isNaN(index) || index < 0 || index >= productosFactura.length) return;
+        const index = Number.parseInt($(this).data('index'), 10);
+        if (Number.isNaN(index) || index < 0 || index >= productosFactura.length) return;
         const item = productosFactura[index];
         if (item.cantidad <= 1) {
             productosFactura.splice(index, 1);
@@ -592,27 +581,6 @@ $(document).ready(function() {
         $('#producto_id').val('');
         $('#precio').val('');
         $('#resultadosProductos').hide();
-    }
-
-    // Función para limpiar el formulario
-    function limpiarFormulario() {
-        productosFactura = [];
-        totalFactura = 0;
-        actualizarTablaProductos();
-        $('#cliente').val(null).trigger('change');
-        $('#infoCliente').hide();
-        $('#formaPago').val('efectivo');
-        
-        // Resetear pasos
-        $('.step').removeClass('active completed');
-        $('#step1').addClass('active');
-        $('#step1 .step-number').text('1');
-        $('#step2 .step-number').text('2');
-        $('#step3 .step-number').text('3');
-        $('#step4 .step-number').text('4');
-        
-        // Limpiar el ID del pedido
-        localStorage.removeItem('pedidoActualId');
     }
 
     // Función para ver pedidos guardados

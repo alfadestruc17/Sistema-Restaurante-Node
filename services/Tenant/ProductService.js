@@ -72,14 +72,14 @@ class ProductService {
             const result = await ProductRepository.create(tenantId, {
                 codigo: codigo.trim(),
                 nombre: nombre.trim(),
-                precio_unidad: parseFloat(precio_unidad) || 0,
+                precio_unidad: Number.parseFloat(precio_unidad) || 0,
                 categoria_id: categoria_id || 1,
                 descripcion: descripcion ? descripcion.trim() : null,
                 imagen_url: imagen_url || null,
                 tributo: tributo || null,
                 tasa_impuesto:
                     tasa_impuesto !== undefined && tasa_impuesto !== null && tasa_impuesto !== ''
-                        ? parseFloat(tasa_impuesto)
+                        ? Number.parseFloat(tasa_impuesto)
                         : null
             });
 
@@ -126,14 +126,14 @@ class ProductService {
             const result = await ProductRepository.update(id, tenantId, {
                 codigo: codigo.trim(),
                 nombre: nombre.trim(),
-                precio_unidad: parseFloat(precio_unidad) || 0,
+                precio_unidad: Number.parseFloat(precio_unidad) || 0,
                 categoria_id: categoria_id || 1,
                 descripcion: descripcion ? descripcion.trim() : null,
                 imagen_url: imagen_url || null,
                 tributo: tributo || null,
                 tasa_impuesto:
                     tasa_impuesto !== undefined && tasa_impuesto !== null && tasa_impuesto !== ''
-                        ? parseFloat(tasa_impuesto)
+                        ? Number.parseFloat(tasa_impuesto)
                         : null
             });
 
@@ -237,7 +237,7 @@ class ProductService {
                         String(row.codigo).trim(),
                         String(row.nombre).trim(),
                         categoriaId,
-                        parseFloat(row.precio_unidad) || 0
+                        Number.parseFloat(row.precio_unidad) || 0
                     ]
                 );
 

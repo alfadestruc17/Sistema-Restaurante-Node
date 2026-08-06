@@ -5,8 +5,8 @@ class UpdateItemCantidadService {
      * @description Actualiza la cantidad y subtotal de un item del pedido.
      */
     static async execute({ tenantId, itemId, cantidad }) {
-        const cant = parseFloat(cantidad);
-        if (isNaN(cant) || cant < 0.01) {
+        const cant = Number.parseFloat(cantidad);
+        if (Number.isNaN(cant) || cant < 0.01) {
             throw new Error('Cantidad inválida (mínimo 0.01)');
         }
 
@@ -39,7 +39,7 @@ class UpdateItemCantidadService {
             console.error('Error al emitir evento SSE en UpdateItemCantidadService:', err);
         }
 
-        return { message: 'Cantidad actualizada', subtotal: parseFloat(subtotal) };
+        return { message: 'Cantidad actualizada', subtotal: Number.parseFloat(subtotal) };
     }
 }
 

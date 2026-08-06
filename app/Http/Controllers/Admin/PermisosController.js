@@ -7,7 +7,7 @@ class PermisosController {
         try {
             const tenants = await TenantService.getAllTenants();
             const secciones = await PermisoRepository.getPermisosAgrupadosPorSeccion();
-            const activeTenantId = Number(req.query.tenantId) || (tenants[0] && tenants[0].id) || null;
+            const activeTenantId = Number(req.query.tenantId) || tenants[0]?.id || null;
             const usuarios = activeTenantId ? await PermisoRepository.getUsuariosByTenantId(activeTenantId) : [];
 
             const roles = await PermisoRepository.getAllRoles();
@@ -35,7 +35,7 @@ class PermisosController {
     // GET /admin/permisos/usuarios
     static async listUsuarios(req, res) {
         try {
-            const tenantId = parseInt(req.query.tenantId);
+            const tenantId = Number.parseInt(req.query.tenantId, 10);
             if (!tenantId) {
                 return res.json({ usuarios: [] });
             }
@@ -50,7 +50,7 @@ class PermisosController {
     // GET /admin/permisos/usuario/:userId
     static async getUsuarioPermisos(req, res) {
         try {
-            const userId = parseInt(req.params.userId);
+            const userId = Number.parseInt(req.params.userId, 10);
             if (!userId) {
                 return res.status(400).json({ error: 'userId inválido' });
             }
@@ -65,9 +65,9 @@ class PermisosController {
     // PUT /admin/permisos/usuario/:userId
     static async updateUsuarioPermisos(req, res) {
         try {
-            const userId = parseInt(req.params.userId);
+            const userId = Number.parseInt(req.params.userId, 10);
             const permisoIds = Array.isArray(req.body.permiso_ids)
-                ? req.body.permiso_ids.map(id => parseInt(id)).filter(id => !isNaN(id))
+                ? req.body.permiso_ids.map(id => Number.parseInt(id, 10)).filter(id => !Number.isNaN(id))
                 : [];
             if (!userId) {
                 return res.status(400).json({ error: 'userId inválido' });

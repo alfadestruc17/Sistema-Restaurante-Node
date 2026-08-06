@@ -24,11 +24,14 @@ class AnaliticaService {
      */
     static async getResumenUltimosMeses(tenantId, months = 3) {
         const meses = await StatsRepository.getMonthlySales(tenantId, months, { excludeEventos: true });
-        
+
         // Sumatorias declarativas e inmutables con .reduce
-        const totalGeneral = (meses || []).reduce((sum, m) => sum + (parseFloat(m.total_ventas) || 0), 0);
-        const cantidadFacturas = (meses || []).reduce((sum, m) => sum + (parseInt(m.cantidad_facturas, 10) || 0), 0);
-        
+        const totalGeneral = (meses || []).reduce((sum, m) => sum + (Number.parseFloat(m.total_ventas) || 0), 0);
+        const cantidadFacturas = (meses || []).reduce(
+            (sum, m) => sum + (Number.parseInt(m.cantidad_facturas, 10) || 0),
+            0
+        );
+
         return {
             meses: (meses || []).map(m => ({
                 ...m,
@@ -48,7 +51,7 @@ class AnaliticaService {
     static async getPrediccionProximoMes(tenantId) {
         // Excluir ventas de eventos para que no afecten la predicción
         const meses = await StatsRepository.getMonthlySales(tenantId, 3, { excludeEventos: true });
-        if (!meses || !meses.length) {
+        if (!meses?.length) {
             return {
                 ventasProximoMes: 0,
                 rangoMin: 0,
@@ -60,19 +63,19 @@ class AnaliticaService {
             };
         }
 
-        const totales = meses.map(m => parseFloat(m.total_ventas) || 0);
-        
+        const totales = meses.map(m => Number.parseFloat(m.total_ventas) || 0);
+
         // Promedio matemático declarativo con .reduce
         const promedio = totales.reduce((a, b) => a + b, 0) / totales.length;
         const min = Math.min(...totales);
         const max = Math.max(...totales);
         const variacion = totales.length >= 2 ? (max - min) / 2 : 0;
-        
+
         const rangoMin = Math.max(0, promedio - variacion);
         const rangoMax = promedio + variacion;
 
         // Margen por defecto 30% si no hay costeo configurado
-        const margenPorDefecto = 0.30;
+        const margenPorDefecto = 0.3;
         const gananciasEsperadas = promedio * margenPorDefecto;
         const posiblesPerdidasVariacion = variacion;
 

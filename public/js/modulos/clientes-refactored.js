@@ -13,10 +13,11 @@ function mostrarAdvertenciaValidacion(mensaje) {
 
 // Client manager class
 class ClientManager {
+    formManager = null;
+    tableManager = null;
+    searchManager = null;
+
     constructor() {
-        this.formManager = null;
-        this.tableManager = null;
-        this.searchManager = null;
         this.init();
     }
 
@@ -119,7 +120,7 @@ class ClientManager {
             document.getElementById('direccion').value = cliente.direccion || '';
             document.getElementById('telefono').value = cliente.telefono || '';
         } catch (error) {
-            AlertManager.alert('Error al cargar el cliente', 'error');
+            AlertManager.alert(error.message || 'Error al cargar el cliente', 'error');
         }
     }
 

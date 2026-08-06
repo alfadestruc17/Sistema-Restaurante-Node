@@ -12,7 +12,7 @@ class TenantsController {
         try {
             const tenants = await TenantService.getAllTenants();
             const plans = await PlanService.getAll();
-            const tenantId = Number(req.query.tenantId) || (tenants[0] && tenants[0].id);
+            const tenantId = Number(req.query.tenantId) || tenants[0]?.id;
             const tenantUsers = tenantId ? await TenantUserService.getUsersByTenant(tenantId) : [];
             const FacturacionElectronicaConfigService = require('../../../../services/Tenant/FacturacionElectronicaConfigService');
             const facturacionElectronica = tenantId
@@ -134,11 +134,12 @@ class TenantsController {
             if (planChanged && plan_id) {
                 await syncPlanPermissionsToTenantUsers(Number(req.params.id), Number(plan_id));
             }
+            const planDetails = planChanged ? ` Plan=${plan_id}` : '';
             await TenantAuditService.log({
                 tenantId: req.params.id,
                 userId: req.user?.id || null,
                 accion: 'actualizar_config',
-                detalles: `Activo=${req.body.activo}${planChanged ? ` Plan=${plan_id}` : ''}`
+                detalles: `Activo=${req.body.activo}${planDetails}`
             });
             if (planChanged) {
                 res.status(200).json({ planUpdated: true });
@@ -189,7 +190,7 @@ class TenantsController {
     static async storeUser(req, res) {
         try {
             const { username, password, email, nombre_completo } = req.body;
-            const rol_nombres = [].concat(req.body.rol_nombres || []);
+            const rol_nombres = [req.body.rol_nombres || []].flat();
             const userId = await TenantUserService.createTenantUser(req.params.id, {
                 username,
                 password,
@@ -212,7 +213,7 @@ class TenantsController {
     // PATCH /admin/tenants/:tenantId/users/:userId/roles
     static async updateUserRole(req, res) {
         try {
-            const rol_nombres = [].concat(req.body.rol_nombres || []);
+            const rol_nombres = [req.body.rol_nombres || []].flat();
             await TenantUserService.assignRoles(req.params.userId, req.params.tenantId, rol_nombres);
             await TenantAuditService.log({
                 tenantId: req.params.tenantId,
@@ -231,10 +232,10 @@ class TenantsController {
         try {
             const { changes } = req.body;
             if (!Array.isArray(changes)) {
-                throw new Error('Formato de cambios inválido');
+                throw new TypeError('Formato de cambios inválido');
             }
             for (const change of changes) {
-                const rol_nombres = [].concat(change.rol_nombres || []);
+                const rol_nombres = [change.rol_nombres || []].flat();
                 await TenantUserService.assignRoles(change.userId, Number(req.params.tenantId), rol_nombres);
                 await TenantAuditService.log({
                     tenantId: req.params.tenantId,
@@ -331,8 +332,7 @@ class TenantsController {
             if (!tenant) {
                 return res.status(404).json({ error: 'Tenant no encontrado' });
             }
-            const tipoNegocio =
-                tenant.config && tenant.config.tipo_negocio ? tenant.config.tipo_negocio : 'restaurante';
+            const tipoNegocio = tenant.config?.tipo_negocio || 'restaurante';
             const result = await CategoryService.seedDefaultCategories(tenantId, tipoNegocio);
             return res.json({ message: 'Categorías creadas', inserted: result.inserted });
         } catch (error) {

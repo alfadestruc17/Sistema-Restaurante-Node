@@ -79,8 +79,8 @@ class StatsService {
             const resumen = await InventarioService.getResumenBajoStock(tenantId);
             insumosBajoStock = resumen.cantidad;
             insumosBajoStockLista = resumen.lista || [];
-        } catch (e) {
-            // Inventario puede no estar disponible en todos los tenants
+        } catch (error) {
+            console.error('Error al obtener resumen de bajo stock de inventario:', error);
         }
 
         const stats = {

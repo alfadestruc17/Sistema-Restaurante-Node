@@ -99,7 +99,7 @@ async function authenticatedFetch(url, options = {}) {
  */
 function hasPermission(permission) {
     const user = getCurrentUser();
-    if (!user || !user.permisos) return false;
+    if (!user?.permisos) return false;
     return user.permisos.includes(permission);
 }
 

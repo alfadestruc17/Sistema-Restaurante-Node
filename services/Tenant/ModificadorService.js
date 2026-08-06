@@ -6,7 +6,7 @@
 const ModificadorRepository = require('../../repositories/Tenant/ModificadorRepository');
 const ProductRepository = require('../../repositories/Tenant/ProductRepository');
 
-const TIPOS_SELECCION = ['unica', 'multiple'];
+const TIPOS_SELECCION = new Set(['unica', 'multiple']);
 
 class ModificadorService {
     static async listGrupos(tenantId, filters = {}) {
@@ -29,17 +29,17 @@ class ModificadorService {
     }
 
     static validarDatosGrupo(data) {
-        if (!data.nombre || !data.nombre.trim()) {
+        if (!data.nombre?.trim()) {
             throw new Error('El nombre del grupo es requerido');
         }
         const tipoSeleccion = data.tipo_seleccion || 'unica';
-        if (!TIPOS_SELECCION.includes(tipoSeleccion)) {
+        if (!TIPOS_SELECCION.has(tipoSeleccion)) {
             throw new Error('Tipo de selección inválido');
         }
-        let minimo = parseInt(data.minimo_selecciones, 10) || 0;
+        let minimo = Number.parseInt(data.minimo_selecciones, 10) || 0;
         let maximo =
             data.maximo_selecciones !== undefined && data.maximo_selecciones !== null && data.maximo_selecciones !== ''
-                ? parseInt(data.maximo_selecciones, 10)
+                ? Number.parseInt(data.maximo_selecciones, 10)
                 : null;
 
         if (tipoSeleccion === 'unica') {
@@ -124,7 +124,7 @@ class ModificadorService {
      *   permiso modificadores.ver: el producto se trata como si no tuviera grupos configurados
      *   (no se exige nada, no suma precio), en vez de rechazar la venta por un obligatorio
      *   que el usuario nunca pudo ver ni completar.
-     * @returns {{precioAdicionalTotal:number, lineasSnapshot:Array, modificadoresHash:string}}
+     * @returns {Promise<{precioAdicionalTotal:number, lineasSnapshot:Array, modificadoresHash:string}>}
      */
     static async validarYCalcularSeleccion(tenantId, productoId, seleccion, { permitido = true } = {}) {
         if (!permitido) {
@@ -137,76 +137,110 @@ class ModificadorService {
             return { precioAdicionalTotal: 0, lineasSnapshot: [], modificadoresHash: null };
         }
 
+        const seleccionPorGrupo = this._mapearSeleccionPorGrupo(seleccion);
+        const { precioAdicionalTotal, lineasSnapshot, opcionIdsOrdenados } = this._procesarGrupos(
+            gruposProducto,
+            seleccionPorGrupo
+        );
+
+        this._validarGruposNoAsignados(seleccionPorGrupo, gruposProducto);
+
+        const modificadoresHash = this._calcularModificadoresHash(opcionIdsOrdenados);
+
+        return { precioAdicionalTotal, lineasSnapshot, modificadoresHash };
+    }
+
+    static _mapearSeleccionPorGrupo(seleccion) {
         const seleccionPorGrupo = new Map();
         for (const s of seleccion || []) {
             seleccionPorGrupo.set(
-                parseInt(s.grupo_id, 10),
-                (s.opciones || []).map(id => parseInt(id, 10))
+                Number.parseInt(s.grupo_id, 10),
+                (s.opciones || []).map(id => Number.parseInt(id, 10))
             );
         }
+        return seleccionPorGrupo;
+    }
 
+    static _procesarGrupos(gruposProducto, seleccionPorGrupo) {
         let precioAdicionalTotal = 0;
         const lineasSnapshot = [];
         const opcionIdsOrdenados = [];
 
         for (const grupo of gruposProducto) {
             const opcionesElegidas = seleccionPorGrupo.get(grupo.id) || [];
-            const cantidadElegida = opcionesElegidas.length;
+            this._validarReglasGrupo(grupo, opcionesElegidas.length);
 
-            if (grupo.obligatorio && cantidadElegida < Math.max(1, grupo.minimo_selecciones)) {
-                throw new Error(
-                    `Debes elegir al menos ${Math.max(1, grupo.minimo_selecciones)} opción(es) en "${grupo.nombre}"`
-                );
-            }
-            if (grupo.minimo_selecciones > 0 && cantidadElegida > 0 && cantidadElegida < grupo.minimo_selecciones) {
-                throw new Error(`Debes elegir al menos ${grupo.minimo_selecciones} opción(es) en "${grupo.nombre}"`);
-            }
-            if (grupo.tipo_seleccion === 'unica' && cantidadElegida > 1) {
-                throw new Error(`Solo puedes elegir 1 opción en "${grupo.nombre}"`);
-            }
-            const maximo = grupo.tipo_seleccion === 'unica' ? 1 : grupo.maximo_selecciones;
-            if (maximo !== null && maximo !== undefined && cantidadElegida > maximo) {
-                throw new Error(`Puedes elegir máximo ${maximo} opción(es) en "${grupo.nombre}"`);
-            }
-
-            for (const opcionId of opcionesElegidas) {
-                const opcion = grupo.opciones.find(o => o.id === opcionId);
-                if (!opcion) {
-                    throw new Error(`La opción seleccionada no pertenece al grupo "${grupo.nombre}"`);
-                }
-                const precioAdicional = parseFloat(opcion.precio_adicional) || 0;
-                precioAdicionalTotal += precioAdicional;
-                opcionIdsOrdenados.push(opcion.id);
-                lineasSnapshot.push({
-                    opcion_modificador_id: opcion.id,
-                    grupo_nombre: grupo.nombre,
-                    opcion_nombre: opcion.nombre,
-                    precio_adicional: precioAdicional,
-                    cantidad: 1,
-                    insumo_id: opcion.insumo_id || null,
-                    cantidad_insumo: opcion.cantidad_insumo || null,
-                    unidad_insumo: opcion.unidad_insumo || null
-                });
-            }
+            const { subtotal, lineas, opcionIds } = this._procesarOpcionesDeGrupo(grupo, opcionesElegidas);
+            precioAdicionalTotal += subtotal;
+            lineasSnapshot.push(...lineas);
+            opcionIdsOrdenados.push(...opcionIds);
         }
 
-        // Rechaza selecciones para grupos que no están asignados a este producto
+        return { precioAdicionalTotal, lineasSnapshot, opcionIdsOrdenados };
+    }
+
+    static _validarReglasGrupo(grupo, cantidadElegida) {
+        const minRequerido = Math.max(1, grupo.minimo_selecciones);
+        if (grupo.obligatorio && cantidadElegida < minRequerido) {
+            throw new Error(`Debes elegir al menos ${minRequerido} opción(es) en "${grupo.nombre}"`);
+        }
+        if (grupo.minimo_selecciones > 0 && cantidadElegida > 0 && cantidadElegida < grupo.minimo_selecciones) {
+            throw new Error(`Debes elegir al menos ${grupo.minimo_selecciones} opción(es) en "${grupo.nombre}"`);
+        }
+        if (grupo.tipo_seleccion === 'unica' && cantidadElegida > 1) {
+            throw new Error(`Solo puedes elegir 1 opción en "${grupo.nombre}"`);
+        }
+
+        const maximo = grupo.tipo_seleccion === 'unica' ? 1 : grupo.maximo_selecciones;
+        if (maximo !== null && maximo !== undefined && cantidadElegida > maximo) {
+            throw new Error(`Puedes elegir máximo ${maximo} opción(es) en "${grupo.nombre}"`);
+        }
+    }
+
+    static _procesarOpcionesDeGrupo(grupo, opcionesElegidas) {
+        let subtotal = 0;
+        const lineas = [];
+        const opcionIds = [];
+
+        for (const opcionId of opcionesElegidas) {
+            const opcion = grupo.opciones.find(o => o.id === opcionId);
+            if (!opcion) {
+                throw new Error(`La opción seleccionada no pertenece al grupo "${grupo.nombre}"`);
+            }
+            const precioAdicional = Number.parseFloat(opcion.precio_adicional) || 0;
+            subtotal += precioAdicional;
+            opcionIds.push(opcion.id);
+            lineas.push({
+                opcion_modificador_id: opcion.id,
+                grupo_nombre: grupo.nombre,
+                opcion_nombre: opcion.nombre,
+                precio_adicional: precioAdicional,
+                cantidad: 1,
+                insumo_id: opcion.insumo_id || null,
+                cantidad_insumo: opcion.cantidad_insumo || null,
+                unidad_insumo: opcion.unidad_insumo || null
+            });
+        }
+        return { subtotal, lineas, opcionIds };
+    }
+
+    static _validarGruposNoAsignados(seleccionPorGrupo, gruposProducto) {
         const grupoIdsValidos = new Set(gruposProducto.map(g => g.id));
         for (const grupoId of seleccionPorGrupo.keys()) {
             if (!grupoIdsValidos.has(grupoId)) {
                 throw new Error('Uno de los grupos seleccionados no está disponible para este producto');
             }
         }
+    }
 
-        const modificadoresHash =
-            opcionIdsOrdenados.length > 0
-                ? opcionIdsOrdenados
-                      .slice()
-                      .sort((a, b) => a - b)
-                      .join(',')
-                : null;
-
-        return { precioAdicionalTotal, lineasSnapshot, modificadoresHash };
+    static _calcularModificadoresHash(opcionIdsOrdenados) {
+        if (opcionIdsOrdenados.length === 0) {
+            return null;
+        }
+        return opcionIdsOrdenados
+            .slice()
+            .sort((a, b) => a - b)
+            .join(',');
     }
 }
 

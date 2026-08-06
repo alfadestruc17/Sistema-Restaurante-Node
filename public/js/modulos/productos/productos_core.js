@@ -60,13 +60,14 @@ async function cargarParametrosCosteoParaEdicion(id, paramContainer) {
 }
 
 class ProductManager {
+  formManager = null;
+  tableManager = null;
+  searchManager = null;
+  _costeoProductoId = null;
+  _costeoData = null;
+  _modificadoresProductoId = null;
+
   constructor() {
-    this.formManager = null;
-    this.tableManager = null;
-    this.searchManager = null;
-    this._costeoProductoId = null;
-    this._costeoData = null;
-    this._modificadoresProductoId = null;
     this.init();
   }
 
@@ -217,7 +218,7 @@ class ProductManager {
   async aplicarPrecioSugerido() {
     const id = this._costeoProductoId;
     const data = this._costeoData;
-    if (!id || !data || data.precio_sugerido == null) return;
+    if (!id || data?.precio_sugerido == null) return;
     try {
       await ApiClient.put(`/api/productos/${id}/precio`, { precio_unidad: data.precio_sugerido });
       bootstrap.Modal.getInstance(document.getElementById('costeoProductoModal'))?.hide();
@@ -300,6 +301,7 @@ class ProductManager {
         await cargarParametrosCosteoParaEdicion(id, paramContainer);
       }
     } catch (error) {
+      console.error('Error al cargar el producto:', error);
       AlertManager.alert('Error al cargar el producto', 'error');
     }
   }

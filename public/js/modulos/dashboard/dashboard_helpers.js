@@ -1,5 +1,16 @@
 // Rendering helpers and SVG generators for GastroFlow Dashboard
 
+// CSS Color Mixing Helpers
+function hx(h) {
+  h = h.replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  return [Number.parseInt(h.slice(0, 2), 16), Number.parseInt(h.slice(2, 4), 16), Number.parseInt(h.slice(4, 6), 16)];
+}
+
+function toHex(a) {
+  return '#' + a.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+}
+
 // Extraída de updateMiniCalendarioEventos (S3776): arma una sola celda del
 // mini-calendario. No captura nada del closure, llega por parámetro.
 function construirCeldaCalendario({ year, month, day, hoy, eventosMap, mixFn, activeTheme }) {
@@ -10,7 +21,11 @@ function construirCeldaCalendario({ year, month, day, hoy, eventosMap, mixFn, ac
   let cls = '';
   if (hasEvent) cls += ' dia-evento';
   if (isToday) cls += ' dia-hoy';
-  const titulo = hasEvent ? ('Evento' + (nombres.length > 1 ? 's' : '') + ': ' + nombres.join(', ')) : '';
+  let titulo = '';
+  if (hasEvent) {
+    const plural = nombres.length > 1 ? 's' : '';
+    titulo = `Evento${plural}: ${nombres.join(', ')}`;
+  }
   const attrTooltip = titulo ? ' data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="' + titulo.replaceAll('"', '&quot;') + '" title="' + titulo.replaceAll('"', '&quot;') + '"' : '';
 
   let style = '';
@@ -27,17 +42,6 @@ function construirCeldaCalendario({ year, month, day, hoy, eventosMap, mixFn, ac
 
 $(function () {
   const mod = window.DashboardModule;
-
-  // CSS Color Mixing Helpers
-  function hx(h) {
-    h = h.replace('#', '');
-    if (h.length === 3) h = h.split('').map(c => c + c).join('');
-    return [Number.parseInt(h.slice(0, 2), 16), Number.parseInt(h.slice(2, 4), 16), Number.parseInt(h.slice(4, 6), 16)];
-  }
-
-  function toHex(a) {
-    return '#' + a.map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
-  }
 
   mod.mix = function (a, b, t) {
     const A = hx(a), B = hx(b);
@@ -246,21 +250,20 @@ $(function () {
 
     const tooltipTriggerList = container.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltipTriggerList.forEach(function (el) {
-      new bootstrap.Tooltip(el, { trigger: 'hover click' });
+      bootstrap.Tooltip.getOrCreateInstance(el, { trigger: 'hover click' });
     });
 
-    const self = this;
-    document.getElementById('calPrevMonth').addEventListener('click', function () {
-      let m = self.calendarViewMonth - 1;
-      let y = self.calendarViewYear;
+    document.getElementById('calPrevMonth').addEventListener('click', () => {
+      let m = this.calendarViewMonth - 1;
+      let y = this.calendarViewYear;
       if (m < 0) { m = 11; y--; }
-      self.fetchCalendarMonth(y, m);
+      this.fetchCalendarMonth(y, m);
     });
-    document.getElementById('calNextMonth').addEventListener('click', function () {
-      let m = self.calendarViewMonth + 1;
-      let y = self.calendarViewYear;
+    document.getElementById('calNextMonth').addEventListener('click', () => {
+      let m = this.calendarViewMonth + 1;
+      let y = this.calendarViewYear;
       if (m > 11) { m = 0; y++; }
-      self.fetchCalendarMonth(y, m);
+      this.fetchCalendarMonth(y, m);
     });
   };
 
@@ -271,20 +274,19 @@ $(function () {
       this.updateMiniCalendarioEventos(this.calendarEventosCache[mesParam], year, month);
       return;
     }
-    const self = this;
     fetch('/api/dashboard/eventos-calendario?mes=' + mesParam, { credentials: 'same-origin' })
-      .then(function (r) {
+      .then(r => {
         if (!r.ok) throw new Error('Error al cargar eventos');
         return r.json();
       })
-      .then(function (data) {
+      .then(data => {
         let list = data.eventosCalendario || data.eventos || [];
         if (!Array.isArray(list)) list = [];
-        self.calendarEventosCache[mesParam] = list;
-        self.updateMiniCalendarioEventos(list, year, month);
+        this.calendarEventosCache[mesParam] = list;
+        this.updateMiniCalendarioEventos(list, year, month);
       })
-      .catch(function () {
-        self.updateMiniCalendarioEventos([], year, month);
+      .catch(() => {
+        this.updateMiniCalendarioEventos([], year, month);
       });
   };
 

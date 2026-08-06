@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     canvases.forEach(canvas => {
         const url = canvas.dataset.url;
         if (url) {
-            new QRious({
+            canvas._qr = new QRious({
                 element: canvas,
                 value: url,
                 size: 300,

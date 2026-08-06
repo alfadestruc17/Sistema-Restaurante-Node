@@ -36,9 +36,12 @@ window.POS_MODIFICADORES = {
             const hint = g.obligatorio
                 ? '<span class="badge bg-warning text-dark">Obligatorio</span>'
                 : '<span class="badge bg-light text-dark">Opcional</span>';
-            const subHint = g.tipo_seleccion === 'multiple'
-                ? (g.maximo_selecciones ? `Elige hasta ${g.maximo_selecciones}` : 'Elige las que quieras')
-                : 'Elige 1';
+            let subHint = 'Elige 1';
+            if (g.tipo_seleccion === 'multiple') {
+                subHint = g.maximo_selecciones
+                    ? `Elige hasta ${g.maximo_selecciones}`
+                    : 'Elige las que quieras';
+            }
             const opcionesHtml = (g.opciones || []).map(o => `
                 <label class="pos-mod-opcion">
                     <span>

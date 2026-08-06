@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire('Error', err.error || 'No se pudo abrir caja', 'error');
                 }
             } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'Error de conexión', 'error');
             }
         });
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         Swal.fire('Turno Cerrado', 'Arqueo guardado exitosamente', 'success').then(() => location.reload());
                     }
                 } catch (error) {
+                    console.error(error);
                     Swal.fire('Error', 'Error de conexión', 'error');
                 }
             }
@@ -77,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire('Éxito', 'Movimiento registrado', 'success').then(() => location.reload());
                 }
             } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'Error al registrar', 'error');
             }
         });

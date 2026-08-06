@@ -74,53 +74,69 @@ $(document).ready(function () {
 
 // Real-time notifications for new orders (SSE)
 (function () {
-    if (!!window.EventSource) {
-        const source = new EventSource('/api/notifications/subscribe');
+    if (!window.EventSource) return;
 
-        source.addEventListener('message', function (e) {
-            try {
-                const data = JSON.parse(e.data);
-                if (data.event === 'orderCreated') {
-                    const isCancelled = data.action === 'cancelled';
-                    const isQR = data.origen === 'qr';
-
-                    if (typeof window.refreshMesaIfOpen === 'function' && data.mesaId) {
-                        window.refreshMesaIfOpen(data.mesaId, data.action);
-                    } else {
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'bottom-end',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: false
-                        });
-
-                        Toast.fire({
-                            icon: isCancelled ? 'warning' : 'info',
-                            title: isCancelled ? 'Pedido Cancelado' : (isQR ? 'Nuevo pedido QR' : 'Nuevo pedido WhatsApp'),
-                            text: isCancelled ? `El pedido #${data.pedidoId} ha sido cancelado.` : 'Actualizando mesas...'
-                        });
-
-                        if (!isQR || isCancelled) {
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 2000);
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error('Error procesando notificación:', err);
-            }
-        }, false);
-
-        source.addEventListener('error', function (e) {
-            if (e.readyState === EventSource.CLOSED) {
-                console.log('SSE connection closed');
-            }
-        }, false);
-
-        window.addEventListener('beforeunload', () => {
-            source.close();
-        });
+    function getNotificationDetails(isCancelled, isQR, pedidoId) {
+        if (isCancelled) {
+            return {
+                icon: 'warning',
+                title: 'Pedido Cancelado',
+                text: `El pedido #${pedidoId} ha sido cancelado.`
+            };
+        }
+        return {
+            icon: 'info',
+            title: isQR ? 'Nuevo pedido QR' : 'Nuevo pedido WhatsApp',
+            text: 'Actualizando mesas...'
+        };
     }
+
+    function handleOrderCreated(data) {
+        const isCancelled = data.action === 'cancelled';
+        const isQR = data.origen === 'qr';
+
+        if (typeof window.refreshMesaIfOpen === 'function' && data.mesaId) {
+            window.refreshMesaIfOpen(data.mesaId, data.action);
+            return;
+        }
+
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'bottom-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: false
+        });
+
+        Toast.fire(getNotificationDetails(isCancelled, isQR, data.pedidoId));
+
+        if (!isQR || isCancelled) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
+    }
+
+    const source = new EventSource('/api/notifications/subscribe');
+
+    source.addEventListener('message', function (e) {
+        try {
+            const data = JSON.parse(e.data);
+            if (data.event === 'orderCreated') {
+                handleOrderCreated(data);
+            }
+        } catch (err) {
+            console.error('Error procesando notificación:', err);
+        }
+    }, false);
+
+    source.addEventListener('error', function (e) {
+        if (e.readyState === EventSource.CLOSED) {
+            console.log('SSE connection closed');
+        }
+    }, false);
+
+    window.addEventListener('beforeunload', () => {
+        source.close();
+    });
 })();

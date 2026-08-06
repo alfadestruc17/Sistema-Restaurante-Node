@@ -56,8 +56,8 @@ $(function () {
       preConfirm: () => {
         const num = (document.getElementById('editMesaNumero').value || '').trim();
         const desc = (document.getElementById('editMesaDesc').value || '').trim();
-        if (!num) { Swal.showValidationMessage('El número es obligatorio'); return false; }
-        if (!desc) { Swal.showValidationMessage('La descripción es obligatoria'); return false; }
+        if (!num) { Swal.showValidationMessage('El número es obligatorio'); return null; }
+        if (!desc) { Swal.showValidationMessage('La descripción es obligatoria'); return null; }
         return { numero: num, descripcion: desc };
       }
     });

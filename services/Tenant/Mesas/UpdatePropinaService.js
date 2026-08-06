@@ -5,7 +5,7 @@ class UpdatePropinaService {
      * @description Actualiza el monto de la propina en un pedido.
      */
     static async execute({ tenantId, pedidoId, propina }) {
-        const montoPropina = Math.max(0, parseFloat(propina) || 0);
+        const montoPropina = Math.max(0, Number.parseFloat(propina) || 0);
 
         const [result] = await db.query('UPDATE pedidos SET propina = ? WHERE id = ? AND tenant_id = ?', [
             montoPropina,

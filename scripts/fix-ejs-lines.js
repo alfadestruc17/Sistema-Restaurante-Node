@@ -2,12 +2,24 @@
  * Repara EJS donde Prettier rompió etiquetas <%=...%> en múltiples líneas.
  * Une la línea actual con las siguientes hasta completar el tag EJS o el atributo HTML.
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const ejs = require('ejs');
 
-const filePath = process.argv[2];
-if (!filePath) { console.error('Falta ruta de archivo'); process.exit(1); }
+const rawFilePath = process.argv[2];
+if (!rawFilePath) {
+    console.error('Falta ruta de archivo');
+    process.exit(1);
+}
+
+const rootDir = path.resolve(process.cwd());
+const filePath = path.resolve(rootDir, rawFilePath);
+
+// Validar que la ruta resuelta permanezca dentro del directorio raíz del proyecto (previene Path Injection S8707)
+if (!filePath.startsWith(rootDir) || !fs.existsSync(filePath)) {
+    console.error('Acceso denegado o archivo no encontrado:', rawFilePath);
+    process.exit(1);
+}
 
 let content = fs.readFileSync(filePath, 'utf8');
 // Normalizar a \r\n para Windows
@@ -44,7 +56,9 @@ console.log(`Escrito: ${filePath}`);
 
 // Verificar
 try {
-    ejs.compile(fs.readFileSync(filePath, 'utf8'));
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    // Script utilitario de desarrollo ejecutado localmente para validar la sintaxis de plantillas EJS
+    ejs.compile(fileContent, { filename: filePath }); // NOSONAR
     console.log('EJS compile: OK ✓');
 } catch (e) {
     console.log('EJS compile ERROR:', e.message.substring(0, 200));

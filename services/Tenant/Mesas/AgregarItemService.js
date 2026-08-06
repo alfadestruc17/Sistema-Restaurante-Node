@@ -39,7 +39,7 @@ class AgregarItemService {
         const check = await InventarioService.checkStockParaProducto(
             tenantId,
             realProductId,
-            parseFloat(cantidad) || 1
+            Number.parseFloat(cantidad) || 1
         );
         if (!check.ok) {
             const msg = (check.faltantes || [])

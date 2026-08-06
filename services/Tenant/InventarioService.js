@@ -15,15 +15,58 @@ function cantidadABase(cantidad, unidad) {
     return convertirABase(cantidad, unidad || 'g').cantidadBase;
 }
 
+function calcularCostoEntrada(costoUnitario, insumo) {
+    if (costoUnitario !== null && costoUnitario !== undefined) {
+        return Number.parseFloat(costoUnitario);
+    }
+    if (insumo.costo_promedio !== null && insumo.costo_promedio !== undefined) {
+        return Number.parseFloat(insumo.costo_promedio);
+    }
+    if (insumo.precio_compra && insumo.cantidad_compra) {
+        return insumo.precio_compra / insumo.cantidad_compra;
+    }
+    return null;
+}
+
+function calcularNuevoCostoPromedio(cant, costo, stockActual, costoActual, nuevoStock) {
+    const tieneCosto = costo !== null && costo !== undefined;
+    const tieneStockOCostoActual = stockActual > 0 || (costoActual !== null && costoActual !== undefined);
+
+    if (tieneCosto && tieneStockOCostoActual) {
+        return (stockActual * (costoActual || costo) + cant * costo) / nuevoStock;
+    }
+    return costo;
+}
+
+async function registrarGastoFinanzasSiAplica(tenantId, insumo, insumoId, cant, costo) {
+    if (!costo || costo <= 0 || cant <= 0) {
+        return;
+    }
+
+    const FinanzasService = require('./FinanzasService');
+    try {
+        await FinanzasService.registrarGastoInventario(tenantId, {
+            monto: costo * cant,
+            insumo_nombre: insumo.nombre,
+            mov_id: insumoId,
+            categoria_nombre: insumo.categoria_nombre
+        });
+    } catch (finErr) {
+        console.error('Error al registrar gasto en finanzas:', finErr);
+    }
+}
+
 class InventarioService {
     static async listInsumos(tenantId, filters = {}) {
         const rows = await InsumoRepository.findAll(tenantId, filters);
         return (rows || []).map(r => ({
             ...r,
-            stock_actual: parseFloat(r.stock_actual) || 0,
-            stock_minimo: parseFloat(r.stock_minimo) || 0,
+            stock_actual: Number.parseFloat(r.stock_actual) || 0,
+            stock_minimo: Number.parseFloat(r.stock_minimo) || 0,
             costo_promedio:
-                r.costo_promedio !== null && r.costo_promedio !== undefined ? parseFloat(r.costo_promedio) : null,
+                r.costo_promedio !== null && r.costo_promedio !== undefined
+                    ? Number.parseFloat(r.costo_promedio)
+                    : null,
             unidad_base: r.unidad_base || 'g'
         }));
     }
@@ -43,18 +86,12 @@ class InventarioService {
         if (!insumo) {
             throw new Error('Insumo no encontrado');
         }
-        const cant = parseFloat(cantidad);
+        const cant = Number.parseFloat(cantidad);
         if (cant <= 0) {
             throw new Error('La cantidad debe ser mayor a 0');
         }
-        const costo =
-            costo_unitario !== null && costo_unitario !== undefined
-                ? parseFloat(costo_unitario)
-                : insumo.costo_promedio !== null && insumo.costo_promedio !== undefined
-                  ? parseFloat(insumo.costo_promedio)
-                  : insumo.precio_compra && insumo.cantidad_compra
-                    ? insumo.precio_compra / insumo.cantidad_compra
-                    : null;
+
+        const costo = calcularCostoEntrada(costo_unitario, insumo);
         const conn = await db.getConnection();
         try {
             await conn.beginTransaction();
@@ -70,42 +107,25 @@ class InventarioService {
                     documento_referencia || null
                 ]
             );
-            const stockActual = parseFloat(insumo.stock_actual) || 0;
+
+            const stockActual = Number.parseFloat(insumo.stock_actual) || 0;
             const costoActual =
                 insumo.costo_promedio !== null && insumo.costo_promedio !== undefined
-                    ? parseFloat(insumo.costo_promedio)
+                    ? Number.parseFloat(insumo.costo_promedio)
                     : null;
             const nuevoStock = stockActual + cant;
-            let nuevoCosto = costo;
-            if (
-                costo !== null &&
-                costo !== undefined &&
-                (stockActual > 0 || (costoActual !== null && costoActual !== undefined))
-            ) {
-                nuevoCosto = (stockActual * (costoActual || costo) + cant * costo) / nuevoStock;
-            }
-            const stockValorizadoActual = parseFloat(insumo.stock_valorizado) || 0;
+            const nuevoCosto = calcularNuevoCostoPromedio(cant, costo, stockActual, costoActual, nuevoStock);
+
+            const stockValorizadoActual = Number.parseFloat(insumo.stock_valorizado) || 0;
             const nuevoStockValorizado = stockValorizadoActual + cant;
+
             await conn.query(
                 'UPDATE insumos SET stock_actual = ?, stock_valorizado = ?, costo_promedio = ? WHERE id = ? AND tenant_id = ?',
                 [nuevoStock, nuevoStockValorizado, nuevoCosto, insumo_id, tenantId]
             );
 
             // --- INTEGRACIÓN CON FINANZAS ---
-            // Si hay un costo real pagado, registrar el gasto
-            if (costo > 0 && cant > 0) {
-                const FinanzasService = require('./FinanzasService');
-                try {
-                    await FinanzasService.registrarGastoInventario(tenantId, {
-                        monto: costo * cant,
-                        insumo_nombre: insumo.nombre,
-                        mov_id: insumo_id, // Podríamos obtener el ID real del INSERT de movimientos si quisiéramos más precisión
-                        categoria_nombre: insumo.categoria_nombre
-                    });
-                } catch (finErr) {
-                    console.error('Error al registrar gasto en finanzas:', finErr);
-                }
-            }
+            await registrarGastoFinanzasSiAplica(tenantId, insumo, insumo_id, cant, costo);
             // --------------------------------
 
             await conn.commit();
@@ -126,11 +146,11 @@ class InventarioService {
         if (!insumo) {
             throw new Error('Insumo no encontrado');
         }
-        const cant = parseFloat(cantidad);
+        const cant = Number.parseFloat(cantidad);
         if (cant <= 0) {
             throw new Error('La cantidad debe ser mayor a 0');
         }
-        const stockActual = parseFloat(insumo.stock_actual) || 0;
+        const stockActual = Number.parseFloat(insumo.stock_actual) || 0;
         if (stockActual < cant) {
             console.warn(
                 `[Inventario] Stock insuficiente para ${insumo.nombre}. Disponible: ${stockActual}, Requerido: ${cant}. Se permitirá stock negativo.`
@@ -144,7 +164,7 @@ class InventarioService {
                 [tenantId, insumo_id, cant, insumo.costo_promedio, referencia || null]
             );
             const nuevoStock = stockActual - cant;
-            const stockValorizadoActual = parseFloat(insumo.stock_valorizado) || 0;
+            const stockValorizadoActual = Number.parseFloat(insumo.stock_valorizado) || 0;
             const nuevoStockValorizado = stockValorizadoActual - cant;
             await conn.query(
                 'UPDATE insumos SET stock_actual = ?, stock_valorizado = ? WHERE id = ? AND tenant_id = ?',
@@ -171,8 +191,8 @@ class InventarioService {
         if (!insumo) {
             throw new Error('Insumo no encontrado');
         }
-        const cant = parseFloat(cantidad);
-        const stockActual = parseFloat(insumo.stock_actual) || 0;
+        const cant = Number.parseFloat(cantidad);
+        const stockActual = Number.parseFloat(insumo.stock_actual) || 0;
         const nuevoStock = Math.max(0, stockActual + cant);
         const conn = await db.getConnection();
         try {
@@ -202,7 +222,7 @@ class InventarioService {
 
     /**
      * Comprueba si hay stock suficiente para preparar N porciones del producto (si tiene receta).
-     * @returns { ok: boolean, faltantes?: Array<{ insumo_nombre, requerido, disponible }> }
+     * @returns {Promise<{ ok: boolean, faltantes?: Array<{ insumo_nombre, requerido, disponible }> }>}
      */
     static async checkStockParaProducto(tenantId, productoId, cantidad = 1) {
         const receta = await RecetaRepository.findByProductoId(productoId, tenantId);
@@ -210,8 +230,8 @@ class InventarioService {
             return { ok: true };
         }
         const ingredientes = await RecetaRepository.getIngredientes(receta.id);
-        const porciones = parseFloat(receta.porciones) || 1;
-        const factor = (parseFloat(cantidad) || 1) / porciones;
+        const porciones = Number.parseFloat(receta.porciones) || 1;
+        const factor = (Number.parseFloat(cantidad) || 1) / porciones;
 
         // Un solo batch fetch en vez de 1 query por ingrediente.
         const insumosPorId = await InsumoRepository.findByIds(
@@ -226,9 +246,9 @@ class InventarioService {
                     return null;
                 }
                 const unidadBase = (insumo.unidad_base || 'g').toString().trim();
-                const cantidadRequerida = (parseFloat(ing.cantidad) || 0) * factor;
+                const cantidadRequerida = (Number.parseFloat(ing.cantidad) || 0) * factor;
                 const requerido = cantidadABase(cantidadRequerida, ing.unidad || unidadBase);
-                const disponible = parseFloat(insumo.stock_actual) || 0;
+                const disponible = Number.parseFloat(insumo.stock_actual) || 0;
 
                 if (disponible < requerido) {
                     return {
@@ -256,8 +276,8 @@ class InventarioService {
             return;
         }
         const ingredientes = await RecetaRepository.getIngredientes(receta.id);
-        const porciones = parseFloat(receta.porciones) || 1;
-        const factor = (parseFloat(cantidad) || 1) / porciones;
+        const porciones = Number.parseFloat(receta.porciones) || 1;
+        const factor = (Number.parseFloat(cantidad) || 1) / porciones;
 
         // Un solo batch fetch para resolver unidad_base de todos los ingredientes.
         // registrarSalida sigue leyendo su propio insumo internamente: necesita el
@@ -273,7 +293,7 @@ class InventarioService {
                 if (!insumo) {
                     return;
                 }
-                const cantidadRequerida = (parseFloat(ing.cantidad) || 0) * factor;
+                const cantidadRequerida = (Number.parseFloat(ing.cantidad) || 0) * factor;
                 const cantidadEnBase = cantidadABase(cantidadRequerida, ing.unidad || insumo.unidad_base || 'g');
                 if (cantidadEnBase > 0) {
                     await this.registrarSalida(tenantId, {
@@ -292,7 +312,7 @@ class InventarioService {
         // Agregación inmutable y pura usando .reduce
         const valorizacion = (insumos || []).reduce(
             (acc, i) => {
-                const stock = parseFloat(i.stock_actual) || 0;
+                const stock = Number.parseFloat(i.stock_actual) || 0;
                 if (stock <= 0) {
                     return acc;
                 }
@@ -300,16 +320,18 @@ class InventarioService {
                 // Un ajuste manual (merma, corrección de cocina) mueve stock_actual pero no
                 // stock_valorizado: usar el mínimo evita que ese stock "gratis" (o el que ya
                 // no existe físicamente) infle o desinfle el valor reportado del inventario.
-                const stockValorizado = parseFloat(i.stock_valorizado) || 0;
+                const stockValorizado = Number.parseFloat(i.stock_valorizado) || 0;
                 const stockParaValorizar = Math.max(0, Math.min(stock, stockValorizado));
 
                 let costo =
-                    i.costo_promedio !== null && i.costo_promedio !== undefined ? parseFloat(i.costo_promedio) : 0;
+                    i.costo_promedio !== null && i.costo_promedio !== undefined
+                        ? Number.parseFloat(i.costo_promedio)
+                        : 0;
                 if (costo === 0) {
-                    if (i.categoria_nombre === 'Cerámicas' && parseFloat(i.precio_venta) > 0) {
-                        costo = parseFloat(i.precio_venta);
-                    } else if (parseFloat(i.precio_compra) > 0 && parseFloat(i.cantidad_compra) > 0) {
-                        costo = parseFloat(i.precio_compra) / parseFloat(i.cantidad_compra);
+                    if (i.categoria_nombre === 'Cerámicas' && Number.parseFloat(i.precio_venta) > 0) {
+                        costo = Number.parseFloat(i.precio_venta);
+                    } else if (Number.parseFloat(i.precio_compra) > 0 && Number.parseFloat(i.cantidad_compra) > 0) {
+                        costo = Number.parseFloat(i.precio_compra) / Number.parseFloat(i.cantidad_compra);
                     }
                 }
 
@@ -330,22 +352,22 @@ class InventarioService {
 
     /**
      * Insumos con stock actual <= stock mínimo (para alertas en dashboard).
-     * @returns {{ cantidad: number, lista: Array }}
+     * @returns {Promise<{ cantidad: number, lista: Array }>}
      */
     static async getResumenBajoStock(tenantId) {
         const insumos = await InsumoRepository.findAll(tenantId, {});
         const lista = (insumos || [])
             .filter(i => {
-                const actual = parseFloat(i.stock_actual) || 0;
-                const min = parseFloat(i.stock_minimo) || 0;
+                const actual = Number.parseFloat(i.stock_actual) || 0;
+                const min = Number.parseFloat(i.stock_minimo) || 0;
                 return actual <= min;
             })
             .map(i => ({
                 id: i.id,
                 codigo: i.codigo,
                 nombre: i.nombre,
-                stock_actual: parseFloat(i.stock_actual) || 0,
-                stock_minimo: parseFloat(i.stock_minimo) || 0,
+                stock_actual: Number.parseFloat(i.stock_actual) || 0,
+                stock_minimo: Number.parseFloat(i.stock_minimo) || 0,
                 unidad_base: i.unidad_base || 'g'
             }));
         return { cantidad: lista.length, lista: lista.slice(0, 10) };
@@ -360,8 +382,8 @@ class InventarioService {
         const insumos = await InsumoRepository.findAll(tenantId, {});
         const lista = (insumos || [])
             .filter(i => {
-                const actual = parseFloat(i.stock_actual) || 0;
-                const min = parseFloat(i.stock_minimo) || 0;
+                const actual = Number.parseFloat(i.stock_actual) || 0;
+                const min = Number.parseFloat(i.stock_minimo) || 0;
                 if (actual <= min) {
                     return true;
                 }
@@ -374,10 +396,10 @@ class InventarioService {
                 id: i.id,
                 codigo: i.codigo,
                 nombre: i.nombre,
-                stock_actual: parseFloat(i.stock_actual) || 0,
-                stock_minimo: parseFloat(i.stock_minimo) || 0,
+                stock_actual: Number.parseFloat(i.stock_actual) || 0,
+                stock_minimo: Number.parseFloat(i.stock_minimo) || 0,
                 unidad_base: i.unidad_base || 'g',
-                bajo: (parseFloat(i.stock_actual) || 0) <= (parseFloat(i.stock_minimo) || 0)
+                bajo: (Number.parseFloat(i.stock_actual) || 0) <= (Number.parseFloat(i.stock_minimo) || 0)
             }));
         return { lista };
     }
