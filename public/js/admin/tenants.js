@@ -5,7 +5,7 @@ if (searchInput) {
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         tenantItems.forEach(item => {
-            const name = item.getAttribute('data-name');
+            const name = item.dataset.name || '';
             item.style.display = name.includes(term) ? 'flex' : 'none';
         });
     });
@@ -24,7 +24,7 @@ if (colorInput) {
 
 presetDots.forEach(dot => {
     dot.addEventListener('click', () => {
-        const color = dot.getAttribute('data-color');
+        const color = dot.dataset.color;
         colorInput.value = color;
         colorPreview.style.background = color;
     });
@@ -51,7 +51,8 @@ async function saveAppearance(tenantId) {
             Swal.fire({ icon: 'error', title: 'Error al servidor' });
         }
     } catch (e) {
-        Swal.fire({ icon: 'error', title: 'Error de red' });
+        console.error('Error al guardar apariencia:', e);
+        Swal.fire({ icon: 'error', title: 'Error de red', text: e.message });
     }
 }
 
@@ -86,6 +87,7 @@ async function handleFormSubmit(event, tenantId, type) {
                 const parsed = JSON.parse(textResp);
                 errText = parsed.error || parsed.message || JSON.stringify(parsed);
             } catch (e) {
+                console.warn('Error al parsear respuesta JSON de error:', e);
                 errText = textResp;
             }
             Swal.fire({ icon: 'error', title: 'Error', text: errText || 'Error al actualizar datos' });
@@ -150,6 +152,7 @@ async function confirmDeleteTenant(id, name) {
                 Swal.fire('Error', 'No se pudo eliminar el restaurante.', 'error');
             }
         } catch (e) {
+            console.error('Error al eliminar restaurante:', e);
             Swal.fire('Error', 'Error de conexión.', 'error');
         }
     }
@@ -161,11 +164,14 @@ async function saveAllRoles(tenantId) {
     let sinRoles = false;
 
     groups.forEach(group => {
-        const userId = group.getAttribute('data-user-id');
-        const originalRoles = (group.getAttribute('data-original-roles') || '').split(',').filter(Boolean).sort();
+        const userId = group.dataset.userId;
+        const originalRoles = (group.dataset.originalRoles || '')
+            .split(',')
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b));
         const newRoles = Array.from(group.querySelectorAll('.user-role-checkbox:checked'))
             .map(cb => cb.value)
-            .sort();
+            .sort((a, b) => a.localeCompare(b));
 
         if (newRoles.length === 0) {
             sinRoles = true;
@@ -223,6 +229,7 @@ async function saveAllRoles(tenantId) {
             });
         }
     } catch (e) {
+        console.error('Error al guardar roles:', e);
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -240,6 +247,7 @@ async function toggleUserStatus(userId, tenantId, activo) {
         });
         if (resp.ok) window.location.reload();
     } catch (e) {
+        console.error('Error al cambiar estado de usuario:', e);
         Swal.fire({ icon: 'error', title: 'Error de red' });
     }
 }
@@ -280,6 +288,7 @@ async function deleteUser(userId, username, tenantId) {
                 });
             }
         } catch (e) {
+            console.error('Error al eliminar usuario:', e);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
@@ -323,6 +332,7 @@ document.getElementById('btnGuardarPassword').addEventListener('click', async ()
             Swal.fire('Error', data.error || 'No se pudo actualizar la contraseña', 'error');
         }
     } catch (e) {
+        console.error('Error al actualizar contraseña:', e);
         Swal.fire('Error', 'Error de red', 'error');
     }
 });
@@ -360,6 +370,7 @@ document.getElementById('btnGuardarCorreo').addEventListener('click', async () =
             Swal.fire('Error', data.error || 'No se pudo actualizar el correo', 'error');
         }
     } catch (e) {
+        console.error('Error al actualizar correo:', e);
         Swal.fire('Error', 'Error de red', 'error');
     }
 });
@@ -367,7 +378,7 @@ document.getElementById('btnGuardarCorreo').addEventListener('click', async () =
 const btnSeed = document.getElementById('btnSeedCategorias');
 if (btnSeed) {
     btnSeed.addEventListener('click', async () => {
-        const tenantId = btnSeed.getAttribute('data-tenant-id');
+        const tenantId = btnSeed.dataset.tenantId;
         const result = await Swal.fire({
             title: '¿Cargar configuración sugerida?',
             text: 'Esto creará categorías y productos base según el tipo de negocio seleccionado.',
@@ -386,6 +397,7 @@ if (btnSeed) {
                     Swal.fire('Error', 'No se pudo realizar la configuración.', 'error');
                 }
             } catch (e) {
+                console.error('Error al cargar configuración inicial:', e);
                 Swal.fire('Error', 'Error de comunicación.', 'error');
             }
         }

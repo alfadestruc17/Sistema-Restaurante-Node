@@ -12,4 +12,4 @@ USE restaurante;
 ALTER TABLE insumos
     ADD COLUMN stock_valorizado DECIMAL(12, 4) NOT NULL DEFAULT 0 COMMENT 'Stock cubierto por compras reales, no se mueve con ajustes manuales' AFTER stock_actual;
 
-UPDATE insumos SET stock_valorizado = stock_actual;
+UPDATE insumos SET stock_valorizado = stock_actual WHERE stock_valorizado <> stock_actual;
