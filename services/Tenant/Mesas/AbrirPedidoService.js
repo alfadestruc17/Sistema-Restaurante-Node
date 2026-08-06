@@ -9,7 +9,10 @@ class AbrirPedidoService {
         try {
             await connection.beginTransaction();
 
-            const [mesas] = await connection.query('SELECT id FROM mesas WHERE id = ? AND tenant_id = ?', [mesa_id, tenantId]);
+            const [mesas] = await connection.query('SELECT id FROM mesas WHERE id = ? AND tenant_id = ?', [
+                mesa_id,
+                tenantId
+            ]);
             if (mesas.length === 0) {
                 throw new Error('Mesa no encontrada');
             }
@@ -18,15 +21,16 @@ class AbrirPedidoService {
                 `SELECT * FROM pedidos WHERE mesa_id = ? AND estado NOT IN ('cerrado','cancelado') LIMIT 1`,
                 [mesa_id]
             );
-            
+
             if (existentes.length > 0) {
                 await connection.commit();
                 return existentes[0];
             }
 
-            // Obtener siguiente número de pedido para este tenant (correlativo interno)
+            // Obtener siguiente número de pedido para este tenant (correlativo interno,
+            // reiniciado cada día como un ticket de cocina)
             const [numResult] = await connection.query(
-                `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ?`,
+                `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
                 [tenantId]
             );
             const siguienteNumero = numResult[0].siguiente;
@@ -39,17 +43,16 @@ class AbrirPedidoService {
             await connection.query("UPDATE mesas SET estado = 'ocupada' WHERE id = ?", [mesa_id]);
 
             await connection.commit();
-            
-            return { 
-                id: insert.insertId, 
+
+            return {
+                id: insert.insertId,
                 numero: siguienteNumero,
-                mesa_id, 
-                cliente_id: cliente_id || null, 
-                estado: 'abierto', 
-                total: 0, 
-                notas: notas || null 
+                mesa_id,
+                cliente_id: cliente_id || null,
+                estado: 'abierto',
+                total: 0,
+                notas: notas || null
             };
-            
         } catch (error) {
             await connection.rollback();
             throw error;

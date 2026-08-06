@@ -91,9 +91,9 @@ class PedidoQRService {
                     );
                 }
             } else {
-                // Crear un nuevo pedido con origen='qr'
+                // Crear un nuevo pedido con origen='qr' (numeración reiniciada cada día)
                 const [numResult] = await connection.query(
-                    `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ?`,
+                    `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
                     [tenantId]
                 );
                 const siguienteNumero = numResult[0].siguiente;

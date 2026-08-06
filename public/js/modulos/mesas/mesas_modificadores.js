@@ -74,6 +74,10 @@ window.MESAS_MODIFICADORES = {
         }).join('');
 
         body.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(inp => {
+            // Los navegadores restauran el "checked" de inputs previos cuando el nuevo
+            // innerHTML reutiliza el mismo name+type (grupos de modificadores compartidos
+            // entre productos): forzamos el estado a no marcado para partir siempre limpio.
+            inp.checked = false;
             inp.addEventListener('change', () => this._actualizarTotal());
         });
 

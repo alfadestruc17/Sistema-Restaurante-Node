@@ -101,7 +101,7 @@ class POSRepository {
         }
 
         const [numResult] = await db.query(
-            `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ?`,
+            `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
             [tenantId]
         );
         const siguienteNumero = numResult[0].siguiente;
