@@ -13,6 +13,22 @@ $(function () {
             .replace(/'/g, '&#39;');
     }
 
+    // Agrupa los modificadores/toppings de un ítem por su grupo (ej. "Elige tu salsa",
+    // "Toppings") para que en la comanda se lea a qué corresponde cada selección, en vez
+    // de una lista plana de nombres sin contexto (ej. "chocolate, chocolate").
+    function formatModificadores(mods) {
+        if (!mods || !mods.length) return '';
+        const porGrupo = new Map();
+        mods.forEach(m => {
+            const grupo = m.grupo_nombre || 'Opciones';
+            if (!porGrupo.has(grupo)) porGrupo.set(grupo, []);
+            porGrupo.get(grupo).push(m.opcion_nombre);
+        });
+        return [...porGrupo.entries()]
+            .map(([grupo, opciones]) => `${grupo}: ${opciones.join(', ')}`)
+            .join(' · ');
+    }
+
     // Allow opening tab directly with ?tab=listos
     function activarTabDesdeQuery() {
         // For mesero role, always show "Listos" tab
@@ -98,8 +114,8 @@ $(function () {
                             </div>` : ''}
                             ${it.modificadores && it.modificadores.length ? `
                             <div class="nota-especial">
-                                <strong>Toppings:</strong>
-                                <span>${it.modificadores.map(m => m.opcion_nombre).join(', ')}</span>
+                                <strong>Detalle:</strong>
+                                <span>${escapeHtml(formatModificadores(it.modificadores))}</span>
                             </div>` : ''}
                             <div class="small text-muted">
                                 <i class="bi bi-clock"></i> ${new Date(it.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
@@ -242,8 +258,7 @@ $(function () {
 
             // La clave de variación combina nota + toppings elegidos: dos líneas del mismo
             // producto con distinta nota o distintos toppings no deben agruparse/marcarse juntas.
-            const modsTexto = (it.modificadores && it.modificadores.length)
-                ? it.modificadores.map(m => m.opcion_nombre).join(', ') : '';
+            const modsTexto = formatModificadores(it.modificadores);
             const varKey = (it.nota || '') + '||' + (it.modificadores_hash || '');
             if (!pData.variaciones.has(varKey)) {
                 pData.variaciones.set(varKey, {
@@ -283,7 +298,7 @@ $(function () {
             `;
 
             pData.variaciones.forEach((vData) => {
-                const label = [vData.nota, vData.modsTexto].filter(Boolean).join(' · ') || 'Estándar';
+                const label = escapeHtml([vData.nota, vData.modsTexto].filter(Boolean).join(' · ') || 'Estándar');
                 const isNota = !!(vData.nota || vData.modsTexto);
 
                 html += `

@@ -39,7 +39,7 @@ class CocinaRepository {
         if (items.length > 0) {
             const itemIds = items.map(i => i.id);
             const [modificadores] = await db.query(
-                'SELECT pedido_item_id, opcion_nombre FROM pedido_item_modificadores WHERE pedido_item_id IN (?)',
+                'SELECT pedido_item_id, grupo_nombre, opcion_nombre FROM pedido_item_modificadores WHERE pedido_item_id IN (?)',
                 [itemIds]
             );
             items.forEach(i => {
