@@ -76,7 +76,8 @@ const PERMISSIONS = {
 
     // POS
     POS_VER: 'pos.ver',
-    POS_VENDER: 'pos.vender'
+    POS_VENDER: 'pos.vender',
+    POS_NOMBRAR_CLIENTE: 'pos.nombrar_cliente'
 };
 
 // Secciones para agrupar permisos en el panel (clave = título, valor = prefijo o permisos)
@@ -101,7 +102,7 @@ const PERMISSION_SECTIONS = {
     Reportes: ['reporte_mensual.test'],
     WhatsApp: ['whatsapp.ver', 'whatsapp.ajustes'],
     Proveedores: ['proveedores.ver', 'proveedores.editar'],
-    POS: ['pos.ver', 'pos.vender']
+    POS: ['pos.ver', 'pos.vender', 'pos.nombrar_cliente']
 };
 
 // Table states

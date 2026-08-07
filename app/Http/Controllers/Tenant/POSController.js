@@ -124,9 +124,21 @@ class POSController {
             const { nombre_cliente, forma_pago, productos, total, pedido_cocina_id, borrador_id } = req.body;
             let { cliente_id } = req.body;
 
+            const nombreLimpio = (nombre_cliente || '').trim();
             if (!cliente_id) {
-                const nombre = (nombre_cliente || 'Consumidor final').trim();
-                cliente_id = await POSService.findOrCreateCliente(tenantId, nombre);
+                cliente_id = await POSService.findOrCreateCliente(tenantId, nombreLimpio || 'Consumidor final');
+            } else if (
+                nombreLimpio &&
+                nombreLimpio.toLowerCase() !== 'consumidor final' &&
+                AuthService.hasPermission(req.user?.permisos, 'pos.nombrar_cliente')
+            ) {
+                // Cuando la orden se guarda y se le pone un nombre (para identificarla en
+                // cocina) y luego se carga de vuelta al carrito para cobrarla, cliente_id
+                // sigue apuntando al cliente "Consumidor final" con el que arranca el
+                // carrito por defecto -- el nombre puesto solo vive en nombre_cliente. Con
+                // este permiso, ese nombre pasa a ser el cliente real de la factura; sin
+                // él, se mantiene el comportamiento de siempre (queda como Consumidor final).
+                cliente_id = await POSService.findOrCreateCliente(tenantId, nombreLimpio);
             }
 
             const puedeUsarModificadores = AuthService.hasPermission(req.user?.permisos, 'modificadores.ver');
