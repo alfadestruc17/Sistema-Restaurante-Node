@@ -279,6 +279,25 @@
     background: rgba(248, 113, 113, 0.12);
 }
 
+.btn-editar-venta-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--sa-accent);
+    background: transparent;
+    color: var(--sa-accent);
+    border-radius: 9px;
+    padding: 7px 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-editar-venta-row:hover {
+    background: var(--sa-accent-soft);
+}
+
 .restaurant-dot {
     width: 9px;
     height: 9px;

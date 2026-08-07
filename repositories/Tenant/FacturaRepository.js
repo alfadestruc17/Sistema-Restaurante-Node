@@ -340,6 +340,72 @@ class FacturaRepository {
             connection.release();
         }
     }
+
+    /**
+     * Datos editables de una factura para el modal de "Modificar venta" del superadmin.
+     * fecha se formatea directo del valor guardado (sin conversión de zona horaria) para
+     * que lo que se ve al abrir el formulario sea exactamente lo que hay en la BD.
+     * @param {number} facturaId - Invoice ID
+     * @returns {Promise<Object|null>}
+     */
+    static async getEditableById(facturaId) {
+        const [rows] = await db.query(
+            `SELECT f.id, f.tenant_id, f.numero, f.cliente_id, f.forma_pago, f.total, f.propina,
+                    DATE_FORMAT(f.fecha, '%Y-%m-%dT%H:%i') AS fecha,
+                    c.nombre AS cliente_nombre, t.nombre AS tenant_nombre
+             FROM facturas f
+             JOIN tenants t ON f.tenant_id = t.id
+             LEFT JOIN clientes c ON f.cliente_id = c.id
+             WHERE f.id = ?`,
+            [facturaId]
+        );
+        return rows[0] || null;
+    }
+
+    /**
+     * Actualiza campos editables de una factura (uso exclusivo de superadmin, para corregir
+     * errores de digitación). No toca las líneas de detalle_factura ni el desglose de
+     * impuestos/subtotal -- si hay que corregir productos hay que anular y rehacer la venta.
+     * @param {number} facturaId - Invoice ID
+     * @param {Object} data
+     * @param {string} data.cliente_nombre - Nombre del cliente (se busca o crea en el tenant de la factura)
+     * @param {string} data.forma_pago - 'efectivo' | 'transferencia' | 'mixto'
+     * @param {number} data.total
+     * @param {number} data.propina
+     * @param {string} data.fecha - 'YYYY-MM-DD HH:mm:ss'
+     * @returns {Promise<{ updated: boolean }>}
+     */
+    static async updateAdmin(facturaId, data) {
+        const [facturas] = await db.query('SELECT tenant_id FROM facturas WHERE id = ?', [facturaId]);
+        if (facturas.length === 0) {
+            return { updated: false };
+        }
+        const tenantId = facturas[0].tenant_id;
+
+        let clienteId = null;
+        const nombreCliente = (data.cliente_nombre || '').trim();
+        if (nombreCliente) {
+            const [existing] = await db.query(
+                'SELECT id FROM clientes WHERE tenant_id = ? AND LOWER(nombre) = LOWER(?) LIMIT 1',
+                [tenantId, nombreCliente]
+            );
+            clienteId =
+                existing.length > 0
+                    ? existing[0].id
+                    : (
+                          await db.query('INSERT INTO clientes (tenant_id, nombre) VALUES (?, ?)', [
+                              tenantId,
+                              nombreCliente
+                          ])
+                      )[0].insertId;
+        }
+
+        const [result] = await db.query(
+            `UPDATE facturas SET cliente_id = COALESCE(?, cliente_id), forma_pago = ?, total = ?, propina = ?, fecha = ? WHERE id = ?`,
+            [clienteId, data.forma_pago, data.total, data.propina, data.fecha, facturaId]
+        );
+        return { updated: result.affectedRows > 0 };
+    }
 }
 
 module.exports = FacturaRepository;

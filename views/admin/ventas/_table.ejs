@@ -37,7 +37,7 @@ const getPaymentBadge = function(method) {
                     <th>Cliente</th>
                     <th>Forma pago</th>
                     <th class="text-end" style="width: 140px;">Total</th>
-                    <th class="text-center" style="width: 132px;">Acción</th>
+                    <th class="text-center" style="width: 200px;">Acción</th>
                 </tr>
             </thead>
             <tbody id="tbodyVentas">
@@ -74,14 +74,20 @@ const getPaymentBadge = function(method) {
                             $<%= Math.round(Number(v.total || 0)).toLocaleString('es-CO') %>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn-eliminar-venta-row"
-                                data-id="<%= v.id %>"
-                                data-numero="<%= num %>"
-                                data-cliente="<%= v.cliente_nombre %>"
-                                data-total="<%= v.total %>"
-                                data-tenant="<%= v.tenant_nombre || 'Principal' %>">
-                                <i class="bi bi-trash3"></i> Eliminar
-                            </button>
+                            <div class="d-inline-flex gap-2">
+                                <button type="button" class="btn-editar-venta-row"
+                                    data-id="<%= v.id %>">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </button>
+                                <button type="button" class="btn-eliminar-venta-row"
+                                    data-id="<%= v.id %>"
+                                    data-numero="<%= num %>"
+                                    data-cliente="<%= v.cliente_nombre %>"
+                                    data-total="<%= v.total %>"
+                                    data-tenant="<%= v.tenant_nombre || 'Principal' %>">
+                                    <i class="bi bi-trash3"></i> Eliminar
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 <% }); %>

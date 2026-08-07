@@ -63,6 +63,86 @@
         });
     });
 
+    // ─── Modificar venta ───────────────────────────────────────────
+    var modalEditarEl = document.getElementById('modalEditarVenta');
+    var modalEditar = modalEditarEl ? new bootstrap.Modal(modalEditarEl) : null;
+    var formEditar = document.getElementById('formEditarVenta');
+
+    if (tbodyVentas) {
+        tbodyVentas.addEventListener('click', function (e) {
+            var btnEdit = e.target.closest('.btn-editar-venta-row');
+            if (!btnEdit) return;
+
+            var id = btnEdit.getAttribute('data-id');
+            if (!id) return;
+
+            fetch('/admin/ventas/' + id, { credentials: 'same-origin' })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+                .then(function (o) {
+                    if (!o.ok) {
+                        Swal.fire({ icon: 'error', title: 'No se pudo cargar la venta', text: o.data.error || '' });
+                        return;
+                    }
+                    var f = o.data;
+                    document.getElementById('editVentaId').value = f.id;
+                    document.getElementById('editVentaNumero').textContent = '#' + (f.numero != null ? f.numero : f.id) + ' — ' + (f.tenant_nombre || '');
+                    document.getElementById('editVentaCliente').value = f.cliente_nombre || '';
+                    document.getElementById('editVentaFormaPago').value = f.forma_pago || 'efectivo';
+                    document.getElementById('editVentaTotal').value = f.total;
+                    document.getElementById('editVentaPropina').value = f.propina || 0;
+                    document.getElementById('editVentaFecha').value = f.fecha;
+                    if (modalEditar) modalEditar.show();
+                })
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo contactar al servidor.' });
+                });
+        });
+    }
+
+    if (formEditar) {
+        formEditar.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var id = document.getElementById('editVentaId').value;
+            var btnGuardar = document.getElementById('btnGuardarEditVenta');
+            var originalText = btnGuardar.innerHTML;
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Guardando...';
+
+            var payload = {
+                cliente_nombre: document.getElementById('editVentaCliente').value,
+                forma_pago: document.getElementById('editVentaFormaPago').value,
+                total: document.getElementById('editVentaTotal').value,
+                propina: document.getElementById('editVentaPropina').value,
+                fecha: document.getElementById('editVentaFecha').value
+            };
+
+            fetch('/admin/ventas/' + id, {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+                .then(function (o) {
+                    if (!o.ok) {
+                        Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: o.data.error || '' });
+                        return;
+                    }
+                    if (modalEditar) modalEditar.hide();
+                    // Recargamos para que la fila (cliente, badge de pago, total, fecha)
+                    // se vea igual que si se hubiera cargado desde cero.
+                    window.location.reload();
+                })
+                .catch(function () {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo contactar al servidor.' });
+                })
+                .finally(function () {
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = originalText;
+                });
+        });
+    }
+
     // Event Delegation para eliminar factura
     if (tbodyVentas) {
         tbodyVentas.addEventListener('click', function (e) {

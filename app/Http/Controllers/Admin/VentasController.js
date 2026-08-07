@@ -51,6 +51,67 @@ class VentasController {
             res.status(500).json({ error: error.message || 'Error al eliminar' });
         }
     }
+
+    // GET /admin/ventas/:id - Datos editables para el modal de "Modificar venta"
+    static async edit(req, res) {
+        try {
+            const facturaId = parseInt(req.params.id);
+            if (!facturaId) {
+                return res.status(400).json({ error: 'ID inválido' });
+            }
+            const factura = await FacturaRepository.getEditableById(facturaId);
+            if (!factura) {
+                return res.status(404).json({ error: 'Venta no encontrada' });
+            }
+            res.json(factura);
+        } catch (error) {
+            console.error('Error al obtener venta para editar:', error);
+            res.status(500).json({ error: 'Error al obtener venta' });
+        }
+    }
+
+    // PUT /admin/ventas/:id - Guardar cambios (uso exclusivo de superadmin)
+    static async update(req, res) {
+        try {
+            const facturaId = parseInt(req.params.id);
+            if (!facturaId) {
+                return res.status(400).json({ error: 'ID inválido' });
+            }
+
+            const { cliente_nombre, forma_pago, total, propina, fecha } = req.body || {};
+
+            const formasValidas = ['efectivo', 'transferencia', 'mixto'];
+            if (!formasValidas.includes(forma_pago)) {
+                return res.status(400).json({ error: 'Forma de pago inválida' });
+            }
+            const totalNum = Number(total);
+            const propinaNum = Number(propina || 0);
+            if (!Number.isFinite(totalNum) || totalNum < 0) {
+                return res.status(400).json({ error: 'Total inválido' });
+            }
+            if (!Number.isFinite(propinaNum) || propinaNum < 0) {
+                return res.status(400).json({ error: 'Propina inválida' });
+            }
+            if (!fecha || Number.isNaN(new Date(fecha).getTime())) {
+                return res.status(400).json({ error: 'Fecha inválida' });
+            }
+
+            const result = await FacturaRepository.updateAdmin(facturaId, {
+                cliente_nombre,
+                forma_pago,
+                total: totalNum,
+                propina: propinaNum,
+                fecha: fecha.replace('T', ' ') + ':00'
+            });
+            if (!result.updated) {
+                return res.status(404).json({ error: 'Venta no encontrada' });
+            }
+            res.json({ success: true, message: 'Venta actualizada correctamente' });
+        } catch (error) {
+            console.error('Error al actualizar venta:', error);
+            res.status(500).json({ error: error.message || 'Error al actualizar' });
+        }
+    }
 }
 
 module.exports = VentasController;
