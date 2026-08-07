@@ -54,6 +54,7 @@ const cajaRoutes = require('./tenant/caja');
 const serviciosRoutes = require('./tenant/servicios');
 const soporteTenantRoutes = require('./tenant/soporte');
 const posRoutes = require('./tenant/pos');
+const clasificacionRoutes = require('./tenant/clasificacion');
 const syncRoutes = require('./tenant/sync');
 const NotificationController = require('../app/Http/Controllers/Tenant/NotificationController');
 
@@ -130,6 +131,7 @@ router.use(
 );
 router.use('/dashboard', requireAuthWithTenant, requirePlanFeature('dashboard'), dashboardRoutes);
 router.use('/analitica', requireAuthWithTenant, requirePlanFeature('analitica'), analiticaRoutes);
+router.use('/clasificacion', requireAuthWithTenant, requirePermission('clasificacion.ver'), clasificacionRoutes);
 router.use(
     '/whatsapp',
     requireAuthWithTenant,

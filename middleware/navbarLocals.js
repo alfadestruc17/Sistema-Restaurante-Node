@@ -59,7 +59,8 @@ module.exports = function navbarLocals(req, res, next) {
                 caja: hp('caja.ver') && cs('caja'),
                 finanzas: hp('finanzas.ver'),
                 servicios: hp('servicios.ver') && cs('servicios'),
-                pos: hp('pos.ver') && cs('ventas')
+                pos: hp('pos.ver') && cs('ventas'),
+                clasificacion: hp('clasificacion.ver')
             };
 
             const hasMas =
@@ -69,7 +70,8 @@ module.exports = function navbarLocals(req, res, next) {
                 can.analitica ||
                 can.whatsapp ||
                 can.proveedores ||
-                can.servicios;
+                can.servicios ||
+                can.clasificacion;
 
             let primaryColor = '#6366f1';
             let bgStart = '#1e3a5f';

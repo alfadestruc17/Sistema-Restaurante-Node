@@ -1,0 +1,224 @@
+/* Clasificación — ranking de productos más vendidos */
+
+body {
+    background: #f6f7f9;
+}
+
+.page-header-container {
+    padding: 24px 0 18px;
+}
+
+.page-title-section {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.page-title-icon {
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent, #2e7d46) 12%, white);
+    color: var(--accent, #2e7d46);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.page-title-text h1 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.page-title-text p {
+    font-size: 13.5px;
+    color: #8a94a6;
+    margin: 2px 0 0;
+}
+
+.clasif-filters-card,
+.clasif-summary-card,
+.clasif-table-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.clasif-filters-card {
+    padding: 16px;
+    margin-bottom: 18px;
+}
+
+.clasif-filters-card .form-label {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #5b6573;
+    margin-bottom: 4px;
+}
+
+.btn-clasif-primary {
+    background: var(--accent, #2e7d46);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+}
+
+.btn-clasif-primary:hover {
+    background: var(--accent, #2e7d46);
+    opacity: 0.88;
+    color: #fff;
+}
+
+.clasif-summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.clasif-summary-card {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.clasif-summary-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #8a94a6;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.clasif-summary-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+}
+
+.clasif-table-card {
+    overflow: hidden;
+    margin-bottom: 30px;
+}
+
+.clasif-table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f3f6;
+}
+
+.clasif-table-header h3 {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0f172a;
+}
+
+.clasif-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f5f6f8;
+}
+
+.clasif-row:last-child {
+    border-bottom: none;
+}
+
+.clasif-rank {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 13px;
+    background: #f1f3f6;
+    color: #8a94a6;
+}
+
+.clasif-rank.top3 {
+    background: color-mix(in srgb, var(--accent, #2e7d46) 15%, white);
+    color: var(--accent, #2e7d46);
+}
+
+.clasif-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.clasif-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.clasif-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e2733;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.clasif-cat-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8a94a6;
+    background: #f4f5f7;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    white-space: nowrap;
+}
+
+.clasif-total {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.clasif-bar-track {
+    height: 7px;
+    background: #f0f2f5;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.clasif-bar-fill {
+    height: 100%;
+    background: var(--accent, #2e7d46);
+    border-radius: 6px;
+}
+
+.clasif-units {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #8a94a6;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    min-width: 70px;
+    text-align: right;
+}
+
+.clasif-empty {
+    padding: 48px 20px;
+    text-align: center;
+    color: #9aa3b2;
+}

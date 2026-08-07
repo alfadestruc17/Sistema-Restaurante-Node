@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasificación</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/modulos/clasificacion.css">
+    <style>
+        <%
+        const activeAccent = (typeof tenant !== 'undefined' && tenant && tenant.config && tenant.config.colores && tenant.config.colores.primary)
+            ? tenant.config.colores.primary
+            : '#2e7d46';
+        %>
+        :root {
+            --accent: <%= activeAccent %>;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null, tenant: typeof tenant !== 'undefined' ? tenant : null }) %>
+
+    <div class="container">
+
+        <div class="page-header-container">
+            <div class="page-title-section">
+                <span class="page-title-icon"><i class="bi bi-trophy"></i></span>
+                <div class="page-title-text">
+                    <h1>Clasificación</h1>
+                    <p>Ranking de productos más vendidos: unidades vendidas y total generado</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="clasif-filters-card">
+            <div class="row g-2 align-items-end">
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Desde</label>
+                    <input type="date" id="clasifDesde" class="form-control">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Hasta</label>
+                    <input type="date" id="clasifHasta" class="form-control">
+                </div>
+                <div class="col-8 col-md-4">
+                    <label class="form-label">Categoría</label>
+                    <select id="clasifCategoria" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        <% (categorias || []).forEach(function (c) { %>
+                            <option value="<%= c.id %>"><%= c.nombre %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="col-4 col-md-2 d-flex gap-2">
+                    <button id="clasifAplicar" class="btn btn-clasif-primary flex-fill" title="Aplicar filtros">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <button id="clasifLimpiar" class="btn btn-outline-secondary" title="Limpiar filtros">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="clasif-summary-row">
+            <div class="clasif-summary-card">
+                <span class="clasif-summary-label">Productos</span>
+                <span class="clasif-summary-val" id="clasifResumenProductos">0</span>
+            </div>
+            <div class="clasif-summary-card">
+                <span class="clasif-summary-label">Unidades vendidas</span>
+                <span class="clasif-summary-val" id="clasifResumenUnidades">0</span>
+            </div>
+            <div class="clasif-summary-card">
+                <span class="clasif-summary-label">Total generado</span>
+                <span class="clasif-summary-val" id="clasifResumenTotal">$ 0</span>
+            </div>
+        </div>
+
+        <!-- Ranking -->
+        <div class="clasif-table-card">
+            <div class="clasif-table-header">
+                <h3><i class="bi bi-list-ol"></i>Ranking</h3>
+            </div>
+            <div id="clasifLista"></div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/modulos/clasificacion.js"></script>
+</body>
+
+</html>

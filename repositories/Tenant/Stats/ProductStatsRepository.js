@@ -8,14 +8,14 @@ function getUtcRangeForColombia(desde, hasta) {
     const utcDesde = `${desde} 05:00:00`;
     const utcHastaDate = new Date(`${hasta}T23:59:59`);
     utcHastaDate.setHours(utcHastaDate.getHours() + 5);
-    
+
     const y = utcHastaDate.getFullYear();
     const m = String(utcHastaDate.getMonth() + 1).padStart(2, '0');
     const d = String(utcHastaDate.getDate()).padStart(2, '0');
     const hh = String(utcHastaDate.getHours()).padStart(2, '0');
     const mm = String(utcHastaDate.getMinutes()).padStart(2, '0');
     const ss = String(utcHastaDate.getSeconds()).padStart(2, '0');
-    
+
     const utcHasta = `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
     return { utcDesde, utcHasta };
 }
@@ -35,13 +35,13 @@ class ProductStatsRepository {
             INNER JOIN productos p ON df.producto_id = p.id
             LEFT JOIN categorias c ON p.categoria_id = c.id
             INNER JOIN facturas f ON df.factura_id = f.id
-            WHERE f.tenant_id = ? AND f.evento_id IS NULL
+            WHERE f.tenant_id = ? AND f.evento_id IS NULL AND p.activo = 1
         `;
         const params = [tenantId];
 
         if (filters.desde && filters.hasta) {
             const { utcDesde, utcHasta } = getUtcRangeForColombia(filters.desde, filters.hasta);
-            query += " AND f.fecha BETWEEN ? AND ?";
+            query += ' AND f.fecha BETWEEN ? AND ?';
             params.push(utcDesde, utcHasta);
         }
 
@@ -64,6 +64,76 @@ class ProductStatsRepository {
         }));
     }
 
+    /**
+     * Listado completo del catálogo (no solo lo vendido), con filtro opcional de
+     * categoría además del rango de fechas. Usado por el módulo de Clasificación
+     * -- a diferencia de getTopProducts (widget del dashboard, solo productos con
+     * ventas), aquí SIEMPRE aparecen todos los productos activos del tenant, con
+     * $0 / 0 unidades los que no se han vendido, para poder detectar qué no se mueve.
+     * Las ventas se agregan en una subconsulta aparte (en vez de LEFT JOIN directo a
+     * detalle_factura/facturas) porque filtrar por fecha en el WHERE de un LEFT JOIN
+     * lo convierte en INNER JOIN y los productos sin ventas en ese rango desaparecerían.
+     */
+    static async getRankingProductos(tenantId, filters = {}) {
+        let ventasSubquery = `
+            SELECT df.producto_id,
+                   SUM(df.cantidad) AS total_cantidad,
+                   SUM(df.subtotal) AS total_ventas,
+                   COUNT(DISTINCT df.factura_id) AS facturas_count
+            FROM detalle_factura df
+            INNER JOIN facturas f ON df.factura_id = f.id
+            WHERE f.tenant_id = ? AND f.evento_id IS NULL
+        `;
+        const params = [tenantId];
+
+        if (filters.desde && filters.hasta) {
+            const { utcDesde, utcHasta } = getUtcRangeForColombia(filters.desde, filters.hasta);
+            ventasSubquery += ' AND f.fecha BETWEEN ? AND ?';
+            params.push(utcDesde, utcHasta);
+        }
+
+        ventasSubquery += ' GROUP BY df.producto_id';
+
+        let query = `
+            SELECT
+                p.id,
+                p.nombre,
+                p.codigo,
+                c.id AS categoria_id,
+                c.nombre AS categoria_nombre,
+                COALESCE(v.total_cantidad, 0) AS total_cantidad,
+                COALESCE(v.total_ventas, 0) AS total_ventas,
+                COALESCE(v.facturas_count, 0) AS facturas_count
+            FROM productos p
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+            LEFT JOIN (${ventasSubquery}) v ON v.producto_id = p.id
+            WHERE p.tenant_id = ? AND p.activo = 1
+        `;
+        params.push(tenantId);
+
+        if (filters.categoria_id) {
+            query += ' AND c.id = ?';
+            params.push(filters.categoria_id);
+        }
+
+        query += `
+            ORDER BY total_ventas DESC, p.nombre ASC
+            LIMIT 500
+        `;
+
+        const [result] = await db.query(query, params);
+        return result.map(row => ({
+            id: row.id,
+            nombre: row.nombre,
+            codigo: row.codigo,
+            categoria_id: row.categoria_id,
+            categoria_nombre: row.categoria_nombre || 'Sin categoría',
+            total_cantidad: parseFloat(row.total_cantidad || 0),
+            total_ventas: parseFloat(row.total_ventas || 0),
+            facturas_count: parseInt(row.facturas_count || 0)
+        }));
+    }
+
     static async getSalesByCategory(tenantId, filters = {}) {
         let query = `
             SELECT 
@@ -75,13 +145,13 @@ class ProductStatsRepository {
             INNER JOIN productos p ON df.producto_id = p.id
             LEFT JOIN categorias c ON p.categoria_id = c.id
             INNER JOIN facturas f ON df.factura_id = f.id
-            WHERE f.tenant_id = ? AND f.evento_id IS NULL
+            WHERE f.tenant_id = ? AND f.evento_id IS NULL AND p.activo = 1
         `;
         const params = [tenantId];
 
         if (filters.desde && filters.hasta) {
             const { utcDesde, utcHasta } = getUtcRangeForColombia(filters.desde, filters.hasta);
-            query += " AND f.fecha BETWEEN ? AND ?";
+            query += ' AND f.fecha BETWEEN ? AND ?';
             params.push(utcDesde, utcHasta);
         }
 
@@ -110,13 +180,13 @@ class ProductStatsRepository {
             INNER JOIN productos p ON df.producto_id = p.id
             LEFT JOIN categorias c ON p.categoria_id = c.id
             INNER JOIN facturas f ON df.factura_id = f.id
-            WHERE f.tenant_id = ? AND f.evento_id IS NULL
+            WHERE f.tenant_id = ? AND f.evento_id IS NULL AND p.activo = 1
         `;
         const params = [tenantId];
 
         if (filters.desde && filters.hasta) {
             const { utcDesde, utcHasta } = getUtcRangeForColombia(filters.desde, filters.hasta);
-            query += " AND f.fecha BETWEEN ? AND ?";
+            query += ' AND f.fecha BETWEEN ? AND ?';
             params.push(utcDesde, utcHasta);
         }
 

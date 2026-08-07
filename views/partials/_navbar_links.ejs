@@ -179,7 +179,8 @@
                                                                                                                                         ||
                                                                                                                                         nav.can.whatsapp
                                                                                                                                         ||
-                                                                                                                                        nav.can.eventos)
+                                                                                                                                        nav.can.eventos ||
+                                                                                                                                        nav.can.clasificacion)
                                                                                                                                         {
                                                                                                                                         %>
                                                                                                                                         <li>
@@ -225,6 +226,9 @@
                                                                                                                                                             </li>
                                                                                                                                                             <% }
                                                                                                                                                                 %>
+                                                                                                                                                                <% if (nav.can.clasificacion) { %>
+                                                                                                                                                                <li><a class="dropdown-item" href="/clasificacion"><i class="bi bi-trophy text-warning"></i>Clasificación</a></li>
+                                                                                                                                                                <% } %>
                                                                                                                                                                                                                                 <% } %>
                                                                                                 </ul>
                                                                                             </li>
