@@ -17,4 +17,7 @@ router.put('/preparar-lote', CocinaController.updateGroupEstado);
 // API Completar pedido de mostrador (POS)
 router.put('/pedidos/:pedidoId/completar', CocinaController.completarPedidoPOS);
 
+// API Cancelar pedido de mostrador (POS)
+router.put('/pedidos/:pedidoId/cancelar', CocinaController.cancelarPedidoPOS);
+
 module.exports = router;

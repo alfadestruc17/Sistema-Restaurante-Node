@@ -104,6 +104,9 @@ function cardMesa(mesaNumero, items) {
     const btnCompletar = esPOS
         ? `<button class="btn btn-sm btn-dark ms-2" data-action="completar-pos" data-pedido-id="${items[0].pedido_id}">
                 <i class="bi bi-check2-all"></i> Completar pedido
+            </button>
+           <button class="btn btn-sm btn-outline-danger ms-2" data-action="cancelar-pos" data-pedido-id="${items[0].pedido_id}">
+                <i class="bi bi-x-circle"></i> Cancelar pedido
             </button>`
         : '';
 
@@ -446,6 +449,29 @@ $(function () {
         } catch (error) {
             console.error('Error:', error);
             Swal.fire({ icon: 'error', title: 'No se pudo completar el pedido' });
+        }
+    });
+
+    $(document).on('click', '[data-action="cancelar-pos"]', async function () {
+        const pedidoId = this.dataset.pedidoId;
+        const confirm = await Swal.fire({
+            icon: 'warning',
+            title: '¿Cancelar pedido?',
+            text: 'Se cancelará el pedido completo y saldrá de la cola de cocina. Esta acción no se puede deshacer.',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, cancelar',
+            cancelButtonText: 'No',
+            confirmButtonColor: '#dc3545'
+        });
+        if (!confirm.isConfirmed) return;
+
+        try {
+            const resp = await fetch(`/api/cocina/pedidos/${pedidoId}/cancelar`, { method: 'PUT' });
+            if (!resp.ok) throw new Error('Error al cancelar pedido');
+            await cargarCola();
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({ icon: 'error', title: 'No se pudo cancelar el pedido' });
         }
     });
 

@@ -16,6 +16,13 @@ function actualizarBannerStockBajo(stats) {
   }
 }
 
+// El backend calcula "hoy"/rangos en hora de Colombia (America/Bogota). Si aquí usáramos
+// toISOString() (UTC), después de las 7pm hora local el día UTC ya cambió y el filtro
+// "Hoy" terminaría pidiéndole al servidor el día siguiente (sin ventas aún) -> vacío.
+function toColombiaDateStr(date) {
+  return date.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+}
+
 function calcularTendenciaVentasHoy(stats) {
   let trendHoy = { pct: '12,4%', up: true };
   if (stats.dailySales?.length >= 2) {
@@ -387,8 +394,8 @@ $(function () {
       desde.setDate(desde.getDate() - 30);
     }
 
-    $('#filtroDesde').val(desde.toISOString().split('T')[0]);
-    $('#filtroHasta').val(hasta.toISOString().split('T')[0]);
+    $('#filtroDesde').val(toColombiaDateStr(desde));
+    $('#filtroHasta').val(toColombiaDateStr(hasta));
 
     // Ensure the correct button has active class
     $('.btn-range').removeClass('active');
@@ -399,8 +406,8 @@ $(function () {
 
     // Load metrics
     window.loadStats({
-      desde: desde.toISOString().split('T')[0],
-      hasta: hasta.toISOString().split('T')[0]
+      desde: toColombiaDateStr(desde),
+      hasta: toColombiaDateStr(hasta)
     });
 
     // Event Bindings
@@ -443,8 +450,8 @@ $(function () {
         start.setDate(start.getDate() - 30);
       }
 
-      $('#filtroDesde').val(start.toISOString().split('T')[0]);
-      $('#filtroHasta').val(end.toISOString().split('T')[0]);
+      $('#filtroDesde').val(toColombiaDateStr(start));
+      $('#filtroHasta').val(toColombiaDateStr(end));
       window.applyFilters();
     });
 

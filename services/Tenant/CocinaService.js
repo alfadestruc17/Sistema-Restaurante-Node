@@ -84,6 +84,14 @@ class CocinaService {
         }
 
         try {
+            const POSRepository = require('../../repositories/Tenant/POSRepository');
+            await POSRepository.deleteBorradorPorPedidoCocina(pedido.id, tenantId);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Error al borrar borrador POS asociado al cancelar desde cocina:', err);
+        }
+
+        try {
             const WhatsAppService = require('./WhatsAppService');
             WhatsAppService.events.emit('orderCreated', {
                 tenantId,

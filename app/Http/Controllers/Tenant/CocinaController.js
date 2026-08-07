@@ -137,6 +137,25 @@ class CocinaController {
             res.status(500).json({ error: 'Error al completar pedido' });
         }
     }
+
+    // PUT /cocina/pedidos/:pedidoId/cancelar
+    static async cancelarPedidoPOS(req, res) {
+        try {
+            const tenantId = req.tenant?.id;
+            if (!tenantId) {
+                return res.status(403).json({ error: 'Contexto de tenant no disponible' });
+            }
+            const pedidoId = parseInt(req.params.pedidoId);
+            const pedido = await CocinaService.cancelarPedidoPOS(pedidoId, tenantId);
+            if (!pedido) {
+                return res.status(404).json({ error: 'Pedido no encontrado' });
+            }
+            res.json({ message: 'Pedido cancelado' });
+        } catch (error) {
+            console.error('Error al cancelar pedido POS:', error);
+            res.status(500).json({ error: 'Error al cancelar pedido' });
+        }
+    }
 }
 
 module.exports = CocinaController;

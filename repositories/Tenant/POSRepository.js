@@ -63,6 +63,16 @@ class POSRepository {
         return { pedidoCocinaId: rows[0].pedido_cocina_id };
     }
 
+    // Contraparte de deleteBorrador: cuando el pedido se cancela desde cocina (no desde
+    // el POS), hay que borrar el borrador asociado para que el cajero no pueda "Cargar"
+    // y cobrar una orden que cocina ya canceló.
+    static async deleteBorradorPorPedidoCocina(pedidoCocinaId, tenantId) {
+        await db.query(`DELETE FROM pos_borradores WHERE pedido_cocina_id = ? AND tenant_id = ?`, [
+            pedidoCocinaId,
+            tenantId
+        ]);
+    }
+
     static async getStatsHoy(tenantId) {
         const [rows] = await db.query(
             `SELECT COUNT(*) AS num_ordenes, COALESCE(SUM(total), 0) AS total_hoy
