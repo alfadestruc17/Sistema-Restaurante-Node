@@ -48,6 +48,22 @@ class POSService {
             });
             pedidoCocinaId = cocina?.pedidoId || null;
             mesaCocinaId = cocina?.mesaId || null;
+        } else {
+            // La orden ya estaba en cocina (venía de un borrador cargado): se reenvía la
+            // versión actual del carrito -- así una corrección de toppings/cantidades sí
+            // llega a cocina en vez de quedarse solo guardada en el POS.
+            await this.resincronizarPedido(tenantId, pedidoCocinaId, data.items, puedeUsarModificadores);
+        }
+
+        // Si la orden viene de un borrador cargado (ver POS.cargarBorrador en el frontend),
+        // se actualiza esa misma fila en vez de crear una nueva -- evita duplicados.
+        if (data.borrador_id) {
+            await POSRepository.updateBorrador(data.borrador_id, tenantId, {
+                ...data,
+                pedido_cocina_id: pedidoCocinaId,
+                mesa_cocina_id: mesaCocinaId
+            });
+            return { id: data.borrador_id };
         }
 
         const id = await POSRepository.createBorrador(tenantId, usuarioId, {
@@ -91,28 +107,34 @@ class POSService {
     }
 
     /**
+     * Resuelve precio/nombre de cada topping del carrito contra el catálogo (nunca se
+     * confía en lo que mandó el frontend), igual que hace FacturaService.create. Los items
+     * vienen crudos, con modificadores_seleccion sin resolver.
+     */
+    static async _resolverItems(tenantId, productos, puedeUsarModificadores) {
+        const ModificadorService = require('./ModificadorService');
+        return Promise.all(
+            (productos || [])
+                .filter(p => !p.es_servicio && p.producto_id)
+                .map(async p => {
+                    const { lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
+                        tenantId,
+                        p.producto_id,
+                        p.modificadores_seleccion || [],
+                        { permitido: puedeUsarModificadores }
+                    );
+                    return { ...p, _modificadoresSnapshot: lineasSnapshot };
+                })
+        );
+    }
+
+    /**
      * Envía una orden del POS a la cola de cocina (ver saveBorrador). Best-effort: si
      * falla, no debe tumbar el guardado de la orden, solo se registra el error.
-     * Los items vienen tal cual del carrito (crudos, con modificadores_seleccion sin
-     * resolver), así que aquí se resuelve el precio/nombre de cada topping contra el
-     * catálogo antes de mandarlos al repository, igual que hace FacturaService.create.
      */
     static async enviarACocina(tenantId, { productos, nombrePedido, clienteId, puedeUsarModificadores = true }) {
         try {
-            const ModificadorService = require('./ModificadorService');
-            const itemsResueltos = await Promise.all(
-                (productos || [])
-                    .filter(p => !p.es_servicio && p.producto_id)
-                    .map(async p => {
-                        const { lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
-                            tenantId,
-                            p.producto_id,
-                            p.modificadores_seleccion || [],
-                            { permitido: puedeUsarModificadores }
-                        );
-                        return { ...p, _modificadoresSnapshot: lineasSnapshot };
-                    })
-            );
+            const itemsResueltos = await this._resolverItems(tenantId, productos, puedeUsarModificadores);
 
             const result = await POSRepository.enviarPedidoACocina(tenantId, {
                 productos: itemsResueltos,
@@ -132,6 +154,32 @@ class POSService {
         } catch (err) {
             // eslint-disable-next-line no-console
             console.error('Error al enviar pedido POS a cocina:', err);
+            return null;
+        }
+    }
+
+    /**
+     * Reenvía a cocina la versión corregida de un pedido ya enviado (ver
+     * POSRepository.resincronizarItemsPedido): se usa cuando el cajero corrige
+     * toppings/cantidades en el carrito de una orden que ya estaba en la cola.
+     * Best-effort igual que enviarACocina.
+     */
+    static async resincronizarPedido(tenantId, pedidoCocinaId, productos, puedeUsarModificadores = true) {
+        try {
+            const itemsResueltos = await this._resolverItems(tenantId, productos, puedeUsarModificadores);
+            const result = await POSRepository.resincronizarItemsPedido(tenantId, pedidoCocinaId, itemsResueltos);
+            if (result) {
+                const WhatsAppService = require('./WhatsAppService');
+                WhatsAppService.events.emit('orderCreated', {
+                    tenantId,
+                    pedidoId: result.pedidoId,
+                    action: 'items_updated'
+                });
+            }
+            return result;
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error('Error al reenviar pedido POS corregido a cocina:', err);
             return null;
         }
     }

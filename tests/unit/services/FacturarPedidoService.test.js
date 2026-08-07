@@ -133,8 +133,16 @@ describe('FacturarPedidoService', () => {
             .mockResolvedValueOnce([[{ id: 10, estado: 'abierto', mesa_id: 2, total: 5000 }]]) // SELECT pedidos
             .mockResolvedValueOnce([[{ id: 1, cantidad: 1, precio_unitario: 5000, pagado: 0 }]]); // SELECT items
 
-        // Simular queries internas de facturación
-        mockConn.query.mockResolvedValue([{ insertId: 100 }]); // INSERT factura, etc.
+        // Simular queries internas de facturación. La consulta de modificadores del
+        // pedido (_copiarModificadores) hace `const [rows] = await connection.query(...)`
+        // y espera un array para poder hacer .filter() sobre él -- el catch-all genérico
+        // de INSERT ({ insertId: 100 }) no sirve para esa, así que se distingue por SQL.
+        mockConn.query.mockImplementation(sql => {
+            if (typeof sql === 'string' && sql.includes('pedido_item_modificadores')) {
+                return Promise.resolve([[]]); // sin modificadores en este pedido de prueba
+            }
+            return Promise.resolve([{ insertId: 100 }]); // INSERT factura, detalle_factura, etc.
+        });
 
         const res = await FacturarPedidoService.execute({
             tenantId: 1,

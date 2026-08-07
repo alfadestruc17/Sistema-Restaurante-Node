@@ -160,6 +160,10 @@ window.POS_UI = {
                         </div>
                     </div>
                     <div class="pci-actions-row">
+                        ${!item.es_servicio ? `
+                        <button class="pci-action-btn pci-mods-btn" data-pci-action="mods" data-pci-idx="${idx}">
+                            <i class="bi bi-pencil-square me-1"></i>Editar pedido
+                        </button>` : ''}
                         <button class="pci-action-btn pci-desc-btn" data-pci-action="desc" data-pci-idx="${idx}">
                             <i class="bi bi-percent me-1"></i>Desc.
                         </button>
@@ -180,6 +184,7 @@ window.POS_UI = {
                     else if (action === 'plus' && item) POS.updateQty(idx, item.cantidad + 1);
                     else if (action === 'del') POS.removeFromCart(idx);
                     else if (action === 'desc') POS_PAGO.abrirDescuento(idx);
+                    else if (action === 'mods') POS_MODIFICADORES.editar(idx);
                 });
             });
         }
@@ -261,17 +266,49 @@ window.POS_UI = {
         if (el2) el2.textContent = money(total_hoy || 0);
     },
 
+    // ─── Servicios ──────────────────────────────────────────────
+    async renderServiciosModal() {
+        const cont = document.getElementById('posServiciosLista');
+        if (!cont) return;
+        cont.innerHTML = `<div class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+            <br><small>Cargando servicios...</small>
+        </div>`;
+
+        const servicios = await POS_API.getServicios();
+        if (!servicios.length) {
+            cont.innerHTML = `<div class="text-center py-4 text-muted"><small>No hay servicios activos</small></div>`;
+            return;
+        }
+
+        POS_UI._serviciosCache = servicios;
+        cont.innerHTML = servicios.map((s, idx) => `
+            <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3" data-serv-idx="${idx}">
+                <span>${s.nombre}</span>
+                <span class="fw-bold">${money(s.precio)}</span>
+            </button>`).join('');
+
+        cont.querySelectorAll('[data-serv-idx]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const s = POS_UI._serviciosCache[Number.parseInt(btn.dataset.servIdx)];
+                if (s) POS.agregarServicio(s);
+            });
+        });
+    },
+
     // ─── Borradores ──────────────────────────────────────────────
     updateBorradoresCount() {
         const el = document.getElementById('posBorradoresCount');
-        if (el) el.textContent = POS.state.borradores.length;
+        if (el) el.textContent = POS.state.borradores.filter(b => b.id !== POS.state.borradorId).length;
     },
 
     renderBorradoresModal() {
         const tbody = document.getElementById('posBorradoresTbody');
         const cards = document.getElementById('posBorradoresCards');
         if (!tbody || !cards) return;
-        const { borradores } = POS.state;
+        // La que ya está cargada en el carrito activo no se muestra como "disponible
+        // para cargar" (ver POS.cargarBorrador: ya no se borra de la BD al cargarla).
+        const borradores = POS.state.borradores.filter(b => b.id !== POS.state.borradorId);
 
         const vacioHtml = `<i class="bi bi-inbox me-2"></i>No hay órdenes guardadas`;
         if (!borradores.length) {

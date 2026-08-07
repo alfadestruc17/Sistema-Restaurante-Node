@@ -16,6 +16,11 @@ window.POS_API = {
         return r.ok ? r.json() : { num_ordenes: 0, total_hoy: 0 };
     },
 
+    async getServicios() {
+        const r = await fetch('/api/servicios/lista');
+        return r.ok ? r.json() : [];
+    },
+
     async getBorradores() {
         const r = await fetch('/pos/borradores');
         return r.ok ? r.json() : [];

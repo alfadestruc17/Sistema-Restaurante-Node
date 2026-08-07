@@ -50,6 +50,9 @@
             <button class="pos-saved-btn" id="posBtnAbrirCajon" title="Abrir el cajón de dinero (requiere QZ Tray)">
                 <i class="bi bi-cash-stack me-1"></i>Abrir cajón
             </button>
+            <button class="pos-saved-btn" id="posBtnServicios">
+                <i class="bi bi-truck me-1"></i>Servicios
+            </button>
             <button class="pos-saved-btn" id="posBtnBorradores">
                 <i class="bi bi-bookmark me-1"></i>Guardadas
                 <span class="pos-saved-badge" id="posBorradoresCount">0</span>
@@ -314,6 +317,26 @@
                 <div class="d-block d-md-none p-3" id="posBorradoresCards">
                     <div class="text-center text-muted py-4">
                         <i class="bi bi-inbox me-2"></i>No hay órdenes guardadas
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Servicios -->
+<div class="modal fade" id="posServiciosModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header py-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-truck me-2"></i>Servicios</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="posServiciosLista" class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                        <br><small>Cargando servicios...</small>
                     </div>
                 </div>
             </div>

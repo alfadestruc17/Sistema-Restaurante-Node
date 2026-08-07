@@ -411,6 +411,12 @@ body.pos-terminal-body .navbar-collapse.collapsing {
     font-family: inherit; font-weight: 600; color: #9aa3b2;
     transition: all .1s;
 }
+.pci-mods-btn {
+    background: var(--pos-accent-softer, #eef2ff);
+    color: var(--pos-accent, #6366f1);
+    font-weight: 700;
+}
+.pci-mods-btn:hover { background: var(--pos-accent-soft, #e0e7ff); }
 .pci-desc-btn:hover { background: #f4f5f7; color: #46505f; }
 .pci-del-btn { margin-left: auto; color: #ef4444; }
 .pci-del-btn:hover { background: #fee2e2; }

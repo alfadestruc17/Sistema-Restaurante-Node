@@ -1,4 +1,5 @@
 const POSService = require('../../../../services/Tenant/POSService');
+const POSRepository = require('../../../../repositories/Tenant/POSRepository');
 const FacturaService = require('../../../../services/Tenant/FacturaService');
 const CajaService = require('../../../../services/Tenant/CajaService');
 const ModificadorService = require('../../../../services/Tenant/ModificadorService');
@@ -120,7 +121,7 @@ class POSController {
     static async vender(req, res) {
         try {
             const tenantId = req.tenant?.id;
-            const { nombre_cliente, forma_pago, productos, total, pedido_cocina_id } = req.body;
+            const { nombre_cliente, forma_pago, productos, total, pedido_cocina_id, borrador_id } = req.body;
             let { cliente_id } = req.body;
 
             if (!cliente_id) {
@@ -148,6 +149,23 @@ class POSController {
                     logger.warn('POS vender: no se pudo completar pedido de cocina', {
                         pedido_cocina_id,
                         err: cocinaErr.message
+                    });
+                }
+            }
+
+            // Si la venta viene de una orden guardada (cargada al carrito), ya se cobró:
+            // ahora sí se borra el borrador. Antes se borraba al "Cargar", lo que dejaba
+            // la orden viviendo solo en el carrito del navegador hasta cobrarla o
+            // guardarla de nuevo -- si algo interrumpía al cajero en el medio (recargar
+            // la página, cerrar la pestaña, "Limpiar" por error), la orden se perdía
+            // por completo porque el registro en la BD ya no existía.
+            if (borrador_id) {
+                try {
+                    await POSRepository.deleteBorrador(parseInt(borrador_id), tenantId);
+                } catch (borradorErr) {
+                    logger.warn('POS vender: no se pudo eliminar el borrador tras cobrar', {
+                        borrador_id,
+                        err: borradorErr.message
                     });
                 }
             }

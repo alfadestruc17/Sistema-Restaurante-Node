@@ -51,6 +51,33 @@ class POSRepository {
         return result.insertId;
     }
 
+    // Actualiza en el sitio una orden guardada ya existente (ver POSService.saveBorrador):
+    // al "Cargar" un borrador para editarlo, ya NO se borra de inmediato (ver cargarBorrador
+    // en pos_core.js) para no dejar la orden viviendo solo en memoria del navegador. Guardar
+    // de nuevo actualiza esta misma fila en vez de crear una duplicada.
+    static async updateBorrador(
+        id,
+        tenantId,
+        { cliente_id, nombre_cliente, items, total, notas, pedido_cocina_id, mesa_cocina_id }
+    ) {
+        await db.query(
+            `UPDATE pos_borradores
+             SET cliente_id = ?, nombre_cliente = ?, items = ?, total = ?, notas = ?, pedido_cocina_id = ?, mesa_cocina_id = ?
+             WHERE id = ? AND tenant_id = ?`,
+            [
+                cliente_id || null,
+                nombre_cliente || null,
+                JSON.stringify(items),
+                total || 0,
+                notas || null,
+                pedido_cocina_id || null,
+                mesa_cocina_id || null,
+                id,
+                tenantId
+            ]
+        );
+    }
+
     static async deleteBorrador(id, tenantId) {
         const [rows] = await db.query(`SELECT pedido_cocina_id FROM pos_borradores WHERE id = ? AND tenant_id = ?`, [
             id,
@@ -99,37 +126,12 @@ class POSRepository {
     }
 
     /**
-     * Crea un pedido "de cocina" para una venta ya facturada del POS: una mesa virtual
-     * dedicada (igual al patrón usado por WhatsAppService) + un pedido con origen='caja'
-     * + sus pedido_items en estado 'enviado' (la venta ya está pagada, cocina debe
-     * prepararla de inmediato). Se completa después desde CocinaRepository.completarPedidoPOS.
+     * Inserta los pedido_items (+ modificadores) de una lista de productos ya resueltos
+     * para un pedido de cocina, todos en estado 'enviado'. Compartido por enviarPedidoACocina
+     * (primer envío) y resincronizarItemsPedido (reenvío tras corregir en el carrito del POS).
+     * @returns {Promise<number>} Total sumado de las líneas insertadas
      */
-    static async enviarPedidoACocina(tenantId, { productos, nombrePedido, clienteId }) {
-        const itemsValidos = (productos || []).filter(p => !p.es_servicio && p.producto_id);
-        if (itemsValidos.length === 0) {
-            return null;
-        }
-
-        const [numResult] = await db.query(
-            `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
-            [tenantId]
-        );
-        const siguienteNumero = numResult[0].siguiente;
-        const numeroMesa = `POS-${siguienteNumero}`;
-
-        const [mesaResult] = await db.query(
-            `INSERT INTO mesas (tenant_id, numero, descripcion, tipo, estado) VALUES (?, ?, ?, 'virtual', 'ocupada')`,
-            [tenantId, numeroMesa, nombrePedido || null]
-        );
-        const mesaId = mesaResult.insertId;
-
-        const [pedidoResult] = await db.query(
-            `INSERT INTO pedidos (tenant_id, mesa_id, cliente_id, estado, total, notas, numero, origen)
-             VALUES (?, ?, ?, 'abierto', 0, ?, ?, 'caja')`,
-            [tenantId, mesaId, clienteId || null, nombrePedido || null, siguienteNumero]
-        );
-        const pedidoId = pedidoResult.insertId;
-
+    static async _insertarItemsPedido(tenantId, pedidoId, itemsValidos) {
         let total = 0;
         for (const p of itemsValidos) {
             const cantidad = parseFloat(p.cantidad) || 1;
@@ -168,10 +170,74 @@ class POSRepository {
                 );
             }
         }
+        return total;
+    }
 
+    /**
+     * Crea un pedido "de cocina" para una venta ya facturada del POS: una mesa virtual
+     * dedicada (igual al patrón usado por WhatsAppService) + un pedido con origen='caja'
+     * + sus pedido_items en estado 'enviado' (la venta ya está pagada, cocina debe
+     * prepararla de inmediato). Se completa después desde CocinaRepository.completarPedidoPOS.
+     */
+    static async enviarPedidoACocina(tenantId, { productos, nombrePedido, clienteId }) {
+        const itemsValidos = (productos || []).filter(p => !p.es_servicio && p.producto_id);
+        if (itemsValidos.length === 0) {
+            return null;
+        }
+
+        const [numResult] = await db.query(
+            `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
+            [tenantId]
+        );
+        const siguienteNumero = numResult[0].siguiente;
+        const numeroMesa = `POS-${siguienteNumero}`;
+
+        const [mesaResult] = await db.query(
+            `INSERT INTO mesas (tenant_id, numero, descripcion, tipo, estado) VALUES (?, ?, ?, 'virtual', 'ocupada')`,
+            [tenantId, numeroMesa, nombrePedido || null]
+        );
+        const mesaId = mesaResult.insertId;
+
+        const [pedidoResult] = await db.query(
+            `INSERT INTO pedidos (tenant_id, mesa_id, cliente_id, estado, total, notas, numero, origen)
+             VALUES (?, ?, ?, 'abierto', 0, ?, ?, 'caja')`,
+            [tenantId, mesaId, clienteId || null, nombrePedido || null, siguienteNumero]
+        );
+        const pedidoId = pedidoResult.insertId;
+
+        const total = await POSRepository._insertarItemsPedido(tenantId, pedidoId, itemsValidos);
         await db.query('UPDATE pedidos SET total = ? WHERE id = ?', [Math.round(total * 100) / 100, pedidoId]);
 
         return { pedidoId, mesaId };
+    }
+
+    /**
+     * Reemplaza los pedido_items de un pedido de cocina ya enviado con el contenido
+     * actual del carrito del POS (ver POS.actualizarModificadoresCarrito / guardarOrden):
+     * al corregir toppings/cantidades de una orden que ya está en cola de cocina, esto
+     * "reenvía" la versión corregida -- todas las líneas quedan en estado 'enviado' de
+     * nuevo, como si acabaran de llegar. ON DELETE CASCADE en pedido_item_modificadores
+     * limpia los toppings de las líneas viejas junto con ellas.
+     */
+    static async resincronizarItemsPedido(tenantId, pedidoId, productos) {
+        const itemsValidos = (productos || []).filter(p => !p.es_servicio && p.producto_id);
+        if (itemsValidos.length === 0) {
+            return null;
+        }
+
+        const [pedidos] = await db.query(`SELECT id FROM pedidos WHERE id = ? AND tenant_id = ? AND origen = 'caja'`, [
+            pedidoId,
+            tenantId
+        ]);
+        if (pedidos.length === 0) {
+            return null;
+        }
+
+        await db.query('DELETE FROM pedido_items WHERE pedido_id = ?', [pedidoId]);
+        const total = await POSRepository._insertarItemsPedido(tenantId, pedidoId, itemsValidos);
+        await db.query('UPDATE pedidos SET total = ? WHERE id = ?', [Math.round(total * 100) / 100, pedidoId]);
+
+        return { pedidoId };
     }
 }
 

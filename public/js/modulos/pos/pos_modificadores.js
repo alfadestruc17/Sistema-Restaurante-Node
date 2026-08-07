@@ -3,6 +3,9 @@
 window.POS_MODIFICADORES = {
     _cache: new Map(), // producto_id -> grupos[] (o [] si no tiene)
     _productoActual: null,
+    // Índice en POS.state.cart de la línea que se está corrigiendo (ver editar()), o
+    // null si el modal está agregando un producto nuevo al carrito.
+    _editandoIdx: null,
 
     // Punto de entrada llamado desde POS.addToCart: si el producto no tiene
     // grupos configurados, agrega directo al carrito (sin fricción, comportamiento
@@ -23,12 +26,47 @@ window.POS_MODIFICADORES = {
             return;
         }
 
+        this._editandoIdx = null;
         this._productoActual = producto;
         this._render(grupos);
         new bootstrap.Modal(document.getElementById('posModificadoresModal')).show();
     },
 
-    _render(grupos) {
+    // Reabre el modal para corregir los toppings de una línea ya en el carrito (botón de
+    // lápiz en pos_ui.renderCart). Pre-marca la selección actual de esa línea.
+    async editar(idx) {
+        const item = POS.state.cart[idx];
+        const producto = item && POS.state.productosMap?.get(item.producto_id);
+        if (!item || !producto) return;
+
+        let grupos = this._cache.get(producto.id);
+        if (grupos === undefined) {
+            try {
+                grupos = await POS_API.getModificadoresProducto(producto.id);
+            } catch (_) {
+                grupos = [];
+            }
+            this._cache.set(producto.id, grupos);
+        }
+
+        if (!grupos || grupos.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Sin toppings configurables',
+                text: 'Este producto no tiene toppings/modificadores para elegir.',
+                timer: 1800,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        this._editandoIdx = idx;
+        this._productoActual = producto;
+        this._render(grupos, item.modificadores_seleccion || []);
+        new bootstrap.Modal(document.getElementById('posModificadoresModal')).show();
+    },
+
+    _render(grupos, seleccionActual = []) {
         document.getElementById('posModificadoresProductoNombre').textContent = this._productoActual.nombre;
         const body = document.getElementById('posModificadoresBody');
         body.innerHTML = grupos.map(g => {
@@ -66,6 +104,14 @@ window.POS_MODIFICADORES = {
             // entre productos): forzamos el estado a no marcado para partir siempre limpio.
             inp.checked = false;
             inp.addEventListener('change', () => this._actualizarTotal());
+        });
+
+        // Al editar una línea ya en el carrito, pre-marcar lo que ya tenía elegido.
+        seleccionActual.forEach(s => {
+            (s.opciones || []).forEach(optId => {
+                const inp = body.querySelector(`input[name="pos-mod-grupo-${s.grupo_id}"][value="${optId}"]`);
+                if (inp) inp.checked = true;
+            });
         });
 
         this._actualizarTotal();
@@ -111,7 +157,12 @@ window.POS_MODIFICADORES = {
             }
         });
 
-        POS.addToCartConModificadores(this._productoActual, seleccion, preview, totalAdicional);
+        if (this._editandoIdx !== null) {
+            POS.actualizarModificadoresCarrito(this._editandoIdx, seleccion, preview, totalAdicional);
+            this._editandoIdx = null;
+        } else {
+            POS.addToCartConModificadores(this._productoActual, seleccion, preview, totalAdicional);
+        }
         bootstrap.Modal.getInstance(document.getElementById('posModificadoresModal'))?.hide();
     }
 };

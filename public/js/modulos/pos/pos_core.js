@@ -13,7 +13,10 @@ window.POS = {
         // Pedido/mesa "de cocina" ya creado para esta orden (si viene de un borrador
         // que se guardó antes, ver guardarOrden/cargarBorrador). Se cierra al cobrar.
         pedidoCocinaId: null,
-        mesaCocinaId: null
+        mesaCocinaId: null,
+        // Id del borrador cargado al carrito (si viene de "Órdenes guardadas"). Se usa
+        // para actualizar esa misma fila al guardar de nuevo, y para borrarla al cobrar.
+        borradorId: null
     },
 
     // ─── Inicialización ────────────────────────────────────────────
@@ -131,6 +134,42 @@ window.POS = {
         POS_UI.flashCard(producto.id);
     },
 
+    // Agrega un servicio (ej. domicilio) como línea del carrito -- sin modificadores,
+    // no va a cocina (POSService._resolverItems filtra es_servicio antes de enviar).
+    agregarServicio(servicio) {
+        const precio = Number.parseFloat(servicio.precio) || 0;
+        this.state.cart.push({
+            producto_id: null,
+            servicio_id: servicio.id,
+            es_servicio: true,
+            nombre: servicio.nombre,
+            precio,
+            precio_original: precio,
+            cantidad: 1,
+            descuento_porcentaje: 0,
+            unidad: 'SERV',
+            modificadores_seleccion: [],
+            modificadores_preview: [],
+            modificadores_total: 0,
+            modificadores_hash: null
+        });
+        POS_UI.renderCart();
+        bootstrap.Modal.getInstance(document.getElementById('posServiciosModal'))?.hide();
+    },
+
+    // Aplica una corrección de toppings sobre una línea ya existente del carrito (ver
+    // POS_MODIFICADORES.editar). A diferencia de addToCartConModificadores, nunca crea
+    // una línea nueva ni fusiona con otra -- solo actualiza esta.
+    actualizarModificadoresCarrito(idx, seleccion, preview, totalAdicional) {
+        const item = this.state.cart[idx];
+        if (!item) return;
+        item.modificadores_seleccion = seleccion;
+        item.modificadores_preview = preview;
+        item.modificadores_total = totalAdicional;
+        item.modificadores_hash = seleccion.flatMap(s => s.opciones).sort((a, b) => a - b).join(',') || null;
+        POS_UI.renderCart();
+    },
+
     removeFromCart(idx) {
         this.state.cart.splice(idx, 1);
         POS_UI.renderCart();
@@ -159,6 +198,7 @@ window.POS = {
         this.state.cliente = null;
         this.state.pedidoCocinaId = null;
         this.state.mesaCocinaId = null;
+        this.state.borradorId = null;
         POS_UI.renderCart();
         // Restaurar cliente por defecto
         const inputEl = document.getElementById('posClienteInput');
@@ -258,7 +298,8 @@ window.POS = {
                 items: this.state.cart,
                 total: this.getTotal(),
                 pedido_cocina_id: this.state.pedidoCocinaId || null,
-                mesa_cocina_id: this.state.mesaCocinaId || null
+                mesa_cocina_id: this.state.mesaCocinaId || null,
+                borrador_id: this.state.borradorId || null
             });
             this.clearCart();
             await this.recargarBorradores();
@@ -269,17 +310,32 @@ window.POS = {
     },
 
     async cargarBorrador(borrador) {
+        if (this.state.cart.length && this.state.borradorId !== borrador.id) {
+            const { isConfirmed } = await Swal.fire({
+                title: '¿Reemplazar el carrito actual?',
+                text: 'Tienes una orden sin guardar en el carrito. Si cargas esta, se perderá.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, reemplazar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc3545'
+            });
+            if (!isConfirmed) return;
+        }
+
         this.state.cart = borrador.items.map(i => ({ ...i }));
         this.state.pedidoCocinaId = borrador.pedido_cocina_id || null;
         this.state.mesaCocinaId = borrador.mesa_cocina_id || null;
+        // Ya NO se borra el borrador de la BD al cargarlo (antes se hacía "skipCocina"
+        // y solo quedaba vivo en memoria del navegador -- si algo interrumpía al cajero
+        // antes de volver a guardar o cobrar, la orden se perdía por completo). Se
+        // mantiene en la BD; guardarOrden lo actualiza en el sitio y el cobro lo borra.
+        this.state.borradorId = borrador.id;
         if (borrador.cliente_id) {
             this.setCliente({ id: borrador.cliente_id, nombre: borrador.nombre_cliente });
         }
         POS_UI.renderCart();
-        // skipCocina: cargar la orden solo la mueve al carrito, el pedido en cocina
-        // sigue activo (se cierra al cobrar o se cancela si luego se elimina/vacía).
-        await POS_API.deleteBorrador(borrador.id, { skipCocina: true });
-        await this.recargarBorradores();
+        POS_UI.updateBorradoresCount();
         bootstrap.Modal.getInstance(document.getElementById('posBorradoresModal'))?.hide();
     },
 
@@ -339,6 +395,11 @@ window.POS = {
         document.getElementById('posBtnBorradores')?.addEventListener('click', () => {
             POS_UI.renderBorradoresModal();
             new bootstrap.Modal(document.getElementById('posBorradoresModal')).show();
+        });
+
+        document.getElementById('posBtnServicios')?.addEventListener('click', () => {
+            POS_UI.renderServiciosModal();
+            new bootstrap.Modal(document.getElementById('posServiciosModal')).show();
         });
 
         document.getElementById('posBtnAbrirCajon')?.addEventListener('click', () => POS_QZ.abrirCajon());
