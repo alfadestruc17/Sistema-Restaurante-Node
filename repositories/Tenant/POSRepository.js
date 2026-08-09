@@ -131,7 +131,7 @@ class POSRepository {
      * (primer envío) y resincronizarItemsPedido (reenvío tras corregir en el carrito del POS).
      * @returns {Promise<number>} Total sumado de las líneas insertadas
      */
-    static async _insertarItemsPedido(tenantId, pedidoId, itemsValidos) {
+    static async _insertarItemsPedido(conn, tenantId, pedidoId, itemsValidos) {
         let total = 0;
         for (const p of itemsValidos) {
             const cantidad = parseFloat(p.cantidad) || 1;
@@ -149,7 +149,7 @@ class POSRepository {
                           .join(',')
                     : null;
 
-            const [itemResult] = await db.query(
+            const [itemResult] = await conn.query(
                 `INSERT INTO pedido_items (tenant_id, pedido_id, producto_id, cantidad, unidad_medida, precio_unitario, subtotal, estado, modificadores_hash, enviado_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, 'enviado', ?, NOW())`,
                 [tenantId, pedidoId, p.producto_id, cantidad, p.unidad || 'UND', precio, subtotal, modificadoresHash]
@@ -164,7 +164,7 @@ class POSRepository {
                     m.precio_adicional,
                     m.cantidad || 1
                 ]);
-                await db.query(
+                await conn.query(
                     'INSERT INTO pedido_item_modificadores (pedido_item_id, opcion_modificador_id, grupo_nombre, opcion_nombre, precio_adicional, cantidad) VALUES ?',
                     [modValues]
                 );
@@ -185,30 +185,54 @@ class POSRepository {
             return null;
         }
 
-        const [numResult] = await db.query(
-            `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE()`,
-            [tenantId]
-        );
-        const siguienteNumero = numResult[0].siguiente;
-        const numeroMesa = `POS-${siguienteNumero}`;
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
 
-        const [mesaResult] = await db.query(
-            `INSERT INTO mesas (tenant_id, numero, descripcion, tipo, estado) VALUES (?, ?, ?, 'virtual', 'ocupada')`,
-            [tenantId, numeroMesa, nombrePedido || null]
-        );
-        const mesaId = mesaResult.insertId;
+            // FOR UPDATE serializa contra otros envíos POS concurrentes del mismo tenant
+            // mientras dure la transacción (ver AbrirPedidoService, mismo patrón).
+            const [numResult] = await connection.query(
+                `SELECT COALESCE(MAX(numero), 0) + 1 AS siguiente FROM pedidos WHERE tenant_id = ? AND DATE(created_at) = CURDATE() FOR UPDATE`,
+                [tenantId]
+            );
+            const siguienteNumero = numResult[0].siguiente;
+            const numeroMesa = `POS-${siguienteNumero}`;
 
-        const [pedidoResult] = await db.query(
-            `INSERT INTO pedidos (tenant_id, mesa_id, cliente_id, estado, total, notas, numero, origen)
-             VALUES (?, ?, ?, 'abierto', 0, ?, ?, 'caja')`,
-            [tenantId, mesaId, clienteId || null, nombrePedido || null, siguienteNumero]
-        );
-        const pedidoId = pedidoResult.insertId;
+            // numeroMesa se reinicia cada día, pero mesas.numero es único por tenant PARA
+            // SIEMPRE y las mesas virtuales del POS nunca se borran, solo se liberan (ver
+            // CocinaRepository.completarPedidoPOS/cancelarPedidoPOS) -- así que un "POS-2"
+            // de hoy puede chocar con un "POS-2" ya liberado de un día anterior. En vez de
+            // insertar a ciegas (causaba ER_DUP_ENTRY y el pedido nunca llegaba a cocina),
+            // reutilizamos esa fila igual que WhatsAppService hace con sus mesas WA-XXXX.
+            const [mesaResult] = await connection.query(
+                `INSERT INTO mesas (tenant_id, numero, descripcion, tipo, estado)
+                 VALUES (?, ?, ?, 'virtual', 'ocupada')
+                 ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), descripcion = VALUES(descripcion), tipo = 'virtual', estado = 'ocupada'`,
+                [tenantId, numeroMesa, nombrePedido || null]
+            );
+            const mesaId = mesaResult.insertId;
 
-        const total = await POSRepository._insertarItemsPedido(tenantId, pedidoId, itemsValidos);
-        await db.query('UPDATE pedidos SET total = ? WHERE id = ?', [Math.round(total * 100) / 100, pedidoId]);
+            const [pedidoResult] = await connection.query(
+                `INSERT INTO pedidos (tenant_id, mesa_id, cliente_id, estado, total, notas, numero, origen)
+                 VALUES (?, ?, ?, 'abierto', 0, ?, ?, 'caja')`,
+                [tenantId, mesaId, clienteId || null, nombrePedido || null, siguienteNumero]
+            );
+            const pedidoId = pedidoResult.insertId;
 
-        return { pedidoId, mesaId };
+            const total = await POSRepository._insertarItemsPedido(connection, tenantId, pedidoId, itemsValidos);
+            await connection.query('UPDATE pedidos SET total = ? WHERE id = ?', [
+                Math.round(total * 100) / 100,
+                pedidoId
+            ]);
+
+            await connection.commit();
+            return { pedidoId, mesaId };
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
     }
 
     /**
@@ -234,7 +258,7 @@ class POSRepository {
         }
 
         await db.query('DELETE FROM pedido_items WHERE pedido_id = ?', [pedidoId]);
-        const total = await POSRepository._insertarItemsPedido(tenantId, pedidoId, itemsValidos);
+        const total = await POSRepository._insertarItemsPedido(db, tenantId, pedidoId, itemsValidos);
         await db.query('UPDATE pedidos SET total = ? WHERE id = ?', [Math.round(total * 100) / 100, pedidoId]);
 
         return { pedidoId };
