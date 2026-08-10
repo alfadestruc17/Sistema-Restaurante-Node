@@ -392,14 +392,18 @@ window.POS = {
             }).then(r => { if (r.isConfirmed) POS.clearCart(); });
         });
 
-        document.getElementById('posBtnBorradores')?.addEventListener('click', () => {
-            POS_UI.renderBorradoresModal();
-            new bootstrap.Modal(document.getElementById('posBorradoresModal')).show();
+        document.querySelectorAll('.pos-btn-borradores, #posBtnBorradores').forEach(btn => {
+            btn.addEventListener('click', () => {
+                POS_UI.renderBorradoresModal();
+                new bootstrap.Modal(document.getElementById('posBorradoresModal')).show();
+            });
         });
 
-        document.getElementById('posBtnServicios')?.addEventListener('click', () => {
-            POS_UI.renderServiciosModal();
-            new bootstrap.Modal(document.getElementById('posServiciosModal')).show();
+        document.querySelectorAll('.pos-btn-servicios, #posBtnServicios').forEach(btn => {
+            btn.addEventListener('click', () => {
+                POS_UI.renderServiciosModal();
+                new bootstrap.Modal(document.getElementById('posServiciosModal')).show();
+            });
         });
 
         document.getElementById('posBtnAbrirCajon')?.addEventListener('click', () => POS_QZ.abrirCajon());

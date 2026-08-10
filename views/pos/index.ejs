@@ -50,12 +50,9 @@
             <button class="pos-saved-btn" id="posBtnAbrirCajon" title="Abrir el cajón de dinero (requiere QZ Tray)">
                 <i class="bi bi-cash-stack me-1"></i>Abrir cajón
             </button>
-            <button class="pos-saved-btn" id="posBtnServicios">
-                <i class="bi bi-truck me-1"></i>Servicios
-            </button>
-            <button class="pos-saved-btn" id="posBtnBorradores">
+            <button class="pos-saved-btn pos-btn-borradores" id="posBtnBorradores" title="Órdenes guardadas">
                 <i class="bi bi-bookmark me-1"></i>Guardadas
-                <span class="pos-saved-badge" id="posBorradoresCount">0</span>
+                <span class="pos-saved-badge posBorradoresCount" id="posBorradoresCount">0</span>
             </button>
         </div>
     </div>
@@ -125,8 +122,21 @@
             <!-- Footer del carrito -->
             <div class="pos-cart-footer">
                 <div class="pos-totals" id="posTotales"></div>
+
+                <!-- Botones auxiliares: Servicios y Guardadas -->
+                <div class="pos-cart-aux-btns">
+                    <button class="pos-aux-btn pos-btn-servicios" id="posBtnServicios" title="Agregar servicio o domicilio">
+                        <i class="bi bi-truck me-1"></i>Servicios / Domicilios
+                    </button>
+                    <button class="pos-aux-btn pos-btn-borradores" title="Ver órdenes guardadas">
+                        <i class="bi bi-bookmark-fill me-1"></i>Guardadas
+                        <span class="pos-saved-badge posBorradoresCount">0</span>
+                    </button>
+                </div>
+
+                <!-- Botones principales: Guardar y Cobrar -->
                 <div class="pos-cart-btns">
-                    <button class="pos-btn-save" id="posBtnAparcar">
+                    <button class="pos-btn-save" id="posBtnAparcar" title="Guardar orden actual">
                         <i class="bi bi-bookmark me-1"></i>Guardar
                     </button>
                     <button class="pos-btn-charge" id="posBtnCobrar" disabled>
@@ -134,6 +144,7 @@
                         Cobrar <span id="posCobrarTotal">$ 0</span>
                     </button>
                 </div>
+
                 <div class="pos-cart-clear-wrap">
                     <button class="pos-btn-clear" id="posBtnLimpiar">
                         <i class="bi bi-x-circle me-1"></i>Limpiar orden

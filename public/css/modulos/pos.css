@@ -7,12 +7,14 @@
 ::-webkit-scrollbar-thumb{background:#d4d8df;border-radius:8px;border:2px solid transparent;background-clip:content-box;}
 
 /* ── Layout base ─────────────────────────────────────── */
-body.pos-terminal-body {
+html, body.pos-terminal-body {
     display: flex;
     flex-direction: column;
     height: 100vh;
     height: 100dvh; /* Descuenta barras del navegador móvil (Brave, Chrome, Safari) */
     overflow: hidden;
+    max-width: 100vw;
+    width: 100%;
     background: #f3f4f6;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     /* Anular el padding-bottom global de index.css que genera franja gris */
@@ -22,6 +24,24 @@ body.pos-terminal-body {
 /* Neutralizar el mb-4 del navbar global dentro del POS */
 body.pos-terminal-body .navbar {
     margin-bottom: 0 !important;
+    max-width: 100vw;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+body.pos-terminal-body .navbar .container-fluid {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+body.pos-terminal-body .alert {
+    max-width: 100vw;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    font-size: 13px;
+    padding: 6px 36px 6px 12px !important;
 }
 
 /* Navbar expandido en móvil/tablet: scroll interno propio para que el
@@ -38,6 +58,9 @@ body.pos-terminal-body .navbar-collapse.collapsing {
     min-height: 0;
     display: flex;
     flex-direction: column;
+    max-width: 100vw;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* ── Sub-header POS ─────────────────────────────────── */
@@ -51,6 +74,9 @@ body.pos-terminal-body .navbar-collapse.collapsing {
     align-items: center;
     justify-content: space-between;
     gap: 18px;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .pos-subheader-left { display: flex; align-items: center; gap: 10px; }
@@ -100,6 +126,7 @@ body.pos-terminal-body .navbar-collapse.collapsing {
     flex: 1; min-height: 0;
     display: grid;
     grid-template-columns: 1fr 408px;
+    max-width: 100%;
 }
 
 /* ── Catálogo ────────────────────────────────────────── */
@@ -448,26 +475,86 @@ body.pos-terminal-body .navbar-collapse.collapsing {
     font-variant-numeric: tabular-nums; letter-spacing: -.02em;
 }
 
-.pos-cart-btns { display: flex; gap: 11px; }
+/* Fila de botones auxiliares: Servicios y Guardadas */
+.pos-cart-aux-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.pos-aux-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 10px;
+    border-radius: 11px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s ease;
+    white-space: nowrap;
+}
+.pos-aux-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+/* Fila de botones principales: Guardar y Cobrar */
+.pos-cart-btns {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 
 .pos-btn-save {
     flex: 0 0 auto;
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 14px 18px; border-radius: 13px;
-    border: 1px solid #e2e5ea; background: #fff; color: #46505f;
-    font-size: 14.5px; font-weight: 700; font-family: inherit;
-    cursor: pointer; transition: all .12s;
+    width: 35%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 13px 12px;
+    border-radius: 12px;
+    border: 1px solid #e2e5ea;
+    background: #fff;
+    color: #334155;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .12s ease;
 }
-.pos-btn-save:hover { background: #f4f5f7; }
+.pos-btn-save:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
 
 .pos-btn-charge {
     flex: 1;
-    display: inline-flex; align-items: center; justify-content: center;
-    gap: 9px; padding: 14px; border-radius: 13px;
-    border: none; font-size: 16px; font-weight: 800;
-    font-family: inherit; cursor: pointer; transition: all .15s;
-    background: var(--pos-accent, #6366f1); color: #fff;
-    box-shadow: 0 8px 18px -8px var(--pos-accent, #6366f1);
+    width: 65%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 14px;
+    border-radius: 12px;
+    border: none;
+    font-size: 15.5px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s ease;
+    background: var(--pos-accent, #6366f1);
+    color: #fff;
+    box-shadow: 0 4px 14px -4px var(--pos-accent, #6366f1);
+    white-space: nowrap;
 }
 .pos-btn-charge:disabled {
     background: #cbd2dc; color: #fff; cursor: default; box-shadow: none;
@@ -561,6 +648,8 @@ body.pos-terminal-body .system-version-footer { display: none; }
     flex: 0 0 auto;
     background: #fff;
     border-bottom: 1px solid #e6e8ec;
+    max-width: 100vw;
+    width: 100%;
 }
 
 .pos-mobile-tab {
@@ -598,11 +687,57 @@ body.pos-terminal-body .system-version-footer { display: none; }
     .pos-mobile-tabs { display: flex; }
 
     /* ── Subheader compacto ── */
-    .pos-subheader { padding: 6px 14px; }
+    .pos-subheader {
+        padding: 6px 12px;
+        gap: 8px;
+        max-width: 100vw;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .pos-subheader-left { flex-shrink: 0; min-width: 0; }
     .pos-subheader-icon { width: 26px; height: 26px; border-radius: 7px; font-size: 13px; }
-    .pos-subheader-title { font-size: 14px; }
-    .pos-saved-btn { padding: 5px 10px; font-size: 12px; gap: 5px; border-radius: 8px; }
-    .pos-saved-badge { font-size: 11px; padding: 0 6px; border-radius: 5px; }
+    .pos-subheader-title { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+    .pos-subheader-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        flex-shrink: 1;
+        min-width: 0;
+        max-width: 100%;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .pos-subheader-right::-webkit-scrollbar { display: none; }
+    .pos-saved-btn {
+        padding: 5px 9px;
+        font-size: 12px;
+        gap: 4px;
+        border-radius: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .pos-saved-badge { font-size: 11px; padding: 0 5px; border-radius: 5px; }
+
+    /* ── Categorías horizontales scrollable ── */
+    .pos-cat-chips {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        margin-top: 10px;
+        gap: 8px;
+        scrollbar-width: none;
+    }
+    .pos-cat-chips::-webkit-scrollbar { display: none; }
+    .pos-cat-chip {
+        white-space: nowrap;
+        flex-shrink: 0;
+        font-size: 12.5px;
+        padding: 6px 12px;
+    }
 
     /* ── Tabs compactos ── */
     .pos-mobile-tab { padding: 9px 8px; font-size: 13px; gap: 6px; }
@@ -615,13 +750,15 @@ body.pos-terminal-body .system-version-footer { display: none; }
         min-height: 0;
         display: flex;
         flex-direction: column;
+        max-width: 100vw;
+        width: 100%;
     }
 
     /* Catálogo: visible por defecto en móvil */
-    .pos-catalog { border-right: none; flex: 1; min-height: 0; }
+    .pos-catalog { border-right: none; flex: 1; min-height: 0; max-width: 100vw; width: 100%; }
 
     /* Carrito: oculto por defecto; visible cuando se activa su tab */
-    .pos-cart-panel { display: none; }
+    .pos-cart-panel { display: none; max-width: 100vw; width: 100%; }
 
     /* JS añade esta clase a .pos-main cuando se elige tab "carrito" */
     .pos-main.pos-mobile-show-cart .pos-catalog { display: none; }
@@ -629,7 +766,15 @@ body.pos-terminal-body .system-version-footer { display: none; }
 
     .pos-search-area { padding: 12px 14px 10px; }
     .pos-product-area { padding: 12px 14px; }
-    .pos-product-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    .pos-product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    /* ── Tarjetas de producto compactas en móvil ── */
+    .pos-product-card { padding: 12px 10px; gap: 7px; border-radius: 13px; }
+    .ppc-icon { width: 36px; height: 36px; border-radius: 9px; font-size: 17px; }
+    .ppc-cat-label { font-size: 9.5px; }
+    .ppc-name { font-size: 13px; line-height: 1.25; }
+    .ppc-price { font-size: 15px; }
+    .ppc-qty-badge { min-width: 20px; height: 20px; font-size: 11.5px; top: 8px; right: 8px; }
 
     /* ── Cliente compacto ── */
     .pos-cart-customer { padding: 8px 14px; gap: 10px; }
@@ -659,9 +804,12 @@ body.pos-terminal-body .system-version-footer { display: none; }
     .pos-total-main > span:first-child { font-size: 14px; }
     .pos-total-amount { font-size: 20px; }
 
+    .pos-cart-aux-btns { gap: 6px; margin-bottom: 8px; }
+    .pos-aux-btn { padding: 8px 8px; font-size: 11.5px; border-radius: 9px; }
+
     .pos-cart-btns { gap: 8px; }
-    .pos-btn-charge { font-size: 14px; padding: 10px; border-radius: 11px; }
-    .pos-btn-save { padding: 10px 12px; font-size: 13px; border-radius: 11px; }
+    .pos-btn-save { width: 33%; padding: 10px 8px; font-size: 13px; border-radius: 11px; }
+    .pos-btn-charge { width: 67%; padding: 10px 10px; font-size: 14px; border-radius: 11px; }
 
     .pos-cart-clear-wrap { margin-top: 5px; }
     .pos-btn-clear { font-size: 12px; gap: 4px; }
@@ -669,9 +817,9 @@ body.pos-terminal-body .system-version-footer { display: none; }
 
 /* Teléfonos muy pequeños */
 @media (max-width: 420px) {
-    .pos-product-grid { grid-template-columns: repeat(2, 1fr); }
-    .pos-cat-chips { gap: 7px; }
-    .pos-cat-chip { font-size: 12px; padding: 6px 12px; }
+    .pos-product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .pos-cat-chips { gap: 6px; }
+    .pos-cat-chip { font-size: 12px; padding: 5px 10px; }
 }
 
 /* Órdenes guardadas — tarjetas en móvil (evita el desborde horizontal de la tabla) */

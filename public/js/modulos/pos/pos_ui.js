@@ -298,8 +298,10 @@ window.POS_UI = {
 
     // ─── Borradores ──────────────────────────────────────────────
     updateBorradoresCount() {
-        const el = document.getElementById('posBorradoresCount');
-        if (el) el.textContent = POS.state.borradores.filter(b => b.id !== POS.state.borradorId).length;
+        const count = POS.state.borradores.filter(b => b.id !== POS.state.borradorId).length;
+        document.querySelectorAll('.posBorradoresCount, #posBorradoresCount').forEach(el => {
+            el.textContent = count;
+        });
     },
 
     renderBorradoresModal() {
