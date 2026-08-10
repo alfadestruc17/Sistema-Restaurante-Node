@@ -112,7 +112,7 @@ class ReporteMensualService {
 
         try {
             const filename = `Reporte_${mesNombre.replaceAll(' ', '_')}_${tenant.nombre.replaceAll(' ', '_')}.pdf`;
-            const caption = `Hola *${tenant.nombre}*! 👋\n\nAquí tienes el resumen de ventas de *${mesNombre}*.\n\n_Tu Sistema Ecl-Fruver_`;
+            const caption = `Hola *${tenant.nombre}*! 👋\n\nAquí tienes el resumen de ventas de *${mesNombre}*.\n\n_Tu Sistema GastroFlow_`;
 
             let waSent = await WhatsAppService.sendMediaMessage(
                 tenant.id,
@@ -146,7 +146,7 @@ class ReporteMensualService {
 
         const mesUpper = rango.mesNombre.toUpperCase();
         const subject = `Reporte Mensual - ${tenant.nombre} - ${mesUpper}`;
-        const bodyContent = `Hola,<br><br>Adjunto enviamos el reporte de resumen de ventas de <strong>${mesUpper}</strong> para <strong>${tenant.nombre}</strong>.<br><br>Saludos cordiales,<br>Tu Sistema Ecl-Fruver`;
+        const bodyContent = `Hola,<br><br>Adjunto enviamos el reporte de resumen de ventas de <strong>${mesUpper}</strong> para <strong>${tenant.nombre}</strong>.<br><br>Saludos cordiales,<br>Tu Sistema GastroFlow`;
 
         try {
             const mailResult = await MailerService.sendMail({
