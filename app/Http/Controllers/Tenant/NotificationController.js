@@ -35,18 +35,6 @@ class NotificationController {
         // Suscribirse al evento en el servicio
         WhatsAppService.events.on('orderCreated', onOrderCreated);
 
-        // Limpiar al cerrar la conexión
-        req.on('close', () => {
-            // console.log(`[SSE] Cliente desconectado para Tenant ${tenantId}`);
-            WhatsAppService.events.removeListener('orderCreated', onOrderCreated);
-        });
-
-        // Enviar un mensaje inicial para confirmar conexión
-        res.write(`data: ${JSON.stringify({ event: 'connected', tenantId })}\n\n`);
-        if (typeof res.flush === 'function') {
-            res.flush();
-        }
-
         // Mantener la conexión enviando keep-alive cada 30 segundos
         const keepAlive = setInterval(() => {
             res.write(': keepalive\n\n');
@@ -55,9 +43,29 @@ class NotificationController {
             }
         }, 30000);
 
-        req.on('close', () => {
+        // Limpiar al cerrar la conexión. 'close' en req no siempre dispara de forma
+        // confiable detrás de proxies/reconexiones del navegador (dejaba listeners
+        // huérfanos acumulándose -- ver warning de MaxListeners), así que se engancha
+        // también en res.close como respaldo. cleanup() es idempotente: da igual si
+        // ambos eventos disparan.
+        let cleaned = false;
+        const cleanup = () => {
+            if (cleaned) {
+                return;
+            }
+            cleaned = true;
+            // console.log(`[SSE] Cliente desconectado para Tenant ${tenantId}`);
+            WhatsAppService.events.removeListener('orderCreated', onOrderCreated);
             clearInterval(keepAlive);
-        });
+        };
+        req.on('close', cleanup);
+        res.on('close', cleanup);
+
+        // Enviar un mensaje inicial para confirmar conexión
+        res.write(`data: ${JSON.stringify({ event: 'connected', tenantId })}\n\n`);
+        if (typeof res.flush === 'function') {
+            res.flush();
+        }
     }
 }
 

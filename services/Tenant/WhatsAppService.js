@@ -11,6 +11,11 @@ class WhatsAppService {
         this.qrCodes = new Map(); // tenant_id -> QR Base64
         this.initializing = new Set(); // tenant_id -> boolean
         this.events = new EventEmitter();
+        // Hub global de SSE: cada pantalla conectada (cocina, mesas, POS, dashboard) de
+        // cualquier tenant engancha un listener 'orderCreated' aquí (ver NotificationController).
+        // Con varios tenants y pantallas abiertas a la vez se supera fácil el límite por
+        // defecto de Node (10) sin que sea una fuga real -- se sube para evitar el warning.
+        this.events.setMaxListeners(100);
     }
 
     /**
