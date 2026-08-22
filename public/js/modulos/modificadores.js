@@ -53,7 +53,7 @@ function addOpcionRow(nombre = '', precioAdicional = '', insumoId = null, cantid
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="form-control form-control-sm opcion-nombre-input" placeholder="Ej: Queso extra" value="${nombre}"></td>
-        <td><input type="text" inputmode="decimal" class="form-control form-control-sm opcion-precio-input money-input" placeholder="0" value="${MoneyInput.format(MoneyInput.digitsOnly(String(precioAdicional || '')))}"></td>
+        <td><input type="text" inputmode="decimal" class="form-control form-control-sm opcion-precio-input money-input" placeholder="0" value="${MoneyInput.format(String(Math.round(Number(precioAdicional) || 0)))}"></td>
         <td><button type="button" class="btn btn-sm btn-outline-danger quitar-opcion" title="Quitar"><i class="bi bi-trash"></i></button></td>
     `;
     // Fila creada después del DOMContentLoaded inicial: money-input.js no la
