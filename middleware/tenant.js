@@ -9,6 +9,7 @@ const AddonRepository = require('../repositories/Admin/AddonRepository');
 const AuthService = require('../services/Shared/AuthService');
 const CacheService = require('../services/Shared/CacheService');
 const { getAllowedByPlan, getAllowedForUser } = require('../utils/planPermissions');
+const { getTenantBlockedMessage } = require('../utils/tenantMessages');
 
 /** TTL del contexto de tenant (usuario/permisos, tenant, add-ons) en el CacheService en memoria. */
 const CONTEXT_TTL_SECONDS = 45;
@@ -108,8 +109,7 @@ async function attachTenantContext(req, res, next) {
         }
 
         if (!cachedTenant.activo) {
-            const msg =
-                'Tu restaurante "' + (cachedTenant.nombre || '') + '" está desactivado. Contacta al administrador.';
+            const msg = getTenantBlockedMessage(cachedTenant);
             if (req.xhr || req.headers.accept?.indexOf('json') > -1) {
                 res.clearCookie('auth_token');
                 return res.status(403).json({ error: msg, redirect: '/auth/login' });

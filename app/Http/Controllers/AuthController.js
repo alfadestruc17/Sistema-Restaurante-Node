@@ -2,6 +2,7 @@ const authService = require('../../../services/Shared/AuthService');
 const TenantRepository = require('../../../repositories/Admin/TenantRepository');
 const { validationResult } = require('express-validator');
 const { ROLES } = require('../../../utils/constants');
+const { getTenantBlockedMessage } = require('../../../utils/tenantMessages');
 const logger = require('../../../utils/logger');
 
 class AuthController {
@@ -38,8 +39,7 @@ class AuthController {
             if (tenantId !== null && tenantId !== undefined && rol !== ROLES.SUPERADMIN) {
                 const tenant = await TenantRepository.findById(tenantId);
                 if (tenant && !tenant.activo) {
-                    const msg =
-                        'Tu restaurante "' + (tenant.nombre || '') + '" está desactivado. Contacta al administrador.';
+                    const msg = getTenantBlockedMessage(tenant);
                     logger.audit('login.blocked', {
                         username,
                         ip,

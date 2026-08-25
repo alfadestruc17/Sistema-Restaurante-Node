@@ -25,7 +25,19 @@ module.exports = async function adminLocals(req, res, next) {
         console.error('Error obteniendo contador de tickets de soporte:', error);
     }
 
-    res.locals.adminBadges = { soporteAbiertos };
+    let onboardingPendientes = null;
+    try {
+        const [[row]] = await db.query(
+            `SELECT
+                (SELECT COUNT(*) FROM tenants WHERE estado_aprobacion = 'pendiente') +
+                (SELECT COUNT(*) FROM usuarios WHERE tenant_id IS NULL AND rol_id = (SELECT id FROM roles WHERE nombre = 'propietario_pendiente')) AS c`
+        );
+        onboardingPendientes = row && row.c > 0 ? row.c : null;
+    } catch (error) {
+        console.error('Error obteniendo contador de onboarding pendiente:', error);
+    }
+
+    res.locals.adminBadges = { soporteAbiertos, onboardingPendientes };
 
     next();
 };

@@ -106,6 +106,7 @@ function restrictSuperadminToAdmin(req, res, next) {
         const path = (req.baseUrl || '') + (req.path || '');
         const allowed =
             path.startsWith('/admin/tenants') ||
+            path.startsWith('/admin/onboarding') ||
             path.startsWith('/admin/dashboard') ||
             path.startsWith('/admin/sistema') ||
             path.startsWith('/admin/planes') ||
@@ -125,6 +126,22 @@ function restrictSuperadminToAdmin(req, res, next) {
             }
             return res.redirect('/admin/dashboard');
         }
+    }
+    next();
+}
+
+/**
+ * Guard for the self-service onboarding flow (crear local).
+ * Must be used after requireAuth. Only lets through users without a tenant yet
+ * (recién verificados, pendientes de crear su local); if the user already has
+ * a tenant, sends them back to '/' instead.
+ */
+function requireOnboarding(req, res, next) {
+    if (!req.user) {
+        return res.redirect('/auth/login');
+    }
+    if (req.user.tenant_id !== null && req.user.tenant_id !== undefined) {
+        return res.redirect('/');
     }
     next();
 }
@@ -159,5 +176,6 @@ module.exports = {
     requireRole,
     requirePermission,
     restrictSuperadminToAdmin,
+    requireOnboarding,
     optionalAuth
 };

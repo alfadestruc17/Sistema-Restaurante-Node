@@ -56,6 +56,8 @@ const soporteTenantRoutes = require('./tenant/soporte');
 const posRoutes = require('./tenant/pos');
 const clasificacionRoutes = require('./tenant/clasificacion');
 const syncRoutes = require('./tenant/sync');
+const onboardingRoutes = require('./onboarding');
+const adminOnboardingRoutes = require('./admin/onboarding');
 const NotificationController = require('../app/Http/Controllers/Tenant/NotificationController');
 
 // ...
@@ -64,6 +66,11 @@ router.use('/api/servicios', requireAuthWithTenant, serviciosRoutes);
 
 // --- RUTAS PÚBLICAS Y AUTH ---
 router.use('/auth', authRoutes);
+// Onboarding: crear el local (usuario ya verificado, sin tenant todavía).
+// Guard propio (requireAuth + requireOnboarding) en routes/onboarding.js;
+// no usa requireAuthWithTenant a propósito (attachTenantContext haría fallback
+// al tenant por defecto si tenant_id es null).
+router.use('/onboarding', onboardingRoutes);
 // Vinculación inicial del desktop con producción (ver DesktopController). Sin
 // auth porque corre antes de que exista ningún usuario local; en producción
 // normal ambas rutas redirigen a /auth/login sin hacer nada (isDesktopMode()
@@ -203,6 +210,7 @@ router.get('/api/notifications/subscribe', requireAuthWithTenant, NotificationCo
 const requireSuperadmin = [requireAuth, requireRole(ROLES.SUPERADMIN), adminLocals];
 router.use('/admin/dashboard', requireSuperadmin, adminDashboardRoutes);
 router.use('/admin/tenants', requireSuperadmin, adminTenantsRoutes);
+router.use('/admin/onboarding', requireSuperadmin, adminOnboardingRoutes);
 router.use('/admin/sistema', requireSuperadmin, adminSistemaRoutes);
 router.use('/admin/planes', requireSuperadmin, adminPlanesRoutes);
 router.use('/admin/permisos', requireSuperadmin, adminPermisosRoutes);

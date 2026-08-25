@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title || 'Crear cuenta' %> - Sistema de Restaurante
+    </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/auth/login.css">
+</head>
+
+<body>
+
+    <!-- ── Panel izquierdo: marca ── -->
+    <aside class="login-brand">
+        <a href="/" class="brand-top" style="text-decoration: none;">
+            <div class="brand-icon"><i class="bi bi-shop"></i></div>
+            <span class="brand-name">GastroFlow</span>
+        </a>
+
+        <div class="brand-center">
+            <h2 class="brand-headline">
+                Crea tu cuenta<br>y monta <span>tu local en minutos</span>
+            </h2>
+            <p class="brand-sub">
+                Regístrate, verifica tu correo y crea tu restaurante.
+                Un asesor aprobará tu cuenta para que empieces a vender.
+            </p>
+        </div>
+
+        <div class="brand-features">
+            <div class="feat-item">
+                <div class="feat-icon"><i class="bi bi-1-circle"></i></div>
+                Regístrate con tu correo
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon"><i class="bi bi-2-circle"></i></div>
+                Verifica tu cuenta
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon"><i class="bi bi-3-circle"></i></div>
+                Crea tu local
+            </div>
+            <div class="feat-item">
+                <div class="feat-icon"><i class="bi bi-4-circle"></i></div>
+                Espera la aprobación y ¡listo!
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── Panel derecho: formulario ── -->
+    <main class="login-form-side">
+        <div class="login-card">
+
+            <a href="/" class="mobile-logo" style="text-decoration: none;">
+                <div class="mobile-logo-icon"><i class="bi bi-shop"></i></div>
+                <span class="mobile-logo-text">GastroFlow</span>
+            </a>
+
+            <h1 class="login-title">Crea tu cuenta</h1>
+            <p class="login-subtitle">Es gratis, solo toma un minuto</p>
+
+            <!-- Alerta de error -->
+            <div id="errorAlert" class="login-alert error" style="display:none;" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span id="errorMsg"></span>
+            </div>
+
+            <!-- Formulario -->
+            <form id="registroForm" autocomplete="off" novalidate>
+
+                <div>
+                    <label for="nombre_completo" class="field-label">Nombre completo</label>
+                    <div class="field-wrap">
+                        <input type="text" class="field-input" id="nombre_completo" name="nombre_completo"
+                            placeholder="Tu nombre" required autofocus autocomplete="name">
+                        <i class="bi bi-person-vcard field-icon"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="username" class="field-label">Nombre de usuario</label>
+                    <div class="field-wrap">
+                        <input type="text" class="field-input" id="username" name="username"
+                            placeholder="tu_usuario" required autocomplete="username">
+                        <i class="bi bi-person field-icon"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="field-label">Correo electrónico</label>
+                    <div class="field-wrap">
+                        <input type="email" class="field-input" id="email" name="email"
+                            placeholder="tu@correo.com" required autocomplete="email">
+                        <i class="bi bi-envelope field-icon"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="field-label">Contraseña</label>
+                    <div class="field-wrap">
+                        <input type="password" class="field-input has-toggle" id="password" name="password"
+                            placeholder="Mínimo 8 caracteres" required autocomplete="new-password" minlength="8">
+                        <i class="bi bi-lock field-icon"></i>
+                        <button type="button" class="pwd-toggle" id="togglePwd" aria-label="Mostrar contraseña"
+                            tabindex="-1">
+                            <i class="bi bi-eye" id="togglePwdIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password_confirm" class="field-label">Confirmar contraseña</label>
+                    <div class="field-wrap">
+                        <input type="password" class="field-input" id="password_confirm" name="password_confirm"
+                            placeholder="Repite tu contraseña" required autocomplete="new-password" minlength="8">
+                        <i class="bi bi-lock field-icon"></i>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnRegistro">
+                    <i class="bi bi-person-plus"></i>
+                    Crear cuenta
+                </button>
+            </form>
+
+            <p class="login-footer" style="margin-top:1rem;">
+                ¿Ya tienes cuenta? <a href="/auth/login" style="color:inherit;font-weight:600;">Inicia sesión</a>
+            </p>
+            <p class="login-footer">
+                &copy; <%= new Date().getFullYear() %> GastroFlow &nbsp;·&nbsp;
+                <a href="/legal/privacidad" style="color:inherit;text-decoration:underline;opacity:0.75;">Privacidad</a>
+                &nbsp;·&nbsp;
+                <a href="/legal/terminos" style="color:inherit;text-decoration:underline;opacity:0.75;">Términos</a>
+            </p>
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/auth/registro.js"></script>
+</body>
+
+</html>

@@ -17,6 +17,13 @@ const ADMIN_SECTIONS = [
         collapsible: true,
         items: [
             { key: 'tenants', label: 'Restaurantes', icon: 'bi-building', href: '/admin/tenants' },
+            {
+                key: 'onboarding',
+                label: 'Onboarding',
+                icon: 'bi-person-check',
+                href: '/admin/onboarding',
+                badgeKey: 'onboardingPendientes'
+            },
             { key: 'planes', label: 'Planes & Add-ons', icon: 'bi-layers', href: '/admin/planes' },
             { key: 'landing', label: 'Landing Page', icon: 'bi-palette', href: '/admin/landing' }
         ]

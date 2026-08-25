@@ -18,6 +18,12 @@ class HomeController {
 
         const rol = String(req.user.rol || '').toLowerCase();
 
+        // Usuario verificado pero sin restaurante creado todavía (recién
+        // registrado por /auth/registro): llevarlo a crear su local.
+        if (rol !== 'superadmin' && (req.user.tenant_id === null || req.user.tenant_id === undefined)) {
+            return res.redirect('/onboarding/crear-local');
+        }
+
         switch (rol) {
             case 'superadmin':
                 return res.redirect('/admin/dashboard');
