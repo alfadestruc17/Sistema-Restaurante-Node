@@ -4,19 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Página no encontrada - 404</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <link rel="stylesheet" href="/css/core/404.css">
+    <link rel="stylesheet" href="/css/core/404.css">
 </head>
-<body>
-    <div class="error-container">
-        <i class="bi bi-exclamation-triangle-fill error-icon"></i>
-        <h1 class="error-title">404</h1>
-        <p class="error-message">Lo sentimos, la página que buscas no existe.</p>
-        <a href="/" class="btn btn-primary">
-            <i class="bi bi-house-fill me-2"></i>
-            Volver al inicio
-        </a>
+<body class="e404-body">
+    <svg width="0" height="0" style="position:absolute;">
+        <filter id="gfFireDistort">
+            <feTurbulence type="fractalNoise" baseFrequency="0.014 0.05" numOctaves="2" seed="7" result="noise">
+                <animate attributeName="baseFrequency" dur="9s" values="0.014 0.05;0.03 0.075;0.014 0.05" repeatCount="indefinite" />
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="16" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+    </svg>
+
+    <div class="e404-glow" aria-hidden="true"></div>
+
+    <div class="e404-scene" aria-hidden="true">
+        <div class="e404-smoke-wrap">
+            <div class="e404-smoke s1"></div>
+            <div class="e404-smoke s2"></div>
+        </div>
+
+        <div class="e404-fire-wrap">
+            <div class="e404-flame f1"></div>
+            <div class="e404-flame f2"></div>
+            <div class="e404-flame f3"></div>
+            <div class="e404-flame f4"></div>
+            <div class="e404-lick l1"></div>
+            <div class="e404-lick l2"></div>
+            <div class="e404-lick l3"></div>
+        </div>
+
+        <div class="e404-embers">
+            <span class="e404-ember e1"></span>
+            <span class="e404-ember e2"></span>
+            <span class="e404-ember e3"></span>
+            <span class="e404-ember e4"></span>
+            <span class="e404-ember e5"></span>
+        </div>
+
+        <div class="e404-code-wrap">
+            <div class="e404-code">404</div>
+        </div>
+
+        <div class="e404-pan-wrap">
+            <div class="e404-pan">
+                <div class="e404-pan-body"></div>
+                <div class="e404-pan-shine"></div>
+                <div class="e404-pan-handle"></div>
+                <div class="e404-pan-cap"></div>
+            </div>
+        </div>
+
+        <div class="e404-pan-floor-shadow"></div>
+    </div>
+
+    <div class="e404-content">
+        <h1 class="e404-title">¡Esta página se salió de la sartén!</h1>
+        <p class="e404-subtitle">
+            <% if (typeof message !== 'undefined' && message) { %>
+                <%= message %>
+            <% } else { %>
+                No encontramos lo que buscabas — se quemó en el fuego. Vuelve al inicio y seguimos cocinando.
+            <% } %>
+        </p>
+        <div class="e404-actions">
+            <a href="/" class="e404-btn e404-btn-primary">
+                <i class="bi bi-house-door-fill"></i>
+                Volver al inicio
+            </a>
+            <a href="/soporte" class="e404-btn e404-btn-secondary">
+                <i class="bi bi-life-preserver"></i>
+                Soporte
+            </a>
+        </div>
     </div>
 </body>
-</html> 
+</html>
