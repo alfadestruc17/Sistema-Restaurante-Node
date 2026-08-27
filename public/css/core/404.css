@@ -6,11 +6,11 @@
 .e404-body {
     position: relative;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 40px 0 56px;
+    padding: 24px 0 32px;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background: radial-gradient(120% 90% at 50% 30%, #fff4e2 0%, #ffe8cd 44%, #fbd8b6 100%);
 }
@@ -38,7 +38,7 @@
 .e404-scene {
     position: relative;
     width: min(760px, 92vw);
-    height: 620px;
+    height: 380px;
     margin: 0 auto;
 }
 

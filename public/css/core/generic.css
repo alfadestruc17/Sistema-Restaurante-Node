@@ -1,0 +1,227 @@
+/* ========================================
+   generic.css — "bajo llave" (403 / plan / validación)
+   Misma familia visual que 404.css, tono ámbar/calma
+   ======================================== */
+
+.eg-body {
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 0 56px;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(120% 90% at 50% 30%, #fffaf0 0%, #fff1d6 44%, #ffe3b0 100%);
+}
+
+.eg-glow {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    width: 900px;
+    height: 760px;
+    max-width: 200vw;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(240, 180, 60, .28), rgba(240, 170, 40, .08) 55%, transparent 72%);
+    animation: egGlow 4.6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.eg-scene {
+    position: relative;
+    width: min(340px, 80vw);
+    height: 260px;
+    margin: 0 auto;
+}
+
+.eg-plate {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;
+    width: 260px;
+    height: 88px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffffff 0%, #f2ede3 100%);
+    box-shadow:
+        inset 0 3px 4px rgba(255, 255, 255, .9),
+        inset 0 -6px 10px rgba(150, 120, 70, .18),
+        0 18px 30px -14px rgba(120, 80, 20, .35);
+}
+
+.eg-cloche-wrap {
+    position: absolute;
+    left: 50%;
+    bottom: 78px;
+    transform: translateX(-50%);
+    animation: egBob 3.6s ease-in-out infinite;
+}
+
+.eg-cloche {
+    position: relative;
+    width: 210px;
+    height: 130px;
+}
+
+.eg-cloche-dome {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 210px;
+    height: 120px;
+    border-radius: 105px 105px 14px 14px / 120px 120px 8px 8px;
+    background: linear-gradient(155deg, #f4f6f8 0%, #cfd6dd 42%, #aab4bf 72%, #8e99a6 100%);
+    box-shadow:
+        inset 0 10px 16px rgba(255, 255, 255, .55),
+        inset 0 -10px 18px rgba(60, 70, 85, .35),
+        0 16px 26px -12px rgba(90, 70, 30, .35);
+}
+
+.eg-cloche-shine {
+    position: absolute;
+    left: 30px;
+    top: 14px;
+    width: 60px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0) 70%);
+    filter: blur(1px);
+}
+
+.eg-cloche-knob {
+    position: absolute;
+    left: 50%;
+    top: -14px;
+    width: 22px;
+    height: 22px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(155deg, #fff 0%, #cfd6dd 50%, #98a3b0 100%);
+    box-shadow: 0 3px 6px rgba(90, 70, 30, .3);
+}
+
+.eg-lock-badge {
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    transform: translateX(-50%);
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ffb238, #f0631a);
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 10px 20px -8px rgba(240, 99, 26, .65);
+    z-index: 2;
+}
+
+.eg-lock-ring {
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    width: 54px;
+    height: 54px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    border: 2px solid rgba(240, 130, 26, .55);
+    animation: egPing 2.4s ease-out infinite;
+}
+
+.eg-lock-ring.r2 { animation-delay: 1.2s; }
+
+/* ---------- Texto y acciones ---------- */
+
+.eg-content {
+    position: relative;
+    text-align: center;
+    margin-top: 6px;
+    padding: 0 24px;
+    animation: egRise .7s ease .2s both;
+}
+
+.eg-title {
+    margin: 0;
+    font-size: clamp(22px, 3.4vw, 31px);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #5a3a10;
+}
+
+.eg-message {
+    margin: 12px auto 0;
+    max-width: 46ch;
+    font-size: clamp(14px, 1.7vw, 16.5px);
+    line-height: 1.6;
+    color: #8a6a3c;
+    font-weight: 500;
+}
+
+.eg-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 26px;
+}
+
+.eg-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 26px;
+    border-radius: 13px;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #f0631a, #ff9126);
+    box-shadow: 0 14px 30px -12px rgba(240, 99, 26, .85);
+    transition: transform .22s, box-shadow .22s;
+}
+
+.eg-btn:hover {
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 20px 38px -12px rgba(240, 99, 26, .95);
+}
+
+.eg-footer {
+    position: relative;
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12.5px;
+    color: #a9895f;
+}
+
+/* ---------- Animaciones ---------- */
+
+@keyframes egGlow {
+    0%, 100% { opacity: .55; transform: translate(-50%, -50%) scale(1); }
+    50%      { opacity: .8; transform: translate(-50%, -50%) scale(1.07); }
+}
+
+@keyframes egBob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(-6px); }
+}
+
+@keyframes egPing {
+    0%   { transform: translateX(-50%) scale(1); opacity: .75; }
+    100% { transform: translateX(-50%) scale(1.9); opacity: 0; }
+}
+
+@keyframes egRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .eg-glow,
+    .eg-cloche-wrap,
+    .eg-lock-ring,
+    .eg-content {
+        animation: none;
+    }
+}

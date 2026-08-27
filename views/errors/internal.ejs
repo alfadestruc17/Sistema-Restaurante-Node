@@ -3,25 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Error interno</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-        <link rel="stylesheet" href="/css/core/error.css">
+    <link rel="stylesheet" href="/css/core/error.css">
 </head>
-<body>
-    <div class="error-container">
-        <i class="bi bi-x-circle-fill error-icon"></i>
-        <h1 class="error-title">Ha ocurrido un error</h1>
-        <p class="error-message">Lo sentimos, ha ocurrido un error inesperado.</p>
-        <% if (error && error.stack) { %>
-            <div class="error-details">
-                <%= error.stack %>
+<body class="ei-body">
+    <div class="ei-glow" aria-hidden="true"></div>
+
+    <div class="ei-scene" aria-hidden="true">
+        <div class="ei-smoke-wrap">
+            <div class="ei-smoke s1"></div>
+            <div class="ei-smoke s2"></div>
+            <div class="ei-smoke s3"></div>
+        </div>
+
+        <span class="ei-spark p1"></span>
+        <span class="ei-spark p2"></span>
+        <span class="ei-spark p3"></span>
+
+        <div class="ei-pot-wrap">
+            <div class="ei-pot">
+                <div class="ei-lid-glow"></div>
+                <div class="ei-pot-handle left"></div>
+                <div class="ei-pot-handle right"></div>
+                <div class="ei-pot-body"></div>
+                <div class="ei-pot-rim"></div>
+                <div class="ei-lid">
+                    <div class="ei-lid-knob"></div>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <div class="ei-content">
+        <h1 class="ei-title">¡Se nos quemó algo en la cocina!</h1>
+        <p class="ei-message">
+            <% if (error && error.message) { %>
+                <%= error.message %>
+            <% } else { %>
+                Ocurrió un error inesperado. Nuestro equipo ya fue notificado.
+            <% } %>
+        </p>
+        <div class="ei-actions">
+            <a href="/" class="ei-btn">
+                <i class="bi bi-house-door-fill"></i>
+                Volver al inicio
+            </a>
+        </div>
+
+        <% if (error && error.stack) { %>
+            <details class="ei-stack">
+                <summary>Detalles técnicos</summary>
+                <pre><%= error.stack %></pre>
+            </details>
         <% } %>
-        <a href="/" class="btn btn-primary">
-            <i class="bi bi-house-fill me-2"></i>
-            Volver al inicio
-        </a>
     </div>
 </body>
-</html> 
+</html>

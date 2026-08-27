@@ -1,41 +1,286 @@
 /* ========================================
-   error.css — extraído de error.ejs
+   error.css — "se nos quemó algo en la cocina" (500)
+   Misma familia visual que 404.css, tono de alarma
    ======================================== */
 
-body {
-            background-color: #f8f9fa;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .error-container {
-            text-align: center;
-            padding: 2rem;
-            max-width: 600px;
-        }
-        .error-icon {
-            font-size: 5rem;
-            color: #dc3545;
-            margin-bottom: 1rem;
-        }
-        .error-title {
-            font-size: 2rem;
-            color: #343a40;
-            margin-bottom: 1rem;
-        }
-        .error-message {
-            font-size: 1.1rem;
-            color: #6c757d;
-            margin-bottom: 1rem;
-        }
-        .error-details {
-            background-color: #f1f3f5;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-            text-align: left;
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
+.ei-body {
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 0 56px;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(120% 90% at 50% 30%, #fff4ec 0%, #ffe1cf 44%, #f9c3ab 100%);
+}
+
+.ei-glow {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 950px;
+    height: 800px;
+    max-width: 200vw;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(230, 70, 30, .26), rgba(230, 70, 30, .08) 55%, transparent 72%);
+    animation: eiGlow 3s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.ei-scene {
+    position: relative;
+    width: min(360px, 82vw);
+    height: 300px;
+    margin: 0 auto;
+}
+
+.ei-smoke-wrap {
+    position: absolute;
+    left: 50%;
+    bottom: 150px;
+    width: 320px;
+    height: 220px;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.ei-smoke {
+    position: absolute;
+    bottom: 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(70, 65, 65, .55), transparent 72%);
+    animation: eiSmoke 5.5s ease-out infinite;
+}
+
+.ei-smoke.s1 { left: 30%; width: 70px; height: 70px; filter: blur(9px); --dx: -30px; }
+.ei-smoke.s2 { left: 52%; width: 96px; height: 96px; filter: blur(12px); --dx: 18px; animation-duration: 6.6s; animation-delay: 1.1s; }
+.ei-smoke.s3 { left: 42%; width: 56px; height: 56px; filter: blur(8px); --dx: 40px; animation-duration: 4.8s; animation-delay: 2.3s; }
+
+.ei-spark {
+    position: absolute;
+    border-radius: 50%;
+    background: #ff5a2e;
+    box-shadow: 0 0 10px 3px rgba(255, 90, 40, .8);
+    animation: eiSpark 2.6s ease-out infinite;
+}
+
+.ei-spark.p1 { left: 40%; bottom: 148px; width: 5px; height: 5px; --dx: -22px; }
+.ei-spark.p2 { left: 58%; bottom: 150px; width: 4px; height: 4px; --dx: 26px; animation-delay: .9s; }
+.ei-spark.p3 { left: 50%; bottom: 146px; width: 4px; height: 4px; --dx: 6px; animation-delay: 1.7s; }
+
+.ei-pot-wrap {
+    position: absolute;
+    left: 50%;
+    bottom: 60px;
+    transform: translateX(-50%);
+    animation: eiWobble 3.4s ease-in-out infinite;
+}
+
+.ei-pot {
+    position: relative;
+    width: 200px;
+    height: 130px;
+}
+
+.ei-pot-body {
+    position: absolute;
+    left: 14px;
+    bottom: 0;
+    width: 172px;
+    height: 92px;
+    border-radius: 14px 14px 34px 34px / 14px 14px 46px 46px;
+    background: linear-gradient(160deg, #4a4a52 0%, #2b2b31 45%, #1a1a1f 100%);
+    box-shadow:
+        inset 0 6px 10px rgba(255, 255, 255, .10),
+        inset 0 -10px 16px rgba(0, 0, 0, .55),
+        0 16px 26px -10px rgba(0, 0, 0, .4);
+}
+
+.ei-pot-rim {
+    position: absolute;
+    left: 6px;
+    bottom: 84px;
+    width: 188px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #5c5c66 0%, #34343b 100%);
+    box-shadow: inset 0 -3px 5px rgba(0, 0, 0, .4);
+}
+
+.ei-pot-handle {
+    position: absolute;
+    bottom: 42px;
+    width: 20px;
+    height: 30px;
+    border-radius: 8px;
+    background: linear-gradient(160deg, #4a4a52, #232328);
+}
+
+.ei-pot-handle.left { left: -6px; }
+.ei-pot-handle.right { right: -6px; }
+
+.ei-lid {
+    position: absolute;
+    left: 26px;
+    bottom: 92px;
+    width: 168px;
+    height: 26px;
+    transform: rotate(-16deg);
+    transform-origin: 20% 50%;
+    border-radius: 50%;
+    background: linear-gradient(160deg, #6a6a75 0%, #3a3a42 55%, #232328 100%);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
+}
+
+.ei-lid-knob {
+    position: absolute;
+    left: 78px;
+    top: -10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(160deg, #7a7a85, #45454e);
+}
+
+.ei-lid-glow {
+    position: absolute;
+    left: 46px;
+    bottom: 96px;
+    width: 60px;
+    height: 30px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(255, 120, 50, .8), transparent 75%);
+    filter: blur(6px);
+    animation: eiLidGlow 1.4s ease-in-out infinite;
+}
+
+/* ---------- Texto y acciones ---------- */
+
+.ei-content {
+    position: relative;
+    text-align: center;
+    padding: 0 24px;
+    animation: eiRise .7s ease .2s both;
+}
+
+.ei-title {
+    margin: 0;
+    font-size: clamp(22px, 3.4vw, 31px);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #5a2a10;
+}
+
+.ei-message {
+    margin: 12px auto 0;
+    max-width: 46ch;
+    font-size: clamp(14px, 1.7vw, 16.5px);
+    line-height: 1.6;
+    color: #96603c;
+    font-weight: 500;
+}
+
+.ei-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 26px;
+}
+
+.ei-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 26px;
+    border-radius: 13px;
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #f0631a, #ff9126);
+    box-shadow: 0 14px 30px -12px rgba(240, 99, 26, .85);
+    transition: transform .22s, box-shadow .22s;
+}
+
+.ei-btn:hover {
+    color: #fff;
+    transform: translateY(-3px);
+    box-shadow: 0 20px 38px -12px rgba(240, 99, 26, .95);
+}
+
+.ei-stack {
+    margin: 24px auto 0;
+    max-width: 640px;
+    text-align: center;
+}
+
+.ei-stack summary {
+    cursor: pointer;
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #96603c;
+    user-select: none;
+}
+
+.ei-stack pre {
+    margin-top: 10px;
+    padding: 14px 16px;
+    text-align: left;
+    background: rgba(30, 20, 15, .85);
+    color: #ffcfa8;
+    border-radius: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 40vh;
+    overflow: auto;
+}
+
+/* ---------- Animaciones ---------- */
+
+@keyframes eiGlow {
+    0%, 100% { opacity: .5; transform: translate(-50%, -50%) scale(1); }
+    50%      { opacity: .85; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes eiSmoke {
+    0%   { transform: translate(-50%, 0) translateX(0) scale(.6); opacity: 0; }
+    25%  { opacity: .5; }
+    100% { transform: translate(-50%, -190px) translateX(var(--dx, 20px)) scale(2.2); opacity: 0; }
+}
+
+@keyframes eiSpark {
+    0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+    15%  { opacity: 1; }
+    100% { transform: translateY(-70px) translateX(var(--dx, 14px)) scale(.3); opacity: 0; }
+}
+
+@keyframes eiWobble {
+    0%, 100% { transform: translateX(-50%) rotate(0deg); }
+    25%      { transform: translateX(-50%) rotate(-1.4deg); }
+    60%      { transform: translateX(-50%) rotate(1.3deg); }
+}
+
+@keyframes eiLidGlow {
+    0%, 100% { opacity: .6; transform: scale(1); }
+    50%      { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes eiRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ei-glow,
+    .ei-smoke,
+    .ei-spark,
+    .ei-pot-wrap,
+    .ei-lid-glow,
+    .ei-content {
+        animation: none;
+    }
+}
