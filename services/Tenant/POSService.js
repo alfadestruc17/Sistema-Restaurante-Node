@@ -109,7 +109,11 @@ class POSService {
     /**
      * Resuelve precio/nombre de cada topping del carrito contra el catálogo (nunca se
      * confía en lo que mandó el frontend), igual que hace FacturaService.create. Los items
-     * vienen crudos, con modificadores_seleccion sin resolver.
+     * vienen crudos, con modificadores_seleccion sin resolver -- a diferencia de
+     * FacturaService.create, aquí el resultado no se factura, se inserta en pedido_items
+     * (ver POSRepository._insertarItemsPedido), así que el precio adicional de los
+     * modificadores debe sumarse al precio/subtotal de una vez: esa inserción usa
+     * directamente p.precio/p.subtotal tal como quedan aquí, sin volver a resolver nada.
      */
     static async _resolverItems(tenantId, productos, puedeUsarModificadores) {
         const ModificadorService = require('./ModificadorService');
@@ -117,13 +121,15 @@ class POSService {
             (productos || [])
                 .filter(p => !p.es_servicio && p.producto_id)
                 .map(async p => {
-                    const { lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
+                    const { precioAdicionalTotal, lineasSnapshot } = await ModificadorService.validarYCalcularSeleccion(
                         tenantId,
                         p.producto_id,
                         p.modificadores_seleccion || [],
                         { permitido: puedeUsarModificadores }
                     );
-                    return { ...p, _modificadoresSnapshot: lineasSnapshot };
+                    const cantidad = parseFloat(p.cantidad) || 1;
+                    const precio = (parseFloat(p.precio) || 0) + precioAdicionalTotal;
+                    return { ...p, precio, subtotal: precio * cantidad, _modificadoresSnapshot: lineasSnapshot };
                 })
         );
     }
