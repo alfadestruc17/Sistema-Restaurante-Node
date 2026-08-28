@@ -22,10 +22,125 @@ class POSRepository {
              ORDER BY updated_at DESC`,
             [tenantId, usuarioId]
         );
-        return rows.map(r => ({
-            ...r,
-            items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items
-        }));
+
+        // El JSON de "items" es solo el snapshot del carrito al momento de guardar. Si
+        // la orden ya tiene mesa virtual (pedido_cocina_id), lo que pasó ahí después
+        // (productos agregados/editados desde Mesas) es la fuente de verdad -- se
+        // reconstruye el carrito desde pedido_items en vez de confiar en el snapshot.
+        const pedidoIds = rows.filter(r => r.pedido_cocina_id).map(r => r.pedido_cocina_id);
+        const itemsVivosPorPedido = await POSRepository.getItemsVivosPorPedidos(tenantId, pedidoIds);
+
+        return rows.map(r => {
+            const tieneItemsVivos = r.pedido_cocina_id && itemsVivosPorPedido.has(r.pedido_cocina_id);
+            const items = tieneItemsVivos
+                ? itemsVivosPorPedido.get(r.pedido_cocina_id)
+                : typeof r.items === 'string'
+                  ? JSON.parse(r.items)
+                  : r.items;
+            const total = tieneItemsVivos
+                ? items.reduce((sum, i) => {
+                      const precioUnitario = (Number(i.precio) || 0) + (Number(i.modificadores_total) || 0);
+                      return sum + i.cantidad * precioUnitario * (1 - (i.descuento_porcentaje || 0) / 100);
+                  }, 0)
+                : Number(r.total) || 0;
+            return { ...r, items, total };
+        });
+    }
+
+    /**
+     * Reconstruye, para cada pedido de cocina dado, el carrito con formato POS (mismas
+     * claves que arma pos_core.js) a partir de sus pedido_items/pedido_item_modificadores
+     * en vivo. Excluye líneas ya pagadas individualmente o canceladas desde Mesas -- esas
+     * ya no deben cobrarse de nuevo en el POS.
+     * @returns {Promise<Map<number, Array>>} pedidoId -> items[]
+     */
+    static async getItemsVivosPorPedidos(tenantId, pedidoIds) {
+        const porPedido = new Map(pedidoIds.map(id => [id, []]));
+        if (pedidoIds.length === 0) {
+            return porPedido;
+        }
+
+        const [items] = await db.query(
+            `SELECT pi.id, pi.pedido_id, pi.producto_id, pi.servicio_id, pi.es_servicio, pi.cantidad,
+                    pi.unidad_medida, pi.precio_unitario, pi.nota,
+                    COALESCE(p.nombre, s.nombre) AS nombre, p.categoria_id
+             FROM pedido_items pi
+             LEFT JOIN productos p ON p.id = pi.producto_id
+             LEFT JOIN servicios s ON s.id = pi.servicio_id
+             WHERE pi.tenant_id = ? AND pi.pedido_id IN (?)
+               AND pi.estado != 'cancelado' AND (pi.pagado = 0 OR pi.pagado IS NULL)
+             ORDER BY pi.created_at ASC`,
+            [tenantId, pedidoIds]
+        );
+        if (items.length === 0) {
+            return porPedido;
+        }
+
+        const [mods] = await db.query(
+            `SELECT m.pedido_item_id, m.opcion_modificador_id, m.grupo_nombre, m.opcion_nombre,
+                    m.precio_adicional, m.cantidad, o.grupo_id
+             FROM pedido_item_modificadores m
+             LEFT JOIN opciones_modificador o ON o.id = m.opcion_modificador_id
+             WHERE m.pedido_item_id IN (?)`,
+            [items.map(i => i.id)]
+        );
+        const modsByItem = new Map();
+        for (const m of mods) {
+            if (!modsByItem.has(m.pedido_item_id)) {
+                modsByItem.set(m.pedido_item_id, []);
+            }
+            modsByItem.get(m.pedido_item_id).push(m);
+        }
+
+        for (const it of items) {
+            const modsItem = modsByItem.get(it.id) || [];
+            const modificadoresTotal = modsItem.reduce((s, m) => s + Number(m.precio_adicional) * (m.cantidad || 1), 0);
+            const precioBase = Number(it.precio_unitario) - modificadoresTotal;
+
+            const seleccionPorGrupo = new Map();
+            for (const m of modsItem) {
+                if (!m.grupo_id) {
+                    continue;
+                }
+                if (!seleccionPorGrupo.has(m.grupo_id)) {
+                    seleccionPorGrupo.set(m.grupo_id, []);
+                }
+                seleccionPorGrupo.get(m.grupo_id).push(m.opcion_modificador_id);
+            }
+
+            const item = {
+                producto_id: it.es_servicio ? null : it.producto_id,
+                servicio_id: it.es_servicio ? it.servicio_id : undefined,
+                es_servicio: !!it.es_servicio,
+                nombre: it.nombre,
+                precio: precioBase,
+                precio_original: precioBase,
+                cantidad: Number(it.cantidad),
+                descuento_porcentaje: 0,
+                categoria_id: it.categoria_id || null,
+                unidad: it.unidad_medida || 'UND',
+                nota: it.nota || null,
+                modificadores_seleccion: [...seleccionPorGrupo.entries()].map(([grupo_id, opciones]) => ({
+                    grupo_id,
+                    opciones
+                })),
+                modificadores_preview: modsItem.map(m => ({
+                    opcion_nombre: m.opcion_nombre,
+                    precio_adicional: Number(m.precio_adicional)
+                })),
+                modificadores_total: modificadoresTotal,
+                modificadores_hash:
+                    modsItem
+                        .map(m => m.opcion_modificador_id)
+                        .filter(Boolean)
+                        .sort((a, b) => a - b)
+                        .join(',') || null
+            };
+
+            porPedido.get(it.pedido_id).push(item);
+        }
+
+        return porPedido;
     }
 
     static async createBorrador(
