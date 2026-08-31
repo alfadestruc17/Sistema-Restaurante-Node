@@ -85,3 +85,12 @@
     background-color: rgba(52, 211, 153, 0.15) !important;
     color: var(--sa-success) !important;
 }
+
+.tenant-pick-row {
+    cursor: pointer;
+}
+
+.tenant-pick-row.tenant-pick-row-active {
+    background-color: var(--sa-accent-soft);
+    box-shadow: inset 3px 0 0 var(--sa-accent);
+}

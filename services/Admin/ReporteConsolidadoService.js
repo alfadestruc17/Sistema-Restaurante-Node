@@ -15,37 +15,61 @@ function formatMoney(amount) {
 
 class ReporteConsolidadoService {
     /**
-     * Generates a consolidated PDF report for all active tenants.
+     * Generates a consolidated PDF report, either for a single tenant or for all
+     * active tenants, over a month range (mesDesde/anioDesde a mesHasta/anioHasta).
      * @param {Object} options
-     * @param {number} options.mes - Month (1-12)
-     * @param {number} options.anio - Year (e.g. 2026)
+     * @param {number|string} [options.tenantId] - Id del tenant a exportar, o 'all'/omitido para todos los activos.
+     * @param {number} options.mesDesde - Mes inicial (1-12)
+     * @param {number} options.anioDesde - Año inicial
+     * @param {number} [options.mesHasta] - Mes final (1-12), por defecto igual a mesDesde
+     * @param {number} [options.anioHasta] - Año final, por defecto igual a anioDesde
      * @returns {Promise<Buffer>} PDF Buffer
      */
     static async generarReporteConsolidado(options = {}) {
         const date = new Date();
-        const targetMes = options.mes ? parseInt(options.mes, 10) : date.getMonth() + 1;
-        const targetAnio = options.anio ? parseInt(options.anio, 10) : date.getFullYear();
+        const targetMesDesde = options.mesDesde ? parseInt(options.mesDesde, 10) : date.getMonth() + 1;
+        const targetAnioDesde = options.anioDesde ? parseInt(options.anioDesde, 10) : date.getFullYear();
+        const targetMesHasta = options.mesHasta ? parseInt(options.mesHasta, 10) : targetMesDesde;
+        const targetAnioHasta = options.anioHasta ? parseInt(options.anioHasta, 10) : targetAnioDesde;
 
         // Validar que no sea una fecha en el futuro
-        const requestDate = new Date(targetAnio, targetMes - 1, 1);
+        const requestDate = new Date(targetAnioHasta, targetMesHasta - 1, 1);
         if (requestDate > date) {
             throw new Error('No se puede generar un reporte de un mes futuro.');
         }
+        if (new Date(targetAnioDesde, targetMesDesde - 1, 1) > new Date(targetAnioHasta, targetMesHasta - 1, 1)) {
+            throw new Error('El periodo inicial no puede ser posterior al periodo final.');
+        }
 
-        const firstDay = `${targetAnio}-${targetMes.toString().padStart(2, '0')}-01`;
-        const lastDayStr = `${targetAnio}-${targetMes.toString().padStart(2, '0')}-${new Date(targetAnio, targetMes, 0).getDate()}`;
+        const firstDay = `${targetAnioDesde}-${targetMesDesde.toString().padStart(2, '0')}-01`;
+        const lastDayStr = `${targetAnioHasta}-${targetMesHasta.toString().padStart(2, '0')}-${new Date(targetAnioHasta, targetMesHasta, 0).getDate()}`;
 
-        // Nombre del mes en español
-        const tempDate = new Date(targetAnio, targetMes - 1, 1);
-        const mesNombre = tempDate.toLocaleString('es-CO', { month: 'long', year: 'numeric' });
+        // Nombre del periodo en español (un solo mes, o rango "Enero 2026 - Marzo 2026")
+        const desdeNombre = new Date(targetAnioDesde, targetMesDesde - 1, 1).toLocaleString('es-CO', {
+            month: 'long',
+            year: 'numeric'
+        });
+        const mismoMes = targetMesDesde === targetMesHasta && targetAnioDesde === targetAnioHasta;
+        const mesNombre = mismoMes
+            ? desdeNombre
+            : `${desdeNombre} - ${new Date(targetAnioHasta, targetMesHasta - 1, 1).toLocaleString('es-CO', { month: 'long', year: 'numeric' })}`;
 
         console.log(
-            `[CONSOLIDADO]: Generando reporte consolidado para el mes ${mesNombre.toUpperCase()} (Rango: ${firstDay} a ${lastDayStr})`
+            `[CONSOLIDADO]: Generando reporte consolidado para ${mesNombre.toUpperCase()} (Rango: ${firstDay} a ${lastDayStr}, tenant: ${options.tenantId || 'all'})`
         );
 
-        // Obtener todos los tenants activos
+        // Obtener los tenants a incluir: uno específico, o todos los activos
         const allTenants = await TenantService.getAllTenants();
-        const activeTenants = (allTenants || []).filter(t => t.activo);
+        let activeTenants;
+        if (options.tenantId && options.tenantId !== 'all') {
+            const tenant = (allTenants || []).find(t => Number(t.id) === Number(options.tenantId));
+            if (!tenant) {
+                throw new Error('Restaurante no encontrado.');
+            }
+            activeTenants = [tenant];
+        } else {
+            activeTenants = (allTenants || []).filter(t => t.activo);
+        }
 
         // Un tenant es independiente de otro: se resuelven en paralelo en vez de
         // secuencial (antes eran 4 awaits × N tenants en serie).

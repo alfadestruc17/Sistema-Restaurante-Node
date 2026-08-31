@@ -24,24 +24,46 @@ class ReportesController {
     // descarga desde /admin/jobs/:id/download cuando el worker termina.
     static async exportPdf(req, res) {
         try {
-            const { mes, anio } = req.query;
+            const { tenantId, mesDesde, anioDesde, mesHasta, anioHasta } = req.query;
 
-            if (!mes || !anio) {
-                return res.status(400).json({ error: 'Mes y año son requeridos.' });
+            if (!mesDesde || !anioDesde) {
+                return res.status(400).json({ error: 'Mes y año iniciales son requeridos.' });
             }
 
-            const mesInt = parseInt(mes, 10);
-            const anioInt = parseInt(anio, 10);
+            const mesDesdeInt = parseInt(mesDesde, 10);
+            const anioDesdeInt = parseInt(anioDesde, 10);
+            const mesHastaInt = mesHasta ? parseInt(mesHasta, 10) : mesDesdeInt;
+            const anioHastaInt = anioHasta ? parseInt(anioHasta, 10) : anioDesdeInt;
 
-            if (isNaN(mesInt) || mesInt < 1 || mesInt > 12) {
-                return res.status(400).json({ error: 'Mes inválido.' });
+            if (isNaN(mesDesdeInt) || mesDesdeInt < 1 || mesDesdeInt > 12) {
+                return res.status(400).json({ error: 'Mes inicial inválido.' });
+            }
+            if (isNaN(mesHastaInt) || mesHastaInt < 1 || mesHastaInt > 12) {
+                return res.status(400).json({ error: 'Mes final inválido.' });
+            }
+            if (isNaN(anioDesdeInt) || anioDesdeInt < 2000 || anioDesdeInt > 2100) {
+                return res.status(400).json({ error: 'Año inicial inválido.' });
+            }
+            if (isNaN(anioHastaInt) || anioHastaInt < 2000 || anioHastaInt > 2100) {
+                return res.status(400).json({ error: 'Año final inválido.' });
             }
 
-            if (isNaN(anioInt) || anioInt < 2000 || anioInt > 2100) {
-                return res.status(400).json({ error: 'Año inválido.' });
+            let tenantIdVal = 'all';
+            if (tenantId && tenantId !== 'all') {
+                const tenantIdInt = parseInt(tenantId, 10);
+                if (isNaN(tenantIdInt)) {
+                    return res.status(400).json({ error: 'Restaurante inválido.' });
+                }
+                tenantIdVal = tenantIdInt;
             }
 
-            const jobId = await JobQueueRepository.encolar('pdf_reporte_consolidado', { mes: mesInt, anio: anioInt });
+            const jobId = await JobQueueRepository.encolar('pdf_reporte_consolidado', {
+                tenantId: tenantIdVal,
+                mesDesde: mesDesdeInt,
+                anioDesde: anioDesdeInt,
+                mesHasta: mesHastaInt,
+                anioHasta: anioHastaInt
+            });
             res.json({ jobId });
         } catch (error) {
             console.error('[PDF_CONSOLIDADO_EXPORT_ERROR]:', error);

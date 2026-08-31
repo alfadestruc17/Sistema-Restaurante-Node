@@ -25,41 +25,75 @@
                 </div>
                 <div class="card-body p-4">
                     <form id="exportForm">
+                        <%
+                        const meses = [
+                            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                        ];
+                        const currentMonth = new Date().getMonth(); // 0-11
+                        // Seleccionar por defecto el mes anterior (o diciembre si estamos en enero)
+                        const defaultMonthIndex = currentMonth === 0 ? 11 : currentMonth - 1;
+                        const currentYear = new Date().getFullYear();
+                        %>
+
                         <div class="mb-3">
-                            <label for="mes" class="form-label fw-bold text-secondary">Seleccionar Mes</label>
-                            <select class="form-select form-select-lg shadow-sm" id="mes" name="mes" required>
-                                <%
-                                const meses = [
-                                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-                                ];
-                                const currentMonth = new Date().getMonth(); // 0-11
-                                // Seleccionar por defecto el mes anterior (o diciembre si estamos en enero)
-                                const defaultMonthIndex = currentMonth === 0 ? 11 : currentMonth - 1;
-                                meses.forEach((m, index) => {
-                                %>
-                                    <option value="<%= index + 1 %>" <%= index === defaultMonthIndex ? 'selected' : '' %>>
-                                        <%= m %>
-                                    </option>
+                            <label for="tenantId" class="form-label fw-bold text-secondary">Restaurante</label>
+                            <select class="form-select form-select-lg shadow-sm" id="tenantId" name="tenantId" required>
+                                <option value="all">Todos los restaurantes (consolidado)</option>
+                                <% (tenants || []).forEach(t => { %>
+                                    <option value="<%= t.id %>"><%= t.nombre %></option>
                                 <% }); %>
                             </select>
                         </div>
 
-                        <div class="mb-4">
-                            <label for="anio" class="form-label fw-bold text-secondary">Seleccionar Año</label>
-                            <select class="form-select form-select-lg shadow-sm" id="anio" name="anio" required>
-                                <%
-                                const currentYear = new Date().getFullYear();
-                                for (let y = currentYear; y >= currentYear - 3; y--) {
-                                %>
-                                    <option value="<%= y %>" <%= y === currentYear ? 'selected' : '' %>>
-                                        <%= y %>
-                                    </option>
-                                <% } %>
-                            </select>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-secondary">Periodo a incluir</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label for="mesDesde" class="form-label small text-muted mb-1">Mes desde</label>
+                                    <select class="form-select shadow-sm" id="mesDesde" name="mesDesde" required>
+                                        <% meses.forEach((m, index) => { %>
+                                            <option value="<%= index + 1 %>" <%= index === defaultMonthIndex ? 'selected' : '' %>>
+                                                <%= m %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="anioDesde" class="form-label small text-muted mb-1">Año desde</label>
+                                    <select class="form-select shadow-sm" id="anioDesde" name="anioDesde" required>
+                                        <% for (let y = currentYear; y >= currentYear - 3; y--) { %>
+                                            <option value="<%= y %>" <%= y === currentYear ? 'selected' : '' %>>
+                                                <%= y %>
+                                            </option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="mesHasta" class="form-label small text-muted mb-1">Mes hasta</label>
+                                    <select class="form-select shadow-sm" id="mesHasta" name="mesHasta" required>
+                                        <% meses.forEach((m, index) => { %>
+                                            <option value="<%= index + 1 %>" <%= index === defaultMonthIndex ? 'selected' : '' %>>
+                                                <%= m %>
+                                            </option>
+                                        <% }); %>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="anioHasta" class="form-label small text-muted mb-1">Año hasta</label>
+                                    <select class="form-select shadow-sm" id="anioHasta" name="anioHasta" required>
+                                        <% for (let y = currentYear; y >= currentYear - 3; y--) { %>
+                                            <option value="<%= y %>" <%= y === currentYear ? 'selected' : '' %>>
+                                                <%= y %>
+                                            </option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-text">Deja "Mes desde" y "Mes hasta" iguales para un reporte de un solo mes.</div>
                         </div>
 
-                        <button type="submit" id="exportSubmitBtn" class="btn btn-premium w-100 py-3 shadow-lg">
+                        <button type="submit" id="exportSubmitBtn" class="btn btn-premium w-100 py-3 shadow-lg mt-2">
                             <i class="bi bi-file-earmark-pdf-fill me-2 fs-5"></i>
                             <span id="exportSubmitLabel">Generar y Descargar PDF</span>
                         </button>
@@ -72,14 +106,15 @@
         <div class="col-md-7">
             <div class="card card-premium">
                 <div class="card-header-premium d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-building me-2"></i>Restaurantes Activos a Exportar</span>
+                    <span><i class="bi bi-building me-2"></i>Restaurantes Activos</span>
                     <span class="badge bg-light text-primary rounded-pill"><%= tenants.length %> activos</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="list-group list-group-flush list-group-premium">
+                    <div class="form-text px-3 pt-3">Haz clic en un restaurante para seleccionarlo en el formulario, o elige "Todos" para un consolidado.</div>
+                    <div class="list-group list-group-flush list-group-premium" id="tenantsListPanel">
                         <% if (tenants && tenants.length > 0) { %>
                             <% tenants.forEach(t => { %>
-                                <div class="list-group-item d-flex align-items-center justify-content-between p-3">
+                                <div class="list-group-item d-flex align-items-center justify-content-between p-3 tenant-pick-row" data-tenant-id="<%= t.id %>" role="button">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="restaurant-avatar">
                                             <i class="bi bi-shop fs-5"></i>

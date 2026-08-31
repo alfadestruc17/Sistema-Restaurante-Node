@@ -21,18 +21,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ─── Helpers & Colors ──────────────────────────────────────────────────────
-    const colorsMap = {
-        'Principal': '#2e7d46',
-        'Restaurante Principal': '#2e7d46',
-        'Ichiban': '#10b981',
-        'Rollito Cinnamon': '#f59e0b',
-        'Carreteritos': '#0ea5e9',
-        'Callejero': '#f43f5e',
-        'Gelatto & Arte': '#8b5cf6'
-    };
+    // Mismo hash de paleta que views/admin/dashboard/_charts.ejs -- deben coincidir
+    // para que el color de cada restaurante no cambie entre el render inicial y el
+    // auto-refresh del leaderboard.
+    const TENANT_COLOR_PALETTE = [
+        '#2e7d46', '#0ea5e9', '#f59e0b', '#8b5cf6', '#f43f5e', '#10b981',
+        '#6366f1', '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4'
+    ];
 
     function getTenantColor(name) {
-        return colorsMap[name] || '#94a3b8';
+        const str = String(name || '');
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+        }
+        return TENANT_COLOR_PALETTE[hash % TENANT_COLOR_PALETTE.length];
     }
 
     function hexToRgb(hex) {

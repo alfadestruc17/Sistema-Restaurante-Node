@@ -32,7 +32,9 @@ body.pos-terminal-body .navbar {
 body.pos-terminal-body .navbar .container-fluid {
     max-width: 100%;
     box-sizing: border-box;
-    overflow-x: hidden;
+    /* NO overflow-x:hidden aquí: recorta los dropdowns del navbar (ej. "Más"),
+       que se posicionan absolutos dentro de este contenedor. El desborde horizontal
+       ya lo contiene el overflow:hidden + max-width:100vw de html/body arriba. */
 }
 
 body.pos-terminal-body .alert {
