@@ -42,6 +42,12 @@ const ADMIN_SECTIONS = [
         collapsible: true,
         items: [
             {
+                key: 'rendimiento',
+                label: 'Panel de rendimiento',
+                icon: 'bi-graph-up-arrow',
+                href: '/admin/rendimiento'
+            },
+            {
                 key: 'reportes',
                 label: 'Reportes consolidados',
                 icon: 'bi-file-earmark-bar-graph',

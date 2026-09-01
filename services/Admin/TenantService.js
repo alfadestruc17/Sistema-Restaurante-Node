@@ -1,6 +1,7 @@
 const TenantCRUDService = require('./Tenant/TenantCRUDService');
 const TenantSeederService = require('./Tenant/TenantSeederService');
 const TenantStatsService = require('./Tenant/TenantStatsService');
+const CrecimientoStatsService = require('./Tenant/CrecimientoStatsService');
 
 class TenantService {
     static async getAllTenants() {
@@ -33,6 +34,10 @@ class TenantService {
 
     static async getDashboardStats() {
         return TenantStatsService.getDashboardStats();
+    }
+
+    static async getCrecimientoStats(options) {
+        return CrecimientoStatsService.getCrecimientoStats(options);
     }
 
     static async getTenantById(id) {

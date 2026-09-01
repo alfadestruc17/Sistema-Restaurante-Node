@@ -1,0 +1,197 @@
+<%- include('_shell/_open', {
+    title: 'Panel de Rendimiento',
+    currentAdminPage: 'rendimiento',
+    pageCss: '/css/admin/rendimiento.css'
+}) %>
+
+<%
+    const fmtMoney = v => '$' + Number(v || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+    const fmtInt = v => Number(v || 0).toLocaleString('es-CO');
+    const fmtPct = v => (v === null || v === undefined) ? 'Nuevo' : (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+    const pctClass = v => (v === null || v === undefined) ? 'pct-badge-new' : (v > 0 ? 'pct-badge-up' : v < 0 ? 'pct-badge-down' : 'pct-badge-flat');
+    const pctIcon = v => (v === null || v === undefined) ? 'bi-stars' : (v > 0 ? 'bi-arrow-up-right' : v < 0 ? 'bi-arrow-down-right' : 'bi-dash');
+
+    const PERIODOS = [
+        { value: 7, label: 'Últimos 7 días' },
+        { value: 30, label: 'Últimos 30 días' },
+        { value: 90, label: 'Últimos 90 días' },
+        { value: 180, label: 'Últimos 6 meses' },
+        { value: 365, label: 'Último año' }
+    ];
+%>
+
+    <div class="admin-page-header d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="header-icon-box">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div>
+                <h1>Panel de Rendimiento</h1>
+                <p class="text-muted mb-0 small">Crecimiento del sistema, ventas y comparación entre restaurantes.</p>
+            </div>
+        </div>
+        <form id="periodoForm" class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm shadow-sm" id="periodoSelect" name="periodo" style="min-width: 180px;">
+                <% PERIODOS.forEach(p => { %>
+                    <option value="<%= p.value %>" <%= p.value === periodoDias ? 'selected' : '' %>><%= p.label %></option>
+                <% }) %>
+            </select>
+        </form>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="premium-card py-3">
+                <span class="stat-meta-label">Restaurantes activos</span>
+                <div class="stat-big-val mt-2" style="font-size: 26px;"><%= fmtInt(stats.kpis.restaurantesActivos) %></div>
+                <div class="stat-detail-text text-muted mt-1" style="font-size: 11px;"><%= fmtInt(stats.kpis.totalRestaurantes) %> registrados en total</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="premium-card py-3">
+                <span class="stat-meta-label">Restaurantes nuevos</span>
+                <div class="stat-big-val mt-2" style="font-size: 26px;"><%= fmtInt(stats.kpis.restaurantesNuevos) %></div>
+                <span class="pct-badge <%= pctClass(stats.kpis.crecimientoRestaurantesPct) %> mt-1">
+                    <i class="bi <%= pctIcon(stats.kpis.crecimientoRestaurantesPct) %>"></i> <%= fmtPct(stats.kpis.crecimientoRestaurantesPct) %>
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="premium-card py-3">
+                <span class="stat-meta-label">Ventas del periodo</span>
+                <div class="stat-big-val mt-2 text-success" style="font-size: 24px;"><%= fmtMoney(stats.kpis.ventasPeriodo) %></div>
+                <span class="pct-badge <%= pctClass(stats.kpis.crecimientoVentasPct) %> mt-1">
+                    <i class="bi <%= pctIcon(stats.kpis.crecimientoVentasPct) %>"></i> <%= fmtPct(stats.kpis.crecimientoVentasPct) %>
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="premium-card py-3">
+                <span class="stat-meta-label">Facturas del periodo</span>
+                <div class="stat-big-val mt-2" style="font-size: 26px;"><%= fmtInt(stats.kpis.facturasPeriodo) %></div>
+                <div class="stat-detail-text text-muted mt-1" style="font-size: 11px;">Ticket promedio: <%= fmtMoney(stats.kpis.ticketPromedio) %></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendencia en el tiempo -->
+    <div class="section-header">
+        <i class="bi bi-clock-history"></i>
+        <h2>Tendencia en el tiempo</h2>
+    </div>
+    <div class="premium-card">
+        <div style="height: 320px;">
+            <canvas id="chartTendencia"></canvas>
+        </div>
+    </div>
+
+    <!-- Comparación del periodo -->
+    <div class="section-header">
+        <i class="bi bi-bar-chart-line"></i>
+        <h2>Comparación vs periodo anterior</h2>
+    </div>
+    <div class="row g-4 mb-4">
+        <%
+            const comparaciones = [
+                { key: 'ventas', label: 'Ventas', fmt: fmtMoney },
+                { key: 'facturas', label: 'Facturas', fmt: fmtInt },
+                { key: 'restaurantesNuevos', label: 'Restaurantes nuevos', fmt: fmtInt }
+            ];
+        %>
+        <% comparaciones.forEach(c => { %>
+            <%
+                const d = stats.comparacionPeriodo[c.key];
+                const max = Math.max(d.actual, d.anterior) || 1;
+                const pctActual = Math.max((d.actual / max) * 100, d.actual > 0 ? 2 : 0);
+                const pctAnterior = Math.max((d.anterior / max) * 100, d.anterior > 0 ? 2 : 0);
+            %>
+            <div class="col-md-4">
+                <div class="premium-card h-100">
+                    <span class="stat-meta-label"><%= c.label %></span>
+                    <div class="compare-bar-row mt-3">
+                        <div class="compare-bar-label"><span class="dot bg-accent"></span>Actual</div>
+                        <div class="compare-bar-bg"><div class="compare-bar-fill bg-accent" style="width: <%= pctActual %>%;"></div></div>
+                        <div class="compare-bar-val"><%= c.fmt(d.actual) %></div>
+                    </div>
+                    <div class="compare-bar-row mt-2">
+                        <div class="compare-bar-label"><span class="dot bg-neutral-dark"></span>Anterior</div>
+                        <div class="compare-bar-bg"><div class="compare-bar-fill bg-neutral-dark" style="width: <%= pctAnterior %>%;"></div></div>
+                        <div class="compare-bar-val"><%= c.fmt(d.anterior) %></div>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- Crecimiento mensual del sistema -->
+    <div class="section-header">
+        <i class="bi bi-graph-up"></i>
+        <h2>Crecimiento mensual del sistema (últimos 12 meses)</h2>
+    </div>
+    <div class="premium-card mb-4">
+        <div style="height: 300px;">
+            <canvas id="chartMensual"></canvas>
+        </div>
+    </div>
+
+    <!-- Comparación por restaurante -->
+    <div class="section-header">
+        <i class="bi bi-bar-chart-steps"></i>
+        <h2>Comparación de ventas por restaurante</h2>
+    </div>
+    <div class="premium-card mb-4">
+        <div style="height: <%= Math.max(stats.porRestaurante.length * 34, 160) %>px;">
+            <canvas id="chartPorRestaurante"></canvas>
+        </div>
+    </div>
+
+    <!-- Detalle por restaurante -->
+    <div class="section-header">
+        <i class="bi bi-table"></i>
+        <h2>Detalle por restaurante</h2>
+    </div>
+    <div class="premium-card p-0 mb-4">
+        <div class="table-responsive">
+            <table class="table rendimiento-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Restaurante</th>
+                        <th class="text-end">Ventas periodo</th>
+                        <th class="text-end">Facturas</th>
+                        <th class="text-end">Ticket promedio</th>
+                        <th class="text-end">Crecimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (stats.porRestaurante && stats.porRestaurante.length > 0) { %>
+                        <% stats.porRestaurante.forEach(r => { %>
+                            <tr>
+                                <td class="fw-bold"><%= r.nombre %></td>
+                                <td class="text-end"><%= fmtMoney(r.ventas) %></td>
+                                <td class="text-end"><%= fmtInt(r.facturas) %></td>
+                                <td class="text-end"><%= fmtMoney(r.ticketPromedio) %></td>
+                                <td class="text-end">
+                                    <span class="pct-badge <%= pctClass(r.crecimientoPct) %>">
+                                        <i class="bi <%= pctIcon(r.crecimientoPct) %>"></i> <%= fmtPct(r.crecimientoPct) %>
+                                    </span>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr><td colspan="5" class="text-center text-muted py-4">No hay restaurantes activos registrados.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<script type="application/json" id="rendimientoData"><%- JSON.stringify({
+    tendencia: stats.tendencia,
+    crecimientoMensual: stats.crecimientoMensual,
+    porRestaurante: stats.porRestaurante
+}) %></script>
+
+<%- include('_shell/_close', {
+    extraScripts: '<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script><script src="/js/admin/rendimiento.js"></script>'
+}) %>
