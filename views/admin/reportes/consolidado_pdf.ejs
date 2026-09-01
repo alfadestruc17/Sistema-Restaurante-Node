@@ -207,6 +207,22 @@
             margin-top: 25px;
         }
 
+        .month-breakdown-block {
+            margin-bottom: 20px;
+            break-inside: avoid;
+        }
+
+        .month-breakdown-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4f46e5;
+            background: #eef2ff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
         .footer {
             text-align: center;
             font-size: 11px;
@@ -338,33 +354,35 @@
                         </div>
                     </div>
 
-                    <div class="section-title">Top 5 Productos más Vendidos</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Categoría</th>
-                                <th class="text-right">Cant. Vendida</th>
-                                <th class="text-right">Total Ventas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (d.topProductos && d.topProductos.length > 0) { %>
-                                <% d.topProductos.forEach(p => { %>
-                                    <tr>
-                                        <td><%= p.nombre %></td>
-                                        <td><%= p.categoria_nombre %></td>
-                                        <td class="text-right"><%= p.total_cantidad %></td>
-                                        <td class="text-right"><%= formatMoney(p.total_ventas) %></td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
+                    <% if (typeof mostrarTopProductos === 'undefined' || mostrarTopProductos) { %>
+                        <div class="section-title">Top 5 Productos más Vendidos</div>
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td colspan="4" class="text-center">No hay datos de productos para este periodo.</td>
+                                    <th>Producto</th>
+                                    <th>Categoría</th>
+                                    <th class="text-right">Cant. Vendida</th>
+                                    <th class="text-right">Total Ventas</th>
                                 </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <% if (d.topProductos && d.topProductos.length > 0) { %>
+                                    <% d.topProductos.forEach(p => { %>
+                                        <tr>
+                                            <td><%= p.nombre %></td>
+                                            <td><%= p.categoria_nombre %></td>
+                                            <td class="text-right"><%= p.total_cantidad %></td>
+                                            <td class="text-right"><%= formatMoney(p.total_ventas) %></td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="4" class="text-center">No hay datos de productos para este periodo.</td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    <% } %>
 
                     <div class="section-title">Ventas por Categoría</div>
                     <table>
@@ -391,6 +409,41 @@
                             <% } %>
                         </tbody>
                     </table>
+
+                    <% if (d.desglosePorMes && d.desglosePorMes.length > 0) { %>
+                        <div class="section-title">Productos más Vendidos por Mes</div>
+                        <% d.desglosePorMes.forEach(dm => { %>
+                            <div class="month-breakdown-block">
+                                <div class="month-breakdown-title" style="text-transform: capitalize;"><%= dm.nombreMes %></div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Categoría</th>
+                                            <th class="text-right">Cant. Vendida</th>
+                                            <th class="text-right">Total Ventas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (dm.topProductos && dm.topProductos.length > 0) { %>
+                                            <% dm.topProductos.forEach(p => { %>
+                                                <tr>
+                                                    <td><%= p.nombre %></td>
+                                                    <td><%= p.categoria_nombre %></td>
+                                                    <td class="text-right"><%= p.total_cantidad %></td>
+                                                    <td class="text-right"><%= formatMoney(p.total_ventas) %></td>
+                                                </tr>
+                                            <% }) %>
+                                        <% } else { %>
+                                            <tr>
+                                                <td colspan="4" class="text-center">Sin ventas registradas en este mes.</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <% }) %>
+                    <% } %>
                 <% } %>
 
                 <div class="footer">

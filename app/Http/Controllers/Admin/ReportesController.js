@@ -24,7 +24,16 @@ class ReportesController {
     // descarga desde /admin/jobs/:id/download cuando el worker termina.
     static async exportPdf(req, res) {
         try {
-            const { tenantId, mesDesde, anioDesde, mesHasta, anioHasta } = req.query;
+            const {
+                tenantId,
+                mesDesde,
+                anioDesde,
+                mesHasta,
+                anioHasta,
+                incluirResumenMensual,
+                incluirTopProductos,
+                incluirDesglosePorMes
+            } = req.query;
 
             if (!mesDesde || !anioDesde) {
                 return res.status(400).json({ error: 'Mes y año iniciales son requeridos.' });
@@ -62,7 +71,10 @@ class ReportesController {
                 mesDesde: mesDesdeInt,
                 anioDesde: anioDesdeInt,
                 mesHasta: mesHastaInt,
-                anioHasta: anioHastaInt
+                anioHasta: anioHastaInt,
+                incluirResumenMensual,
+                incluirTopProductos,
+                incluirDesglosePorMes
             });
             res.json({ jobId });
         } catch (error) {

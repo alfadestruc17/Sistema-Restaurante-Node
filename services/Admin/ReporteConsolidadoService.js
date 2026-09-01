@@ -4,6 +4,17 @@ const puppeteer = require('puppeteer');
 const TenantService = require('./TenantService');
 const StatsRepository = require('../../repositories/Tenant/StatsRepository');
 
+/**
+ * Interpreta flags que llegan como string desde query params ('1'/'0', 'true'/'false')
+ * o ya como boolean (cuando se invoca el servicio directamente).
+ */
+function toBool(value, defaultValue) {
+    if (value === undefined || value === null || value === '') {
+        return defaultValue;
+    }
+    return value === true || value === '1' || value === 'true';
+}
+
 function formatMoney(amount) {
     return new Intl.NumberFormat('es-CO', {
         style: 'currency',
@@ -23,6 +34,9 @@ class ReporteConsolidadoService {
      * @param {number} options.anioDesde - Año inicial
      * @param {number} [options.mesHasta] - Mes final (1-12), por defecto igual a mesDesde
      * @param {number} [options.anioHasta] - Año final, por defecto igual a anioDesde
+     * @param {boolean} [options.incluirResumenMensual] - Tabla "Total por Mes" en la portada. Solo aplica a un tenant específico (default true).
+     * @param {boolean} [options.incluirTopProductos] - Tabla de productos más vendidos por restaurante (default true).
+     * @param {boolean} [options.incluirDesglosePorMes] - Desglosa el top de productos mes a mes en vez de solo el total del rango. Solo aplica a un tenant específico (default false).
      * @returns {Promise<Buffer>} PDF Buffer
      */
     static async generarReporteConsolidado(options = {}) {
@@ -60,8 +74,9 @@ class ReporteConsolidadoService {
 
         // Obtener los tenants a incluir: uno específico, o todos los activos
         const allTenants = await TenantService.getAllTenants();
+        const esEspecifico = !!(options.tenantId && options.tenantId !== 'all');
         let activeTenants;
-        if (options.tenantId && options.tenantId !== 'all') {
+        if (esEspecifico) {
             const tenant = (allTenants || []).find(t => Number(t.id) === Number(options.tenantId));
             if (!tenant) {
                 throw new Error('Restaurante no encontrado.');
@@ -71,6 +86,14 @@ class ReporteConsolidadoService {
             activeTenants = (allTenants || []).filter(t => t.activo);
         }
 
+        // El desglose (resumen mensual, top de productos, desglose mes a mes) solo tiene
+        // sentido cuando se exporta un restaurante específico -- el consolidado de "todos"
+        // siempre trae el contenido completo, tal como antes.
+        const incluirResumenMensual = esEspecifico ? toBool(options.incluirResumenMensual, true) : true;
+        const incluirTopProductos = esEspecifico ? toBool(options.incluirTopProductos, true) : true;
+        const incluirDesglosePorMes =
+            esEspecifico && incluirTopProductos ? toBool(options.incluirDesglosePorMes, false) : false;
+
         // Un tenant es independiente de otro: se resuelven en paralelo en vez de
         // secuencial (antes eran 4 awaits × N tenants en serie).
         const activeTenantsData = await Promise.all(
@@ -79,7 +102,9 @@ class ReporteConsolidadoService {
                     const [totalMes, facturasMes, topProductos, porCategoria] = await Promise.all([
                         StatsRepository.getTotalSales(tenant.id, { desde: firstDay, hasta: lastDayStr }),
                         StatsRepository.getTotalInvoices(tenant.id, { desde: firstDay, hasta: lastDayStr }),
-                        StatsRepository.getTopProducts(tenant.id, 5, { desde: firstDay, hasta: lastDayStr }),
+                        incluirTopProductos
+                            ? StatsRepository.getTopProducts(tenant.id, 5, { desde: firstDay, hasta: lastDayStr })
+                            : [],
                         StatsRepository.getSalesByCategory(tenant.id, { desde: firstDay, hasta: lastDayStr })
                     ]);
 
@@ -126,7 +151,7 @@ class ReporteConsolidadoService {
         }
 
         const ventasPorMes =
-            mesesEnRango.length > 1
+            incluirResumenMensual && mesesEnRango.length > 1
                 ? await Promise.all(
                       mesesEnRango.map(async ({ anio, mes }) => {
                           const desde = `${anio}-${mes.toString().padStart(2, '0')}-01`;
@@ -150,11 +175,43 @@ class ReporteConsolidadoService {
                   )
                 : [];
 
+        // Desglose de productos más vendidos mes a mes (solo tenant específico): repite
+        // el top 5 + ventas por categoría para cada mes del rango, en vez de un solo
+        // agregado. Se calcula sobre el (único) tenant en activeTenants.
+        if (incluirDesglosePorMes && mesesEnRango.length > 1) {
+            const tenant = activeTenants[0];
+            const desglosePorMes = await Promise.all(
+                mesesEnRango.map(async ({ anio, mes }) => {
+                    const desde = `${anio}-${mes.toString().padStart(2, '0')}-01`;
+                    const hasta = `${anio}-${mes.toString().padStart(2, '0')}-${new Date(anio, mes, 0).getDate()}`;
+                    const nombreMes = new Date(anio, mes - 1, 1).toLocaleString('es-CO', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                    try {
+                        const [topProductos, porCategoria] = await Promise.all([
+                            StatsRepository.getTopProducts(tenant.id, 5, { desde, hasta }),
+                            StatsRepository.getSalesByCategory(tenant.id, { desde, hasta })
+                        ]);
+                        return { nombreMes, topProductos, porCategoria };
+                    } catch (err) {
+                        console.error(
+                            `[CONSOLIDADO_ERROR] Error obteniendo desglose mensual para tenant ${tenant.nombre} (${nombreMes}):`,
+                            err.message
+                        );
+                        return { nombreMes, topProductos: [], porCategoria: [] };
+                    }
+                })
+            );
+            activeTenantsData[0].desglosePorMes = desglosePorMes;
+        }
+
         const templatePath = path.join(__dirname, '../../views/admin/reportes/consolidado_pdf.ejs');
         const data = {
             mes: mesNombre.toUpperCase(),
             activeTenantsData,
             ventasPorMes,
+            mostrarTopProductos: incluirTopProductos,
             totals: {
                 totalSales: globalTotalSales,
                 totalInvoices: globalTotalInvoices
