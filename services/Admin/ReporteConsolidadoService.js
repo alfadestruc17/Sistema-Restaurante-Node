@@ -109,10 +109,52 @@ class ReporteConsolidadoService {
             globalTotalInvoices += tenantData.facturasMes;
         }
 
+        // Desglose por mes calendario dentro del rango (solo aporta valor cuando el
+        // rango cubre más de un mes; con 1 mes coincide con el total ya calculado).
+        const mesesEnRango = [];
+        {
+            let y = targetAnioDesde;
+            let m = targetMesDesde;
+            while (y < targetAnioHasta || (y === targetAnioHasta && m <= targetMesHasta)) {
+                mesesEnRango.push({ anio: y, mes: m });
+                m += 1;
+                if (m > 12) {
+                    m = 1;
+                    y += 1;
+                }
+            }
+        }
+
+        const ventasPorMes =
+            mesesEnRango.length > 1
+                ? await Promise.all(
+                      mesesEnRango.map(async ({ anio, mes }) => {
+                          const desde = `${anio}-${mes.toString().padStart(2, '0')}-01`;
+                          const hasta = `${anio}-${mes.toString().padStart(2, '0')}-${new Date(anio, mes, 0).getDate()}`;
+                          const porTenant = await Promise.all(
+                              activeTenants.map(t =>
+                                  Promise.all([
+                                      StatsRepository.getTotalSales(t.id, { desde, hasta }),
+                                      StatsRepository.getTotalInvoices(t.id, { desde, hasta })
+                                  ]).catch(() => [0, 0])
+                              )
+                          );
+                          const total = porTenant.reduce((sum, [ventas]) => sum + ventas, 0);
+                          const facturas = porTenant.reduce((sum, [, fact]) => sum + fact, 0);
+                          const nombreMes = new Date(anio, mes - 1, 1).toLocaleString('es-CO', {
+                              month: 'long',
+                              year: 'numeric'
+                          });
+                          return { nombreMes, total, facturas };
+                      })
+                  )
+                : [];
+
         const templatePath = path.join(__dirname, '../../views/admin/reportes/consolidado_pdf.ejs');
         const data = {
             mes: mesNombre.toUpperCase(),
             activeTenantsData,
+            ventasPorMes,
             totals: {
                 totalSales: globalTotalSales,
                 totalInvoices: globalTotalInvoices

@@ -132,6 +132,11 @@
             background-color: #f8fafc;
         }
 
+        tfoot tr {
+            background-color: #eef2ff !important;
+            border-top: 2px solid #4f46e5;
+        }
+
         /* Estilo de los Reportes Individuales */
         .report-section {
             padding-top: 10px;
@@ -224,7 +229,7 @@
 
         <div class="stats-grid">
             <div class="stat-card sales">
-                <h3>Total Ventas Consolidadas</h3>
+                <h3>Total Neto del Periodo</h3>
                 <div class="value"><%= formatMoney(totals.totalSales) %></div>
             </div>
             <div class="stat-card">
@@ -236,6 +241,35 @@
                 <div class="value"><%= activeTenantsData.length %></div>
             </div>
         </div>
+
+        <% if (ventasPorMes && ventasPorMes.length > 1) { %>
+            <h2>Total por Mes</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th class="text-right">Total Facturas</th>
+                        <th class="text-right">Ventas Totales</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% ventasPorMes.forEach(vm => { %>
+                        <tr>
+                            <td class="fw-bold" style="text-transform: capitalize;"><%= vm.nombreMes %></td>
+                            <td class="text-right"><%= vm.facturas %></td>
+                            <td class="text-right fw-bold"><%= formatMoney(vm.total) %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="fw-bold">Total Neto</td>
+                        <td class="text-right fw-bold"><%= totals.totalInvoices %></td>
+                        <td class="text-right fw-bold"><%= formatMoney(totals.totalSales) %></td>
+                    </tr>
+                </tfoot>
+            </table>
+        <% } %>
 
         <h2>Resumen de Rendimiento por Restaurante</h2>
         <table>
