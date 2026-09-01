@@ -35,6 +35,17 @@ class StatsService {
         const mesInicio = mesInicioStr;
         const mesFin = mesFinStr;
 
+        // "Evolución de ventas" (dailySales) debe seguir el mismo rango elegido en el
+        // selector Hoy/7 días/30 días -- se deriva la cantidad de días de desde/hasta
+        // en vez de un fijo de 30 (que ignoraba por completo el filtro seleccionado).
+        let dailySalesDays = 30;
+        if (filters.desde && filters.hasta) {
+            const diffDays = Math.round((new Date(`${hasta}T00:00:00`) - new Date(`${desde}T00:00:00`)) / 86400000);
+            if (diffDays >= 0) {
+                dailySalesDays = diffDays;
+            }
+        }
+
         const [
             ventasHoy,
             ventasMes,
@@ -61,7 +72,7 @@ class StatsService {
             StatsRepository.getTopProducts(tenantId, 10, filters),
             StatsRepository.getSalesByCategory(tenantId, filters),
             StatsRepository.getTopProductsByCategory(tenantId, 5, filters),
-            StatsRepository.getDailySales(tenantId, 30),
+            StatsRepository.getDailySales(tenantId, dailySalesDays),
             StatsRepository.getEventStatsForDashboard(tenantId, desde, hasta),
             StatsRepository.getVentasPorEventoEnRango(tenantId, desde, hasta),
             StatsRepository.getEventosEnRango(tenantId, desde, hasta),

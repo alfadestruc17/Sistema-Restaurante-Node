@@ -282,16 +282,19 @@ $(function () {
       }
     }
 
-    // 2. Payment Methods Donut Chart (Dynamic SVG)
-    const cash = stats.totalEfectivoMes != null ? stats.totalEfectivoMes : 0;
-    const trans = stats.totalTransferenciaMes != null ? stats.totalTransferenciaMes : 0;
-    const ext = stats.totalServiciosExternosMes != null ? stats.totalServiciosExternosMes : 0;
+    // 2. Payment Methods Donut Chart (Dynamic SVG) -- sigue el mismo rango elegido en
+    // el selector Hoy/7 días/30 días (stats.totalEfectivo* ya viene filtrado por
+    // filters.desde/hasta desde el backend, a diferencia de las variantes "...Mes").
+    const cash = stats.totalEfectivo != null ? stats.totalEfectivo : 0;
+    const trans = stats.totalTransferencia != null ? stats.totalTransferencia : 0;
+    const ext = stats.totalServiciosExternos != null ? stats.totalServiciosExternos : 0;
 
+    const rangeLabels = { hoy: 'Total hoy', '7d': 'Total 7 días', '30d': 'Total 30 días' };
     const donutSVG = mod.donut([
       { value: cash, color: mod.activeTheme },
       { value: trans, color: '#9aa7bd' },
       { value: ext, color: '#3257b0' }
-    ]);
+    ], rangeLabels[mod.activeRange] || 'Total periodo');
     $('#paymentChartDonut').html(donutSVG);
 
     // Payment chart descriptions below

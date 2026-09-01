@@ -105,7 +105,7 @@ $(function () {
   };
 
   // Donut Chart Generator (Dynamic SVG)
-  mod.donut = function (parts) {
+  mod.donut = function (parts, centerLabel) {
     if (!parts || parts.length === 0) return '';
     const total = parts.reduce((s, p) => s + p.value, 0);
     const r = 54, cx = 70, cy = 70, sw = 20, C = 2 * Math.PI * r;
@@ -126,7 +126,7 @@ $(function () {
         <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eef1f4" stroke-width="${sw}" />
         ${segs}
         <text x="${cx}" y="${cy - 3}" text-anchor="middle" style="font-size:12px; font-weight:800; fill:#0f172a; font-family:inherit;">${totalShort}</text>
-        <text x="${cx}" y="${cy + 13}" text-anchor="middle" style="font-size:8px; font-weight:700; fill:#8a94a6; font-family:inherit;">Total mes</text>
+        <text x="${cx}" y="${cy + 13}" text-anchor="middle" style="font-size:8px; font-weight:700; fill:#8a94a6; font-family:inherit;">${centerLabel || 'Total mes'}</text>
       </svg>
     `;
   };
