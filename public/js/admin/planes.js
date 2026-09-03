@@ -259,11 +259,21 @@
     function fmtCOP(n) { return '$' + Number(n || 0).toLocaleString('es-CO'); }
     function setText(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
 
+    async function cobrarAhoraTenant(tid) {
+        try {
+            await localFetch('/admin/planes/api/tenant/' + tid + '/cobrar-ahora', 'POST');
+            Swal.fire({ icon: 'success', title: 'Cobro iniciado', timer: 1500, showConfirmButton: false });
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Error al iniciar el cobro', text: e.message });
+        }
+    }
+
     // Expose functions needed by onclick handlers in HTML
     window.openModal = openModal;
     window.selTamano = selTamano;
     window.savePlanCompleto = savePlanCompleto;
     window.saveAddon = saveAddon;
+    window.cobrarAhoraTenant = cobrarAhoraTenant;
 
     // Deep-link: /admin/planes?tenantId=<id> abre directo la gestión de ese restaurante
     if (SD.openTenantId && metaMap[SD.openTenantId]) {

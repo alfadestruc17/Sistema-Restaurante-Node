@@ -12,6 +12,9 @@ function getTenantBlockedMessage(tenant) {
     if (tenant?.estado_aprobacion === 'rechazado') {
         return `Tu solicitud para "${nombre}" no fue aprobada. ${tenant.motivo_rechazo || 'Contáctanos para más información.'}`;
     }
+    if (tenant?.suspendido_por_pago) {
+        return `Tu suscripción a GastroFlow venció. Actualiza tu método de pago para reactivar "${nombre}".`;
+    }
     return `Tu restaurante "${nombre}" está desactivado. Contacta al administrador.`;
 }
 

@@ -22,5 +22,6 @@ router.post('/api/tenant/:tenantId/addons', PlanesController.addAddonToTenant);
 router.delete('/api/tenant/:tenantId/addons/:addonId', PlanesController.removeAddonFromTenant);
 router.put('/api/tenant/:tenantId/tamano', PlanesController.updateTenantTamano);
 router.put('/api/tenant/:tenantId/plan', PlanesController.updateTenantPlan);
+router.post('/api/tenant/:tenantId/cobrar-ahora', PlanesController.cobrarAhoraTenant);
 
 module.exports = router;

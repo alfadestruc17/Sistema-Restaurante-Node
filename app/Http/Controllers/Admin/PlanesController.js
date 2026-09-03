@@ -5,6 +5,7 @@ const TenantAuditService = require('../../../../services/Admin/TenantAuditServic
 const { syncPlanPermissionsToTenantUsers } = require('../../../../services/Admin/PlanPermissionSyncService');
 const { PLAN_MODULES, MODULE_LABELS } = require('../../../../utils/planPermissions');
 const JobQueueRepository = require('../../../../repositories/Shared/JobQueueRepository');
+const SuscripcionService = require('../../../../services/Admin/SuscripcionService');
 
 class PlanesController {
     // GET /admin/planes
@@ -189,6 +190,16 @@ class PlanesController {
         } catch (error) {
             console.error('Error al actualizar plan del tenant:', error);
             res.status(400).json({ error: error.message || 'Error al actualizar plan' });
+        }
+    }
+    // POST /api/tenant/:tenantId/cobrar-ahora
+    static async cobrarAhoraTenant(req, res) {
+        try {
+            await SuscripcionService.cobrarAhora(Number(req.params.tenantId), req.user?.id || null);
+            res.json({ ok: true });
+        } catch (error) {
+            console.error('Error al cobrar ahora (superadmin):', error);
+            res.status(400).json({ error: error.message || 'Error al iniciar el cobro' });
         }
     }
 }

@@ -5,6 +5,7 @@ const WhatsAppService = require('../services/Tenant/WhatsAppService');
 const FacturacionElectronicaWorkerService = require('../services/Tenant/FacturacionElectronicaWorkerService');
 const JobWorkerService = require('../services/Shared/JobWorkerService');
 const DesktopSyncService = require('../services/Shared/DesktopSyncService');
+const SuscripcionService = require('../services/Admin/SuscripcionService');
 
 const runBackgroundJobs = async () => {
     try {
@@ -35,6 +36,18 @@ const runBackgroundJobs = async () => {
         // Electron.
         cron.schedule('*/15 * * * * *', () => {
             DesktopSyncService.runCycle();
+        });
+
+        // Cobro recurrente de suscripciones (Wompi): 8:00am hora Bogotá (13:00 UTC).
+        // Nunca toca tenants sin tarjeta registrada (wompi_payment_source_id NULL) --
+        // ver SuscripcionService.procesarCobrosDiarios para la regla de seguridad.
+        cron.schedule('0 13 * * *', async () => {
+            try {
+                await SuscripcionService.reconciliarPendientes();
+                await SuscripcionService.procesarCobrosDiarios();
+            } catch (err) {
+                console.error('Error en cron de cobro de suscripciones:', err.message);
+            }
         });
 
         console.log('--- Cron jobs iniciados exitosamente ---');

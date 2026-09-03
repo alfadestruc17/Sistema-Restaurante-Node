@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturación y Suscripción</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+
+<body class="bg-light">
+    <%- include('../partials/navbar', { user: user, tenant: tenant }) %>
+
+    <div class="container mt-4 mb-5" style="max-width: 900px;">
+        <h2 class="mb-4"><i class="bi bi-credit-card me-2"></i>Facturación y Suscripción</h2>
+
+        <% if (estado && estado.suspendidoPorPago) { %>
+        <div class="alert alert-danger d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+            <div>
+                <strong>Tu restaurante está suspendido por falta de pago.</strong>
+                Actualiza tu método de pago o presiona "Cobrar ahora" para reactivarlo.
+            </div>
+        </div>
+        <% } else if (estado && estado.intentosFallidos > 0) { %>
+        <div class="alert alert-warning d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-circle-fill fs-4"></i>
+            <div>Tuvimos un problema cobrando tu último pago (intento <%= estado.intentosFallidos %> de 3). Reintentaremos automáticamente.</div>
+        </div>
+        <% } %>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-box-seam me-2"></i>Tu plan actual</h5>
+                        <p class="text-muted small mb-3">Plan + add-ons contratados</p>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Plan</span>
+                            <span>$<%= Number(estado ? estado.montoPlan : 0).toLocaleString('es-CO') %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Add-ons</span>
+                            <span>$<%= Number(estado ? estado.montoAddons : 0).toLocaleString('es-CO') %></span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total mensual</span>
+                            <span>$<%= Number(estado ? estado.montoTotal : 0).toLocaleString('es-CO') %></span>
+                        </div>
+                        <% if (estado && estado.proximoCobro) { %>
+                        <p class="text-muted small mt-3 mb-0">
+                            Próximo cobro: <strong><%= new Date(estado.proximoCobro).toLocaleDateString('es-CO') %></strong>
+                        </p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-wallet2 me-2"></i>Método de pago</h5>
+                        <% if (estado && estado.tieneMetodoPago) { %>
+                        <p class="text-success mb-3"><i class="bi bi-check-circle-fill me-1"></i>Tarjeta registrada</p>
+                        <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-2" id="btnActualizarTarjeta">
+                            <i class="bi bi-arrow-repeat me-1"></i>Actualizar tarjeta
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm w-100" id="btnCobrarAhora">
+                            <i class="bi bi-lightning-charge-fill me-1"></i>Cobrar ahora
+                        </button>
+                        <% } else { %>
+                        <p class="text-muted mb-3">Todavía no tienes un método de pago automático registrado. Tu suscripción se gestiona manualmente con GastroFlow.</p>
+                        <% if (wompiPublicKey) { %>
+                        <button type="button" class="btn btn-primary w-100" id="btnActivarCobroAutomatico">
+                            <i class="bi bi-credit-card-2-front me-1"></i>Activar cobro automático
+                        </button>
+                        <% } else { %>
+                        <p class="text-muted small mb-0"><i class="bi bi-info-circle me-1"></i>El cobro automático no está disponible todavía.</p>
+                        <% } %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Historial de cobros</h5>
+                        <% if (!estado || !estado.historial || estado.historial.length === 0) { %>
+                        <p class="text-muted mb-0">Todavía no hay cobros registrados.</p>
+                        <% } else { %>
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Periodo</th>
+                                        <th>Monto</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% estado.historial.forEach(function(p) { %>
+                                    <tr>
+                                        <td><%= new Date(p.created_at).toLocaleDateString('es-CO') %></td>
+                                        <td><%= new Date(p.periodo_desde).toLocaleDateString('es-CO') %> - <%= new Date(p.periodo_hasta).toLocaleDateString('es-CO') %></td>
+                                        <td>$<%= Number(p.monto).toLocaleString('es-CO') %></td>
+                                        <td>
+                                            <% if (p.estado === 'exitoso') { %>
+                                            <span class="badge bg-success">Exitoso</span>
+                                            <% } else if (p.estado === 'fallido') { %>
+                                            <span class="badge bg-danger">Fallido</span>
+                                            <% } else { %>
+                                            <span class="badge bg-secondary">Pendiente</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <% if (wompiPublicKey) { %>
+    <script src="https://checkout.wompi.co/widget.js"></script>
+    <% } %>
+    <script>
+        window.__FACTURACION__ = {
+            wompiPublicKey: <%- JSON.stringify(wompiPublicKey) %>,
+            checkoutSetup: <%- JSON.stringify(checkoutSetup) %>,
+            tenantEmail: <%- JSON.stringify(tenant.email || (user && user.email) || '') %>
+        };
+    </script>
+    <script src="/js/modulos/facturacion.js"></script>
+</body>
+
+</html>

@@ -5,8 +5,9 @@ const CacheService = require('../../Shared/CacheService');
 class TenantCRUDService {
     static async getAllTenants() {
         const [rows] = await db.query(`
-            SELECT t.id, t.nombre, t.email, t.slug, t.activo, t.config, t.plan_id, t.created_at, 
+            SELECT t.id, t.nombre, t.email, t.slug, t.activo, t.config, t.plan_id, t.created_at,
                    t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal,
+                   t.wompi_payment_source_id, t.proximo_cobro, t.intentos_fallidos_pago, t.suspendido_por_pago,
                    p.nombre AS plan_nombre, p.slug AS plan_slug
             FROM tenants t
             LEFT JOIN planes p ON t.plan_id = p.id
@@ -36,7 +37,11 @@ class TenantCRUDService {
                 telefono: row.telefono,
                 ciudad: row.ciudad,
                 regimen_fiscal: row.regimen_fiscal,
-                created_at: row.created_at
+                created_at: row.created_at,
+                wompi_payment_source_id: row.wompi_payment_source_id,
+                proximo_cobro: row.proximo_cobro,
+                intentos_fallidos_pago: row.intentos_fallidos_pago,
+                suspendido_por_pago: Boolean(row.suspendido_por_pago)
             };
         });
     }
@@ -178,6 +183,7 @@ class TenantCRUDService {
             const tables = [
                 'tenant_audit',
                 'tenant_addons',
+                'suscripcion_pagos',
                 'pedido_items',
                 'pedidos',
                 'movimientos_inventario',

@@ -19,7 +19,7 @@ class TenantRepository {
         const [rows] = await db.query(
             `SELECT t.id, t.nombre, t.email, t.slug, t.config, t.logo_data, t.logo_tipo, t.activo, t.plan_id, t.created_at, t.updated_at,
                     t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal,
-                    t.estado_aprobacion, t.motivo_rechazo,
+                    t.estado_aprobacion, t.motivo_rechazo, t.tamano, t.suspendido_por_pago,
                     p.id AS plan_id_ref, p.nombre AS plan_nombre, p.slug AS plan_slug, p.descripcion AS plan_descripcion, p.caracteristicas AS plan_caracteristicas
              FROM tenants t
              LEFT JOIN planes p ON t.plan_id = p.id
@@ -44,7 +44,7 @@ class TenantRepository {
         }
         const [rows] = await db.query(
             `SELECT t.id, t.nombre, t.email, t.slug, t.config, t.logo_data, t.logo_tipo, t.activo, t.plan_id, t.created_at, t.updated_at,
-                    t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal,
+                    t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal, t.tamano, t.suspendido_por_pago,
                     p.id AS plan_id_ref, p.nombre AS plan_nombre, p.slug AS plan_slug, p.descripcion AS plan_descripcion, p.caracteristicas AS plan_caracteristicas
              FROM tenants t LEFT JOIN planes p ON t.plan_id = p.id WHERE t.id = ? AND t.activo = TRUE`,
             [id]
@@ -67,7 +67,7 @@ class TenantRepository {
         }
         const [rows] = await db.query(
             `SELECT t.id, t.nombre, t.email, t.slug, t.config, t.logo_data, t.logo_tipo, t.activo, t.plan_id, t.created_at, t.updated_at,
-                    t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal,
+                    t.nit, t.direccion, t.telefono, t.ciudad, t.regimen_fiscal, t.tamano, t.suspendido_por_pago,
                     p.id AS plan_id_ref, p.nombre AS plan_nombre, p.slug AS plan_slug, p.descripcion AS plan_descripcion, p.caracteristicas AS plan_caracteristicas
              FROM tenants t LEFT JOIN planes p ON t.plan_id = p.id WHERE t.slug = ? AND t.activo = TRUE`,
             [slug]
@@ -126,6 +126,8 @@ class TenantRepository {
             activo: Boolean(row.activo),
             estado_aprobacion: row.estado_aprobacion || 'aprobado',
             motivo_rechazo: row.motivo_rechazo || null,
+            tamano: row.tamano || 'pequeno',
+            suspendido_por_pago: Boolean(row.suspendido_por_pago),
             plan_id: row.plan_id,
             plan: plan,
             nit: row.nit,

@@ -48,6 +48,7 @@ const inventarioRoutes = require('./tenant/inventario');
 const recetasRoutes = require('./tenant/recetas');
 const modificadoresRoutes = require('./tenant/modificadores');
 const perfilRoutes = require('./tenant/perfil');
+const facturacionRoutes = require('./tenant/facturacion');
 const whatsappRoutes = require('./tenant/whatsapp');
 const proveedoresRoutes = require('./tenant/proveedores');
 const finanzasRoutes = require('./tenant/finanzas');
@@ -80,6 +81,8 @@ router.get('/desktop/link', DesktopController.showLink);
 router.post('/desktop/link', DesktopController.link);
 router.use('/qr', require('./qr'));
 router.use('/api/qr', require('./qr_api'));
+// Webhook público de Wompi (cobro de suscripciones) -- se autentica por firma, no por sesión.
+router.use('/webhooks', require('./webhooks'));
 
 // --- RUTA PRINCIPAL (Home & Redirección) ---
 router.get('/', optionalAuth, HomeController.index);
@@ -107,6 +110,7 @@ router.get('/legal/terminos', async (req, res) => {
 // --- RUTAS DE TENANT (RESTAURANTE) ---
 router.use('/productos', requireAuthWithTenant, requirePlanFeature('productos'), productosRoutes);
 router.use('/perfil', requireAuthWithTenant, perfilRoutes);
+router.use('/facturacion', requireAuthWithTenant, facturacionRoutes);
 router.use(
     '/clientes',
     requireAuthWithTenant,

@@ -17,6 +17,7 @@
                                 <th>Tamaño</th>
                                 <th>Add-ons</th>
                                 <th class="text-end">Total/mes</th>
+                                <th>Suscripción</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -73,6 +74,23 @@
                                                     Number(t.precio_plan||0).toLocaleString('es-CO') %>
                                             </span> + Addons <span id="tb-pa-<%= t.id %>">$<%=
                                                     Number(t.precio_addons||0).toLocaleString('es-CO') %></span></div>
+                                    </td>
+                                    <td>
+                                        <% if (!t.wompi_payment_source_id) { %>
+                                            <span class="text-muted small">Manual</span>
+                                        <% } else if (t.suspendido_por_pago) { %>
+                                            <span class="badge bg-danger">Suspendido</span>
+                                        <% } else if (t.intentos_fallidos_pago > 0) { %>
+                                            <span class="badge bg-warning text-dark">Reintentando</span>
+                                        <% } else { %>
+                                            <span class="badge bg-success">Al día</span>
+                                        <% } %>
+                                        <% if (t.wompi_payment_source_id) { %>
+                                            <button type="button" class="btn btn-sm btn-outline-primary ms-1 py-0"
+                                                onclick="cobrarAhoraTenant(<%= t.id %>)" title="Cobrar ahora">
+                                                <i class="bi bi-lightning-charge-fill"></i>
+                                            </button>
+                                        <% } %>
                                     </td>
                                     <td>
                                         <button class="btn-gest" onclick="openModal(<%= t.id %>)">
