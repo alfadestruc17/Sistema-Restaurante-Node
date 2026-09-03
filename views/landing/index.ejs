@@ -1,11 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <% const siteUrl = 'https://gastroflow.digital'; %>
+  <% const pageTitle = 'GastroFlow | Gestión Inteligente para Restaurantes'; %>
+  <% const pageDesc = 'GastroFlow conecta tus ventas, tu inventario y tu cocina en tiempo real. Fichas técnicas automatizadas, KDS y control total de tu margen.'; %>
+  <% const pageImage = siteUrl + '/logo.png'; %>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GastroFlow | Gestión Inteligente para Restaurantes</title>
-  <meta name="description" content="GastroFlow conecta tus ventas, tu inventario y tu cocina en tiempo real. Fichas técnicas automatizadas, KDS y control total de tu margen.">
-  
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= pageDesc %>">
+  <link rel="canonical" href="<%= siteUrl %>/">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
+
+  <!-- Open Graph / Facebook, WhatsApp, LinkedIn -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="<%= siteUrl %>/">
+  <meta property="og:site_name" content="GastroFlow">
+  <meta property="og:locale" content="es_CO">
+  <meta property="og:title" content="<%= pageTitle %>">
+  <meta property="og:description" content="<%= pageDesc %>">
+  <meta property="og:image" content="<%= pageImage %>">
+  <meta property="og:image:width" content="966">
+  <meta property="og:image:height" content="966">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= pageTitle %>">
+  <meta name="twitter:description" content="<%= pageDesc %>">
+  <meta name="twitter:image" content="<%= pageImage %>">
+
+  <!-- Structured Data (Google rich results) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "GastroFlow",
+    "url": "<%= siteUrl %>/",
+    "image": "<%= pageImage %>",
+    "description": "<%= pageDesc %>",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "COP",
+      "availability": "https://schema.org/InStock"
+    }
+  }
+  </script>
+
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

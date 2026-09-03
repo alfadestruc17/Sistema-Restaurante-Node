@@ -1,4 +1,36 @@
 User-agent: *
 Allow: /
+Allow: /auth/
+Allow: /legal/
+
+# Área operativa del sistema (requiere sesión iniciada) - no indexable
+Disallow: /dashboard
+Disallow: /pos
+Disallow: /mesas
+Disallow: /cocina
+Disallow: /productos
+Disallow: /inventario
+Disallow: /recetas
+Disallow: /costeo
+Disallow: /finanzas
+Disallow: /caja
+Disallow: /clientes
+Disallow: /facturas
+Disallow: /ventas
+Disallow: /eventos
+Disallow: /servicios
+Disallow: /modificadores
+Disallow: /clasificacion
+Disallow: /proveedores
+Disallow: /configuracion
+Disallow: /perfil
+Disallow: /soporte
+Disallow: /whatsapp
+Disallow: /analitica
+Disallow: /onboarding
+Disallow: /admin
+Disallow: /api
+Disallow: /qr
+Disallow: /desktop
 
 Sitemap: https://gastroflow.digital/sitemap.xml

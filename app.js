@@ -38,21 +38,32 @@ app.get('/sitemap.xml', (req, res) => {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'gastroflow.digital';
     const domain = `${protocol}://${host}`;
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Solo páginas públicas indexables. Todo lo demás vive detrás de /auth
+    // (login, tenant_id, permisos) y no debe aparecer en el sitemap.
+    const pages = [
+        { path: '/', changefreq: 'daily', priority: '1.0' },
+        { path: '/auth/login', changefreq: 'monthly', priority: '0.6' },
+        { path: '/auth/registro', changefreq: 'monthly', priority: '0.8' },
+        { path: '/legal/privacidad', changefreq: 'yearly', priority: '0.3' },
+        { path: '/legal/terminos', changefreq: 'yearly', priority: '0.3' }
+    ];
+
+    const urls = pages
+        .map(
+            p => `    <url>
+        <loc>${domain}${p.path}</loc>
+        <lastmod>${today}</lastmod>
+        <changefreq>${p.changefreq}</changefreq>
+        <priority>${p.priority}</priority>
+    </url>`
+        )
+        .join('\n');
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
-        <loc>${domain}/</loc>
-        <lastmod>2026-05-04</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>${domain}/auth/login</loc>
-        <lastmod>2026-05-04</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
+${urls}
 </urlset>`;
 
     res.header('Content-Type', 'application/xml');
