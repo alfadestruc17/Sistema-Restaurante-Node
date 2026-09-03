@@ -97,6 +97,11 @@
                                     Negocio</a>
                             </li>
                             <% } %>
+                                <% if (nav.can && nav.can.facturacion) { %>
+                                    <li><a class="dropdown-item" href="/facturacion"><i
+                                                class="bi bi-credit-card text-muted"></i>Facturación</a>
+                                    </li>
+                                    <% } %>
                                 <li><a class="dropdown-item" href="/auth/cambiar-password"><i
                                             class="bi bi-key text-muted"></i>Cambiar contraseña</a>
                                 </li>

@@ -53,6 +53,7 @@ module.exports = function navbarLocals(req, res, next) {
                 analitica: hp('analitica.ver') && cs('analitica'),
                 configuracion: hp('configuracion.ver') && cs('configuracion'),
                 perfil: hp('perfil.ver'),
+                facturacion: hp('facturacion.ver'),
                 whatsapp: hp('whatsapp.ver') && cs('configuracion'),
                 whatsappAjustes: hp('whatsapp.ajustes') && cs('configuracion'),
                 proveedores: hp('proveedores.ver') && cs('proveedores'),
