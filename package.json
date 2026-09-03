@@ -27,6 +27,7 @@
     "seed:docs": "node scripts/seed-doc-types.js",
     "create-admin": "node scripts/create-admin.js",
     "create-test-users": "node scripts/create-test-users.js",
+    "generate:og-image": "node scripts/generate-og-image.js",
     "seed-tenants": "node scripts/seed-tenants-test.js",
     "stress": "artillery run stress-tests/artillery-stress.yml",
     "stress:quick": "artillery run stress-tests/artillery-quick.yml",
