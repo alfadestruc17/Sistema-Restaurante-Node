@@ -10,6 +10,7 @@
   <title><%= pageTitle %></title>
   <meta name="description" content="<%= pageDesc %>">
   <link rel="canonical" href="<%= siteUrl %>/">
+  <meta name="theme-color" content="<%= settings.color_background || '#080b09' %>">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/logo.png">
@@ -50,6 +51,19 @@
     }
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "GastroFlow",
+    "url": "<%= siteUrl %>/",
+    "logo": "<%= siteUrl %>/logo.png",
+    "description": "<%= pageDesc %>"
+  }
+  </script>
+
+  <!-- Analytics -->
+  <%- include('../partials/_analytics') %>
 
   <!-- Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

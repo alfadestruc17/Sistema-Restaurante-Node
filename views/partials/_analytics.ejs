@@ -1,0 +1,18 @@
+<% /*
+  Google Analytics (GA4). Solo se incluye en páginas públicas orientadas a
+  marketing/adquisición (landing, login, registro, legal) -- nunca en el
+  sistema operativo interno detrás de auth (POS, dashboard, etc.), para no
+  mezclar analítica de visitantes con uso real de restaurantes.
+
+  Se activa solo si GA_MEASUREMENT_ID está seteado en el .env (igual que
+  SENTRY_DSN): sin esa variable, este partial no imprime nada.
+*/ %>
+<% if (process.env.GA_MEASUREMENT_ID) { %>
+<script async src="https://www.googletagmanager.com/gtag/js?id=<%= process.env.GA_MEASUREMENT_ID %>"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '<%= process.env.GA_MEASUREMENT_ID %>');
+</script>
+<% } %>

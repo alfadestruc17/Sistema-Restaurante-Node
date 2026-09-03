@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <%= title || 'Iniciar Sesión' %> - Sistema de Restaurante
-    </title>
+    <title><%= title || 'Iniciar Sesión' %> | GastroFlow</title>
+    <meta name="description" content="Inicia sesión en GastroFlow, el sistema de gestión inteligente para restaurantes: ventas, inventario, cocina y costeo en tiempo real.">
+    <link rel="canonical" href="https://gastroflow.digital/auth/login">
+    <meta name="theme-color" content="#080b09">
+    <link rel="icon" type="image/png" href="/logo.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="/css/auth/login.css">
+    <%- include('../partials/_analytics') %>
 </head>
 
 <body>

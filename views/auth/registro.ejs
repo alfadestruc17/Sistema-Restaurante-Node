@@ -4,12 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        <%= title || 'Crear cuenta' %> - Sistema de Restaurante
-    </title>
+    <title><%= title || 'Crear cuenta' %> | GastroFlow</title>
+    <meta name="description" content="Crea tu cuenta en GastroFlow y empieza a controlar el margen de tu restaurante: ventas, inventario, cocina y costeo en tiempo real.">
+    <link rel="canonical" href="https://gastroflow.digital/auth/registro">
+    <meta name="theme-color" content="#080b09">
+    <link rel="icon" type="image/png" href="/logo.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="/css/auth/login.css">
+    <%- include('../partials/_analytics') %>
 </head>
 
 <body>
