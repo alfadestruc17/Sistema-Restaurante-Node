@@ -111,14 +111,17 @@ app.use((req, res, next) => {
 
     const cspDirectives = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com",
+        // checkout.wompi.co: Widget de Checkout de Wompi (registro de método de
+        // pago / cobro de suscripción, ver public/js/modulos/facturacion.js)
+        "script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tailwindcss.com https://checkout.wompi.co",
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
         "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com",
         "img-src 'self' data: blob: https:",
         // wss/ws localhost: websocket local de QZ Tray (puente de impresión térmica
         // y apertura de cajón — ver public/js/modulos/pos/pos_qz.js)
         "connect-src 'self' https://cdn.jsdelivr.net wss://localhost:8181 wss://localhost:8282 ws://localhost:8182 ws://localhost:8283",
-        "frame-src 'self'",
+        // frame-src: el widget de Wompi abre el formulario de pago en un iframe
+        "frame-src 'self' https://checkout.wompi.co",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'"
