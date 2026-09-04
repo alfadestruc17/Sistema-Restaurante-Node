@@ -45,17 +45,15 @@ async function enviarCorreoSeguro(opts) {
 
 class SuscripcionService {
     /**
-     * Guarda el método de pago. `paymentSourceId` llega ya creado desde el
-     * frontend (Widget de Checkout de Wompi, con "guardar tarjeta" activado:
-     * el primer cobro se hace ahí mismo y Wompi devuelve un payment_source_id
-     * reutilizable en la respuesta de la transacción -- por eso este método
-     * no vuelve a llamar a Wompi, solo persiste lo que el widget ya devolvió).
-     * Si el tenant no tenía proximo_cobro todavía, arranca el ciclo mensual
-     * desde hoy (el primer mes ya quedó cobrado por el widget).
+     * Guarda el método de pago. `paymentSourceId` ya fue creado por
+     * FacturacionController.guardarMetodoPago vía WompiService.crearFuenteDePago
+     * (tokenización de tarjeta en el frontend -> payment_source_id reutilizable);
+     * este método solo lo persiste, no vuelve a llamar a Wompi.
      *
-     * `WompiService.crearFuenteDePago` queda disponible para un flujo
-     * alternativo 100% server-side si más adelante se prefiere no depender
-     * del widget de checkout.
+     * No se hace ningún cobro aquí. Si el tenant no tenía ciclo todavía,
+     * `proximo_cobro` queda en hoy para que el cron diario cobre el primer mes
+     * en su próxima corrida; si ya tenía ciclo, solo se actualiza la tarjeta y
+     * se respeta la fecha de cobro vigente.
      */
     static async registrarMetodoPago(tenantId, { paymentSourceId }) {
         if (!paymentSourceId) {
@@ -69,7 +67,7 @@ class SuscripcionService {
         let query = 'UPDATE tenants SET wompi_payment_source_id = ?, intentos_fallidos_pago = 0';
         if (!yaTeniaCiclo) {
             query += ', proximo_cobro = ?';
-            params.push(addOneMonth(todayStr()));
+            params.push(todayStr());
         }
         query += ' WHERE id = ?';
         params.push(tenantId);

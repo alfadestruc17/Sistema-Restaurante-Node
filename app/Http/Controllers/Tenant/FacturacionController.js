@@ -8,29 +8,17 @@ class FacturacionController {
             const tenantId = req.tenant.id;
             const estado = await SuscripcionService.getEstado(tenantId);
             const wompiPublicKey = process.env.WOMPI_PUBLIC_KEY || null;
-
-            // Referencia + firma de integridad para el Widget de Checkout, generadas
-            // aquí (nunca en el frontend) porque requieren WOMPI_INTEGRITY_SECRET,
-            // que no debe salir del backend. Solo tienen sentido si hay un monto
-            // real que cobrar en la primera activación.
-            let checkoutSetup = null;
-            const amountInCents = Math.round(Number((estado && estado.montoTotal) || 0) * 100);
-            if (wompiPublicKey && amountInCents > 0) {
-                try {
-                    const reference = `sub-setup-${tenantId}-${Date.now()}`;
-                    const signature = WompiService.firmarIntegridad({ reference, amountInCents, currency: 'COP' });
-                    checkoutSetup = { reference, signature, amountInCents };
-                } catch (err) {
-                    console.error('No se pudo generar la firma de integridad de Wompi:', err.message);
-                }
-            }
+            // El frontend tokeniza la tarjeta contra la API de Wompi con la
+            // llave pública (GET /merchants/{key} + POST /tokens/cards); necesita
+            // la URL base para no hardcodear el host sandbox/production.
+            const wompiApiBase = wompiPublicKey ? WompiService.apiBaseUrl() : null;
 
             res.render('facturacion/index', {
                 tenant: req.tenant,
                 user: req.user,
                 estado,
                 wompiPublicKey,
-                checkoutSetup
+                wompiApiBase
             });
         } catch (error) {
             console.error('Error cargando facturación:', error);
@@ -39,15 +27,26 @@ class FacturacionController {
     }
 
     // POST /facturacion/metodo-pago
-    // Body: { paymentSourceId } -- ya generado por el Widget de Checkout de
-    // Wompi en el frontend (ver public/js/modulos/facturacion.js).
+    // Body: { cardToken, acceptanceToken } -- el token de tarjeta (tok_...) y el
+    // acceptance_token los genera el frontend contra la API de Wompi con la
+    // llave pública (ver public/js/modulos/facturacion.js). Este backend nunca
+    // ve datos de tarjeta cruda: solo cambia el token por un payment_source_id
+    // reutilizable usando la llave privada.
     static async guardarMetodoPago(req, res) {
         try {
             const tenantId = req.tenant.id;
-            const { paymentSourceId } = req.body;
-            if (!paymentSourceId) {
-                return res.status(400).json({ error: 'paymentSourceId requerido' });
+            const { cardToken, acceptanceToken } = req.body;
+            if (!cardToken || !acceptanceToken) {
+                return res.status(400).json({ error: 'cardToken y acceptanceToken requeridos' });
             }
+
+            const customerEmail = req.tenant.email || req.user?.email || null;
+            const paymentSourceId = await WompiService.crearFuenteDePago({
+                token: cardToken,
+                customerEmail,
+                acceptanceToken
+            });
+
             await SuscripcionService.registrarMetodoPago(tenantId, { paymentSourceId });
             res.json({ ok: true });
         } catch (error) {

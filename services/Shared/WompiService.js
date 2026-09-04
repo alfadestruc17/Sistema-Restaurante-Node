@@ -26,6 +26,16 @@ function getBaseUrl() {
     return BASE_URLS[env];
 }
 
+/**
+ * URL base de la API de Wompi que el frontend necesita para tokenizar la
+ * tarjeta (GET /merchants/{public_key} para el acceptance_token y
+ * POST /tokens/cards, ambas operaciones de llave pública). Se expone a la
+ * vista para no hardcodear el host en el JS del navegador.
+ */
+function getPublicApiBaseUrl() {
+    return getBaseUrl();
+}
+
 async function request(path, { method = 'GET', body, useBearer = true } = {}) {
     const privateKey = process.env.WOMPI_PRIVATE_KEY;
     if (!privateKey) {
@@ -51,9 +61,14 @@ async function request(path, { method = 'GET', body, useBearer = true } = {}) {
 }
 
 class WompiService {
+    /** URL base de la API de Wompi (sandbox/production) para el frontend. */
+    static apiBaseUrl() {
+        return getPublicApiBaseUrl();
+    }
+
     /**
      * Crea una fuente de pago reutilizable (tarjeta tokenizada) a partir de un
-     * token de tarjeta ya generado en el frontend con el widget de Wompi
+     * token de tarjeta ya generado en el frontend con Wompi
      * (WOMPI_PUBLIC_KEY, nunca toca este backend con datos de tarjeta cruda).
      * @returns {Promise<string>} payment_source_id
      */
