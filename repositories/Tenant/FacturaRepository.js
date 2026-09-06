@@ -129,6 +129,18 @@ class FacturaRepository {
                     descuentoFactura += Math.round((precioOriginal - p.precio) * p.cantidad * 100) / 100;
                 }
 
+                const descuentoValorLinea =
+                    p.descuento_valor !== null && p.descuento_valor !== undefined && p.descuento_valor > 0
+                        ? p.descuento_valor
+                        : null;
+                const descuentoPorcentajeLinea =
+                    descuentoValorLinea === null &&
+                    p.descuento_porcentaje !== null &&
+                    p.descuento_porcentaje !== undefined &&
+                    p.descuento_porcentaje > 0
+                        ? p.descuento_porcentaje
+                        : null;
+
                 return [
                     factura_id,
                     p.producto_id || null,
@@ -139,11 +151,8 @@ class FacturaRepository {
                     precioOriginal, // Guardar precio original (catálogo)
                     p.unidad || (p.es_servicio ? 'SERV' : 'UND'),
                     p.subtotal,
-                    p.descuento_porcentaje !== null &&
-                    p.descuento_porcentaje !== undefined &&
-                    p.descuento_porcentaje > 0
-                        ? p.descuento_porcentaje
-                        : null,
+                    descuentoPorcentajeLinea,
+                    descuentoValorLinea,
                     base_gravable,
                     tasa,
                     valor_impuesto
@@ -151,7 +160,7 @@ class FacturaRepository {
             });
 
             const [detalleResult] = await connection.query(
-                'INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, precio_original, unidad_medida, subtotal, descuento_porcentaje, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?',
+                'INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, precio_original, unidad_medida, subtotal, descuento_porcentaje, descuento_valor, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?',
                 [detallesValues]
             );
 

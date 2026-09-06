@@ -93,6 +93,15 @@
                                             <%= item.modificadores.map(m => m.opcion_nombre).join(', ') %>
                                         </div>
                                     <% } %>
+                                    <% if (item.descuento_valor != null && Number(item.descuento_valor) > 0) { %>
+                                        <div style="font-size: 0.65em; font-weight: normal; text-transform: none; color: #555;">
+                                            Descuento: -$<%= Number(item.descuento_valor).toLocaleString('es-CO') %>
+                                        </div>
+                                    <% } else if (item.descuento_porcentaje != null && Number(item.descuento_porcentaje) > 0) { %>
+                                        <div style="font-size: 0.65em; font-weight: normal; text-transform: none; color: #555;">
+                                            Descuento: -<%= Number(item.descuento_porcentaje) %>%
+                                        </div>
+                                    <% } %>
                                 </div>
                                 <div class="producto-total"
                                     style="text-align: right; flex: 1; font-weight: bold; font-size: 1.2em;">

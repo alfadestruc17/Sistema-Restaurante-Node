@@ -81,13 +81,14 @@ class FacturarPedidoService {
                 l.unidad_medida,
                 l.subtotal,
                 l.descuento_porcentaje,
+                l.descuento_valor,
                 l.base_gravable,
                 l.tasa_impuesto,
                 l.valor_impuesto
             ]);
 
             const [detalleResult] = await connection.query(
-                `INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, unidad_medida, subtotal, descuento_porcentaje, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?`,
+                `INSERT INTO detalle_factura (factura_id, producto_id, servicio_id, es_servicio, cantidad, precio_unitario, unidad_medida, subtotal, descuento_porcentaje, descuento_valor, base_gravable, tasa_impuesto, valor_impuesto) VALUES ?`,
                 [detallesValuesFinal]
             );
 
@@ -151,6 +152,22 @@ class FacturarPedidoService {
         return { pedido, items };
     }
 
+    /**
+     * Normaliza una entrada de descuentosMap a { tipo, valor }.
+     * Acepta un número suelto (retrocompat = porcentaje) o
+     * { tipo: 'porcentaje'|'valor', valor: N }.
+     */
+    static _normalizarDescuento(entrada) {
+        if (entrada === null || entrada === undefined) {
+            return { tipo: 'porcentaje', valor: 0 };
+        }
+        if (typeof entrada === 'object') {
+            const tipo = entrada.tipo === 'valor' ? 'valor' : 'porcentaje';
+            return { tipo, valor: Math.max(0, Number(entrada.valor) || 0) };
+        }
+        return { tipo: 'porcentaje', valor: Math.max(0, Number(entrada) || 0) };
+    }
+
     static _procesarLineasFactura(items, descuentosMap, tasas, defaultTasa, formaPagoBase) {
         let total = 0;
         let montoEfectivo = 0;
@@ -161,13 +178,26 @@ class FacturarPedidoService {
         const lineasFactura = items.map(i => {
             const cant = Number(i.cantidad || 0);
             const precioUnit = Number(i.precio_unitario || 0);
-            const pct =
-                descuentosMap[String(i.id)] !== null && descuentosMap[String(i.id)] !== undefined
-                    ? Number(descuentosMap[String(i.id)])
-                    : 0;
-            const desc = Math.min(100, Math.max(0, pct)) / 100;
-            const subtotal = Math.round(cant * precioUnit * (1 - desc) * 100) / 100;
-            const precioUnitFactura = desc > 0 ? Math.round(precioUnit * (1 - desc) * 100) / 100 : precioUnit;
+            const bruto = cant * precioUnit;
+
+            const { tipo: descTipo, valor: descValor } = FacturarPedidoService._normalizarDescuento(
+                descuentosMap[String(i.id)]
+            );
+
+            let subtotal;
+            let descuentoPorcentaje = null;
+            let descuentoValor = null;
+            if (descTipo === 'valor' && descValor > 0) {
+                const montoDesc = Math.min(bruto, descValor);
+                subtotal = Math.round((bruto - montoDesc) * 100) / 100;
+                descuentoValor = Math.round(montoDesc * 100) / 100;
+            } else {
+                const desc = Math.min(100, Math.max(0, descValor)) / 100;
+                subtotal = Math.round(bruto * (1 - desc) * 100) / 100;
+                descuentoPorcentaje = desc > 0 ? descValor : null;
+            }
+            const precioUnitFactura =
+                cant > 0 && subtotal !== bruto ? Math.round((subtotal / cant) * 100) / 100 : precioUnit;
             total += subtotal;
 
             const esPagadoEfectivo = i.pagado ? i.forma_pago === 'efectivo' : formaPagoBase === 'efectivo';
@@ -192,7 +222,8 @@ class FacturarPedidoService {
                 precio_unitario: precioUnitFactura,
                 unidad_medida: i.unidad_medida || 'UND',
                 subtotal,
-                descuento_porcentaje: desc > 0 ? pct : null,
+                descuento_porcentaje: descuentoPorcentaje,
+                descuento_valor: descuentoValor,
                 base_gravable,
                 tasa_impuesto: tasa,
                 valor_impuesto

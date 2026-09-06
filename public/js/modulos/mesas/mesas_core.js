@@ -14,9 +14,31 @@ window.MesasModule = {
     return `$${Number(valor || 0).toLocaleString('es-CO')}`;
   },
 
+  // Normaliza la entrada de descuentosPorItem a { tipo, valor }.
+  // Acepta número suelto (retrocompat = %) o { tipo:'porcentaje'|'valor', valor:N }.
+  descuentoNormalizado(itemId) {
+    const raw = this.descuentosPorItem[itemId];
+    if (raw == null) return { tipo: 'porcentaje', valor: 0 };
+    if (typeof raw === 'object') {
+      return { tipo: raw.tipo === 'valor' ? 'valor' : 'porcentaje', valor: Math.max(0, Number(raw.valor) || 0) };
+    }
+    return { tipo: 'porcentaje', valor: Math.max(0, Number(raw) || 0) };
+  },
+
   subtotalConDescuento(cantidad, precio, itemId) {
-    const pct = this.descuentosPorItem[itemId] != null ? this.descuentosPorItem[itemId] : 0;
-    return cantidad * precio * (1 - pct / 100);
+    const bruto = cantidad * precio;
+    const { tipo, valor } = this.descuentoNormalizado(itemId);
+    if (tipo === 'valor') {
+      return Math.max(0, bruto - Math.min(valor, bruto));
+    }
+    return bruto * (1 - Math.min(100, valor) / 100);
+  },
+
+  // Texto corto para el badge de descuento de un ítem ('' si no tiene).
+  descuentoBadge(itemId) {
+    const { tipo, valor } = this.descuentoNormalizado(itemId);
+    if (valor <= 0) return '';
+    return tipo === 'valor' ? '-' + this.formatear(valor) : '-' + valor + '%';
   },
 
   async runWithOffcanvasHidden(action) {

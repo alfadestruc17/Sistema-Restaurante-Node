@@ -14,8 +14,8 @@ window.MesasModule.renderItems = function() {
       totalRestante += subtotal;
     }
 
-    const descBadge = (this.descuentosPorItem[it.id] != null && this.descuentosPorItem[it.id] > 0)
-      ? ' <span class="badge bg-success">-' + this.descuentosPorItem[it.id] + '%</span>' : '';
+    const descTxt = this.descuentoBadge(it.id);
+    const descBadge = descTxt ? ' <span class="badge bg-success">' + descTxt + '</span>' : '';
     const badgePagado = it.pagado ? '<br><span class="badge bg-success mt-1"><i class="bi bi-check2-circle me-1"></i>Pagado</span>' : '';
     const modsTexto = (it.modificadores && it.modificadores.length)
       ? '<div class="pedido-item-mods">' + it.modificadores.map(m => m.opcion_nombre).join(', ') + '</div>' : '';

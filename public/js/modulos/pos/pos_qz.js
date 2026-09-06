@@ -91,6 +91,11 @@ window.POS_QZ = {
             text(`${item.cantidad} x ${item.producto_nombre}`.slice(0, cols));
             const sub = item.subtotal !== undefined ? money(item.subtotal) : '';
             if (sub) text(sub.padStart(cols));
+            if (item.descuento_valor != null && Number(item.descuento_valor) > 0) {
+                text(`  Desc: -${money(item.descuento_valor)}`.slice(0, cols));
+            } else if (item.descuento_porcentaje != null && Number(item.descuento_porcentaje) > 0) {
+                text(`  Desc: -${Number(item.descuento_porcentaje)}%`.slice(0, cols));
+            }
             (item.modificadores || []).forEach(mod => {
                 text(`  + ${mod.opcion_nombre}`.slice(0, cols));
             });
