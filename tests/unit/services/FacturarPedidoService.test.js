@@ -199,7 +199,7 @@ describe('FacturarPedidoService', () => {
             pagado: 0
         };
 
-        it('acumula el servicio externo pagado en efectivo en montoServiciosExternosEfectivo', () => {
+        it('acumula el servicio externo en montoServiciosExternos (pago en efectivo)', () => {
             const res = FacturarPedidoService._procesarLineasFactura(
                 [producto, domicilioExterno],
                 {},
@@ -208,9 +208,23 @@ describe('FacturarPedidoService', () => {
                 'efectivo',
                 new Set([99])
             );
-            expect(res.montoServiciosExternosEfectivo).toBe(6000);
+            expect(res.montoServiciosExternos).toBe(6000);
             // el monto sigue sumando al efectivo de la factura (se compensa aparte con la salida)
             expect(res.montoEfectivo).toBe(36000);
+        });
+
+        it('acumula el servicio externo AUNQUE la factura se pague por transferencia', () => {
+            const res = FacturarPedidoService._procesarLineasFactura(
+                [producto, domicilioExterno],
+                {},
+                tasas,
+                0,
+                'transferencia',
+                new Set([99])
+            );
+            // al domiciliario se le paga en efectivo de la gaveta -> se compensa igual
+            expect(res.montoServiciosExternos).toBe(6000);
+            expect(res.montoEfectivo).toBe(0);
         });
 
         it('NO acumula si el servicio no es externo', () => {
@@ -222,19 +236,7 @@ describe('FacturarPedidoService', () => {
                 'efectivo',
                 new Set() // 99 no está marcado como externo
             );
-            expect(res.montoServiciosExternosEfectivo).toBe(0);
-        });
-
-        it('NO acumula si el servicio externo se pagó por transferencia', () => {
-            const res = FacturarPedidoService._procesarLineasFactura(
-                [producto, domicilioExterno],
-                {},
-                tasas,
-                0,
-                'transferencia',
-                new Set([99])
-            );
-            expect(res.montoServiciosExternosEfectivo).toBe(0);
+            expect(res.montoServiciosExternos).toBe(0);
         });
     });
 

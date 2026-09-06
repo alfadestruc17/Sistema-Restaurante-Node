@@ -73,15 +73,13 @@ async function seccionServiciosExternos() {
     const tabla = [];
 
     for (const r of rows) {
-        const esEfectivo = r.forma_pago === 'efectivo';
         const sesionAbierta = r.sesion_estado === 'abierta';
         let accion;
 
+        // La salida es SIEMPRE en efectivo (al domiciliario se le paga de la
+        // gaveta), sin importar cómo pagó el cliente la factura.
         if (r.ya_compensada) {
             accion = 'ya compensada';
-        } else if (!esEfectivo) {
-            accion = 'REVISAR MANUAL (pago ' + r.forma_pago + ')';
-            pendientes++;
         } else if (!sesionAbierta) {
             accion = 'sesión CERRADA — revisar manual';
             pendientes++;

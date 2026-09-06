@@ -46,7 +46,7 @@ class FacturarPedidoService {
                 subtotalFactura,
                 impuestosFactura,
                 lineasFactura,
-                montoServiciosExternosEfectivo
+                montoServiciosExternos
             } = FacturarPedidoService._procesarLineasFactura(
                 items,
                 descuentosMap,
@@ -124,9 +124,9 @@ class FacturarPedidoService {
             await FacturarPedidoService._copiarModificadores(connection, items, detalleResult.insertId);
 
             // El cobro de servicios externos (ej. domicilio de un tercero) entra con
-            // la factura pero se le entrega al proveedor: se compensa con una salida
-            // de caja para que el arqueo no lo cuente como efectivo del negocio.
-            if (cajaSesionId && montoServiciosExternosEfectivo > 0) {
+            // la factura pero se le entrega al proveedor en efectivo: se compensa
+            // con una salida de caja, sin importar cómo pagó el cliente la factura.
+            if (cajaSesionId && montoServiciosExternos > 0) {
                 await CajaRepository.registrarSalidaServicioExterno(
                     {
                         tenantId,
@@ -134,7 +134,7 @@ class FacturarPedidoService {
                         usuarioId: usuarioId || cajaSesionUsuarioId,
                         facturaId,
                         numeroFactura,
-                        monto: montoServiciosExternosEfectivo
+                        monto: montoServiciosExternos
                     },
                     connection
                 );
@@ -228,7 +228,10 @@ class FacturarPedidoService {
         let montoTransferencia = 0;
         let subtotalFactura = 0;
         let impuestosFactura = 0;
-        let montoServiciosExternosEfectivo = 0;
+        // Servicios externos: se compensan SIEMPRE con una salida de caja en
+        // efectivo (al domiciliario se le paga de la gaveta), sin importar cómo
+        // pagó el cliente la factura.
+        let montoServiciosExternos = 0;
 
         const lineasFactura = items.map(i => {
             const cant = Number(i.cantidad || 0);
@@ -264,8 +267,8 @@ class FacturarPedidoService {
                 montoTransferencia += subtotal;
             }
 
-            if (i.es_servicio && i.servicio_id && serviciosExternosIds.has(Number(i.servicio_id)) && esPagadoEfectivo) {
-                montoServiciosExternosEfectivo += subtotal;
+            if (i.es_servicio && i.servicio_id && serviciosExternosIds.has(Number(i.servicio_id))) {
+                montoServiciosExternos += subtotal;
             }
 
             const tasa = i.es_servicio ? defaultTasa : (tasas.get(i.producto_id) ?? defaultTasa);
@@ -296,7 +299,7 @@ class FacturarPedidoService {
             subtotalFactura,
             impuestosFactura,
             lineasFactura,
-            montoServiciosExternosEfectivo: Math.round(montoServiciosExternosEfectivo * 100) / 100
+            montoServiciosExternos: Math.round(montoServiciosExternos * 100) / 100
         };
     }
 

@@ -217,16 +217,16 @@ class FacturaRepository {
                 ]
             );
 
-            // Servicios externos (ej. domicilio de un tercero) cobrados en efectivo:
-            // el dinero entra con la factura pero se entrega al proveedor, así que se
-            // compensa con una salida de caja para no descuadrar el arqueo.
-            if (cajaSesionId && montoEfectivo > 0) {
-                const montoExternosEfectivo = await FacturaRepository._calcularServiciosExternos(
+            // Servicios externos (ej. domicilio de un tercero): el dinero entra con
+            // la factura pero se le entrega al proveedor en efectivo, así que se
+            // compensa con una salida de caja, sin importar cómo pagó el cliente.
+            if (cajaSesionId) {
+                const montoExternos = await FacturaRepository._calcularServiciosExternos(
                     connection,
                     tenantId,
                     facturaData.productos
                 );
-                if (montoExternosEfectivo > 0) {
+                if (montoExternos > 0) {
                     await CajaRepository.registrarSalidaServicioExterno(
                         {
                             tenantId,
@@ -234,7 +234,7 @@ class FacturaRepository {
                             usuarioId: facturaData.usuario_id || cajaSesionUsuarioId,
                             facturaId: factura_id,
                             numeroFactura: numero,
-                            monto: montoExternosEfectivo
+                            monto: montoExternos
                         },
                         connection
                     );
