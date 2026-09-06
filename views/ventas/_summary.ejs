@@ -14,6 +14,8 @@ let facturasHoyCount = 0;
 });
 
 const fmtNum = (n) => '$ ' + (Number(n) || 0).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtNum0 = (n) => '$ ' + (Number(n) || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+const vHoy = (typeof ventasHoy !== 'undefined' && ventasHoy) ? ventasHoy : { efectivo: 0, transferencia: 0, total: 0 };
 %>
 
 <div class="kpis-grid">
@@ -51,5 +53,18 @@ const fmtNum = (n) => '$ ' + (Number(n) || 0).toLocaleString('es-CO', { minimumF
             <span class="kpi-card-title">Facturas Hoy</span>
         </div>
         <div class="kpi-card-value" id="facturasHoyVal"><%= facturasHoyCount %></div>
+    </div>
+
+    <!-- Ventas Hoy (día actual, independiente del filtro de rango) -->
+    <div class="kpi-card">
+        <div class="kpi-card-header">
+            <span class="kpi-card-icon" style="background: var(--accentSoft); color: var(--accent);"><i class="bi bi-calendar-day"></i></span>
+            <span class="kpi-card-title">Ventas Hoy (neto)</span>
+        </div>
+        <div class="kpi-card-value"><%= fmtNum0(vHoy.total) %></div>
+        <div class="kpi-card-sub text-muted" style="font-size: 12px; margin-top: 4px;">
+            Efectivo: <strong><%= fmtNum0(vHoy.efectivo) %></strong> ·
+            Transf.: <strong><%= fmtNum0(vHoy.transferencia) %></strong>
+        </div>
     </div>
 </div>
