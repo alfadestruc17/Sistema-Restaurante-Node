@@ -1,5 +1,13 @@
 const db = require('../../config/database');
 
+// Los movimientos con referencia_tipo = 'venta' los crea FinanzasService por
+// CADA factura (para el módulo de Finanzas). El arqueo de caja NO debe sumarlos
+// como "entradas manuales": las ventas ya se cuentan desde la tabla `facturas`
+// (monto_efectivo / monto_transferencia / total). Sumarlos aquí las contaría
+// dos veces. Los demás movimientos (manuales, compra_inventario, servicio_externo)
+// sí son flujo de caja real y se mantienen.
+const EXCLUIR_ENTRADAS_VENTA = `(referencia_tipo IS NULL OR referencia_tipo <> 'venta')`;
+
 class CajaRepository {
     /**
      * Obtiene la sesión abierta actual para un tenant
@@ -51,7 +59,7 @@ class CajaRepository {
             [sesionId]
         );
         const [entradas] = await db.query(
-            `SELECT SUM(monto) as total FROM caja_movimientos WHERE sesion_id = ? AND tipo = 'entrada'`,
+            `SELECT SUM(monto) as total FROM caja_movimientos WHERE sesion_id = ? AND tipo = 'entrada' AND ${EXCLUIR_ENTRADAS_VENTA}`,
             [sesionId]
         );
         const [salidas] = await db.query(
@@ -190,9 +198,10 @@ class CajaRepository {
             sesionId
         ]);
 
-        // Sumar movimientos manuales
+        // Sumar movimientos manuales (excluye las entradas 'venta' de FinanzasService,
+        // que duplicarían las ventas ya contadas desde la tabla facturas).
         const [entradas] = await db.query(
-            `SELECT SUM(monto) as total FROM caja_movimientos WHERE sesion_id = ? AND tipo = 'entrada'`,
+            `SELECT SUM(monto) as total FROM caja_movimientos WHERE sesion_id = ? AND tipo = 'entrada' AND ${EXCLUIR_ENTRADAS_VENTA}`,
             [sesionId]
         );
         const [salidas] = await db.query(
