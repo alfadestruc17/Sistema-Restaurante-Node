@@ -1,5 +1,6 @@
 const db = require('../../../config/database');
 const FacturaRepository = require('../../../repositories/Tenant/FacturaRepository');
+const CajaRepository = require('../../../repositories/Tenant/CajaRepository');
 const InventarioService = require('../InventarioService');
 const TaxService = require('../../Shared/TaxService');
 
@@ -7,7 +8,7 @@ class FacturarPedidoService {
     /**
      * @description Carga un pedido, lo consolida, resta inventario y genera factura final.
      */
-    static async execute({ tenantId, pedidoId, cliente_id, forma_pago, descuentosMap, propinaBody }) {
+    static async execute({ tenantId, pedidoId, cliente_id, forma_pago, descuentosMap, propinaBody, usuarioId = null }) {
         const connection = await db.getConnection();
         try {
             await connection.beginTransaction();
@@ -23,14 +24,28 @@ class FacturarPedidoService {
             const productoIds = items.filter(i => !i.es_servicio && i.producto_id).map(i => i.producto_id);
             const { tasas, defaultTasa } = await TaxService.getTasasPorProducto(tenantId, productoIds, connection);
 
+            const serviciosExternosIds = await FacturarPedidoService._obtenerServiciosExternos(
+                connection,
+                tenantId,
+                items
+            );
+
             const {
                 total,
                 montoEfectivo: mEfectivoLineas,
                 montoTransferencia: mTransfLineas,
                 subtotalFactura,
                 impuestosFactura,
-                lineasFactura
-            } = FacturarPedidoService._procesarLineasFactura(items, descuentosMap, tasas, defaultTasa, forma_pago);
+                lineasFactura,
+                montoServiciosExternosEfectivo
+            } = FacturarPedidoService._procesarLineasFactura(
+                items,
+                descuentosMap,
+                tasas,
+                defaultTasa,
+                forma_pago,
+                serviciosExternosIds
+            );
 
             const propina = Math.max(
                 0,
@@ -46,10 +61,8 @@ class FacturarPedidoService {
                     forma_pago
                 );
 
-            const { numeroFactura, cajaSesionId } = await FacturarPedidoService._obtenerNumeroYCajaSesion(
-                connection,
-                tenantId
-            );
+            const { numeroFactura, cajaSesionId, cajaSesionUsuarioId } =
+                await FacturarPedidoService._obtenerNumeroYCajaSesion(connection, tenantId);
             const fechaEmisionUtc = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
             const [facturaInsert] = await connection.query(
@@ -93,6 +106,24 @@ class FacturarPedidoService {
             );
 
             await FacturarPedidoService._copiarModificadores(connection, items, detalleResult.insertId);
+
+            // El cobro de servicios externos (ej. domicilio de un tercero) entra con
+            // la factura pero se le entrega al proveedor: se compensa con una salida
+            // de caja para que el arqueo no lo cuente como efectivo del negocio.
+            if (cajaSesionId && montoServiciosExternosEfectivo > 0) {
+                await CajaRepository.registrarSalidaServicioExterno(
+                    {
+                        tenantId,
+                        sesionId: cajaSesionId,
+                        usuarioId: usuarioId || cajaSesionUsuarioId,
+                        facturaId,
+                        numeroFactura,
+                        monto: montoServiciosExternosEfectivo
+                    },
+                    connection
+                );
+            }
+
             await FacturarPedidoService._descontarInventario(tenantId, lineasFactura, facturaId);
 
             await connection.query(`UPDATE pedidos SET estado = 'cerrado', total = ? WHERE id = ?`, [
@@ -168,12 +199,20 @@ class FacturarPedidoService {
         return { tipo: 'porcentaje', valor: Math.max(0, Number(entrada) || 0) };
     }
 
-    static _procesarLineasFactura(items, descuentosMap, tasas, defaultTasa, formaPagoBase) {
+    static _procesarLineasFactura(
+        items,
+        descuentosMap,
+        tasas,
+        defaultTasa,
+        formaPagoBase,
+        serviciosExternosIds = new Set()
+    ) {
         let total = 0;
         let montoEfectivo = 0;
         let montoTransferencia = 0;
         let subtotalFactura = 0;
         let impuestosFactura = 0;
+        let montoServiciosExternosEfectivo = 0;
 
         const lineasFactura = items.map(i => {
             const cant = Number(i.cantidad || 0);
@@ -209,6 +248,10 @@ class FacturarPedidoService {
                 montoTransferencia += subtotal;
             }
 
+            if (i.es_servicio && i.servicio_id && serviciosExternosIds.has(Number(i.servicio_id)) && esPagadoEfectivo) {
+                montoServiciosExternosEfectivo += subtotal;
+            }
+
             const tasa = i.es_servicio ? defaultTasa : (tasas.get(i.producto_id) ?? defaultTasa);
             const { base_gravable, valor_impuesto } = TaxService.desglosarLinea(subtotal, tasa);
             subtotalFactura += base_gravable;
@@ -230,7 +273,30 @@ class FacturarPedidoService {
             };
         });
 
-        return { total, montoEfectivo, montoTransferencia, subtotalFactura, impuestosFactura, lineasFactura };
+        return {
+            total,
+            montoEfectivo,
+            montoTransferencia,
+            subtotalFactura,
+            impuestosFactura,
+            lineasFactura,
+            montoServiciosExternosEfectivo: Math.round(montoServiciosExternosEfectivo * 100) / 100
+        };
+    }
+
+    /** Set con los servicio_id de las líneas que son servicios externos (es_externo = 1). */
+    static async _obtenerServiciosExternos(connection, tenantId, items) {
+        const servicioIds = [
+            ...new Set(items.filter(i => i.es_servicio && i.servicio_id).map(i => Number(i.servicio_id)))
+        ];
+        if (servicioIds.length === 0) {
+            return new Set();
+        }
+        const [rows] = await connection.query(
+            'SELECT id FROM servicios WHERE tenant_id = ? AND id IN (?) AND es_externo = 1',
+            [tenantId, servicioIds]
+        );
+        return new Set(rows.map(r => Number(r.id)));
     }
 
     static _calcularTotalesYFormaPago(totalInicial, mEfectivoLineas, mTransfLineas, propina, formaPagoBase) {
@@ -269,12 +335,13 @@ class FacturarPedidoService {
         const numeroFactura = rowsNum?.[0]?.siguiente || 1;
 
         const [sesiones] = await connection.query(
-            'SELECT id FROM caja_sesiones WHERE tenant_id = ? AND estado = "abierta" LIMIT 1',
+            'SELECT id, usuario_id FROM caja_sesiones WHERE tenant_id = ? AND estado = "abierta" LIMIT 1',
             [tenantId]
         );
         const cajaSesionId = sesiones.length > 0 ? sesiones[0].id : null;
+        const cajaSesionUsuarioId = sesiones.length > 0 ? sesiones[0].usuario_id : null;
 
-        return { numeroFactura, cajaSesionId };
+        return { numeroFactura, cajaSesionId, cajaSesionUsuarioId };
     }
 
     static async _copiarModificadores(connection, items, primerDetalleId) {

@@ -128,6 +128,52 @@ class CajaRepository {
     }
 
     /**
+     * Registra la SALIDA de caja que compensa el cobro de un servicio externo
+     * (ej. domicilio de un tercero): el dinero entra con la factura pero se le
+     * entrega al proveedor del servicio, así que no debe quedar en el arqueo.
+     *
+     * Idempotente: usa (referencia_tipo='servicio_externo', referencia_id=facturaId)
+     * como llave lógica y no vuelve a insertar si ya existe.
+     *
+     * @param {object} [conn] Conexión/transacción opcional (si no, usa el pool).
+     * @returns {Promise<number|null>} id del movimiento creado, o null si no aplica / ya existía.
+     */
+    static async registrarSalidaServicioExterno(
+        { tenantId, sesionId, usuarioId, facturaId, monto, numeroFactura },
+        conn = db
+    ) {
+        const montoNum = Math.round((Number.parseFloat(monto) || 0) * 100) / 100;
+        if (!sesionId || !usuarioId || montoNum <= 0) {
+            return null;
+        }
+
+        const [existe] = await conn.query(
+            `SELECT id FROM caja_movimientos
+             WHERE tenant_id = ? AND referencia_tipo = 'servicio_externo' AND referencia_id = ?
+             LIMIT 1`,
+            [tenantId, facturaId]
+        );
+        if (existe.length > 0) {
+            return null;
+        }
+
+        const [result] = await conn.query(
+            `INSERT INTO caja_movimientos
+                (tenant_id, sesion_id, usuario_id, tipo, monto, motivo, categoria_gasto, referencia_tipo, referencia_id)
+             VALUES (?, ?, ?, 'salida', ?, ?, 'Servicio externo', 'servicio_externo', ?)`,
+            [
+                tenantId,
+                sesionId,
+                usuarioId,
+                montoNum,
+                `Pago servicio externo (ej. domicilio) - Factura #${numeroFactura ?? facturaId}`,
+                facturaId
+            ]
+        );
+        return result.insertId;
+    }
+
+    /**
      * Obtiene estadísticas rápidas de la sesión actual
      */
     static async getEstadisticasSesion(sesionId) {

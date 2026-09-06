@@ -187,6 +187,57 @@ describe('FacturarPedidoService', () => {
         });
     });
 
+    describe('_procesarLineasFactura (servicios externos → salida de caja)', () => {
+        const tasas = new Map();
+        const producto = { id: 1, producto_id: 7, es_servicio: 0, cantidad: 1, precio_unitario: 30000, pagado: 0 };
+        const domicilioExterno = {
+            id: 2,
+            servicio_id: 99,
+            es_servicio: 1,
+            cantidad: 1,
+            precio_unitario: 6000,
+            pagado: 0
+        };
+
+        it('acumula el servicio externo pagado en efectivo en montoServiciosExternosEfectivo', () => {
+            const res = FacturarPedidoService._procesarLineasFactura(
+                [producto, domicilioExterno],
+                {},
+                tasas,
+                0,
+                'efectivo',
+                new Set([99])
+            );
+            expect(res.montoServiciosExternosEfectivo).toBe(6000);
+            // el monto sigue sumando al efectivo de la factura (se compensa aparte con la salida)
+            expect(res.montoEfectivo).toBe(36000);
+        });
+
+        it('NO acumula si el servicio no es externo', () => {
+            const res = FacturarPedidoService._procesarLineasFactura(
+                [producto, domicilioExterno],
+                {},
+                tasas,
+                0,
+                'efectivo',
+                new Set() // 99 no está marcado como externo
+            );
+            expect(res.montoServiciosExternosEfectivo).toBe(0);
+        });
+
+        it('NO acumula si el servicio externo se pagó por transferencia', () => {
+            const res = FacturarPedidoService._procesarLineasFactura(
+                [producto, domicilioExterno],
+                {},
+                tasas,
+                0,
+                'transferencia',
+                new Set([99])
+            );
+            expect(res.montoServiciosExternosEfectivo).toBe(0);
+        });
+    });
+
     it('factura correctamente y emite el evento SSE "billed"', async () => {
         mockConn.query
             .mockResolvedValueOnce([[{ id: 10, estado: 'abierto', mesa_id: 2, total: 5000 }]]) // SELECT pedidos

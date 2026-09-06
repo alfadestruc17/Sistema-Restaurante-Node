@@ -75,7 +75,8 @@ class FacturaService {
             total,
             forma_pago,
             productos,
-            evento_id: evento_id || null
+            evento_id: evento_id || null,
+            usuario_id: facturaData.usuario_id || null
         });
 
         const facturaId = result.insertId;

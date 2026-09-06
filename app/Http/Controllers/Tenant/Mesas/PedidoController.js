@@ -77,7 +77,13 @@ class PedidoController {
             const descuentosMap = descuentos && typeof descuentos === 'object' ? descuentos : {};
 
             const resultado = await FacturarPedidoService.execute({
-                tenantId, pedidoId, cliente_id, forma_pago, descuentosMap, propinaBody: propina
+                tenantId,
+                pedidoId,
+                cliente_id,
+                forma_pago,
+                descuentosMap,
+                propinaBody: propina,
+                usuarioId: req.user?.id || null
             });
             return res.status(201).json(resultado);
         } catch (error) {

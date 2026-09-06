@@ -7,6 +7,7 @@
 const db = require('../../config/database');
 const { toFechaISOUtc } = require('../../utils/dateHelpers');
 const TaxService = require('../../services/Shared/TaxService');
+const CajaRepository = require('./CajaRepository');
 
 class FacturaRepository {
     /**
@@ -86,13 +87,21 @@ class FacturaRepository {
 
             // Buscar sesión de caja abierta para vincular la venta
             const [sesiones] = await connection.query(
-                'SELECT id FROM caja_sesiones WHERE tenant_id = ? AND estado = "abierta" LIMIT 1',
+                'SELECT id, usuario_id FROM caja_sesiones WHERE tenant_id = ? AND estado = "abierta" LIMIT 1',
                 [tenantId]
             );
             const cajaSesionId = sesiones.length > 0 ? sesiones[0].id : null;
+            const cajaSesionUsuarioId = sesiones.length > 0 ? sesiones[0].usuario_id : null;
+
+            // Desglose efectivo/transferencia para el arqueo de caja. El POS/eventos
+            // envían un solo forma_pago (sin split), así que el total va íntegro al
+            // método usado; 'mixto' u otros quedan en 0/0 (no rompe: la caja usa 0).
+            const totalNum = Number.parseFloat(facturaData.total) || 0;
+            const montoEfectivo = facturaData.forma_pago === 'efectivo' ? totalNum : 0;
+            const montoTransferencia = facturaData.forma_pago === 'transferencia' ? totalNum : 0;
 
             const [result] = await connection.query(
-                'INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, evento_id, fecha, caja_sesion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, evento_id, fecha, caja_sesion_id, monto_efectivo, monto_transferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     tenantId,
                     numero,
@@ -101,7 +110,9 @@ class FacturaRepository {
                     facturaData.forma_pago,
                     evento_id,
                     fechaEmisionUtc,
-                    cajaSesionId
+                    cajaSesionId,
+                    montoEfectivo,
+                    montoTransferencia
                 ]
             );
 
@@ -199,6 +210,30 @@ class FacturaRepository {
                 ]
             );
 
+            // Servicios externos (ej. domicilio de un tercero) cobrados en efectivo:
+            // el dinero entra con la factura pero se entrega al proveedor, así que se
+            // compensa con una salida de caja para no descuadrar el arqueo.
+            if (cajaSesionId && montoEfectivo > 0) {
+                const montoExternosEfectivo = await FacturaRepository._calcularServiciosExternos(
+                    connection,
+                    tenantId,
+                    facturaData.productos
+                );
+                if (montoExternosEfectivo > 0) {
+                    await CajaRepository.registrarSalidaServicioExterno(
+                        {
+                            tenantId,
+                            sesionId: cajaSesionId,
+                            usuarioId: facturaData.usuario_id || cajaSesionUsuarioId,
+                            facturaId: factura_id,
+                            numeroFactura: numero,
+                            monto: montoExternosEfectivo
+                        },
+                        connection
+                    );
+                }
+            }
+
             await connection.commit();
             connection.release();
 
@@ -208,6 +243,32 @@ class FacturaRepository {
             connection.release();
             throw error;
         }
+    }
+
+    /**
+     * Suma el subtotal de las líneas que son servicios externos (servicios.es_externo = 1)
+     * dentro de un arreglo de productos de factura. Usado para compensar el arqueo de caja.
+     * @returns {Promise<number>} monto total de servicios externos (0 si no hay)
+     */
+    static async _calcularServiciosExternos(connection, tenantId, productos) {
+        const servicioIds = [
+            ...new Set((productos || []).filter(p => p.es_servicio && p.servicio_id).map(p => Number(p.servicio_id)))
+        ];
+        if (servicioIds.length === 0) {
+            return 0;
+        }
+        const [rows] = await connection.query(
+            'SELECT id FROM servicios WHERE tenant_id = ? AND id IN (?) AND es_externo = 1',
+            [tenantId, servicioIds]
+        );
+        const externos = new Set(rows.map(r => Number(r.id)));
+        if (externos.size === 0) {
+            return 0;
+        }
+        const monto = (productos || [])
+            .filter(p => p.es_servicio && p.servicio_id && externos.has(Number(p.servicio_id)))
+            .reduce((sum, p) => sum + (Number.parseFloat(p.subtotal) || 0), 0);
+        return Math.round(monto * 100) / 100;
     }
 
     /**
