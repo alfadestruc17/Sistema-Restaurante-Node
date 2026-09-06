@@ -87,6 +87,9 @@ window.POS_PAGO = {
         const nombreCliente = document.getElementById('posClienteInput')?.value?.trim() || 'Consumidor final';
         const formaPago = document.getElementById('posPagoMetodo')?.value || 'efectivo';
         const total = POS.getTotal();
+        // Efectivo recibido (informativo, para "Recibido/Cambio" en el ticket).
+        const efectivoRecibido =
+            formaPago === 'efectivo' ? MoneyInput.parse(document.getElementById('posEfectivoRecibido')?.value) : 0;
 
         const btn = document.getElementById('posConfirmarPagoBtn');
         btn.disabled = true;
@@ -104,6 +107,7 @@ window.POS_PAGO = {
                 borrador_id: POS.state.borradorId || null,
                 total,
                 forma_pago: formaPago,
+                efectivo_recibido: efectivoRecibido > 0 ? efectivoRecibido : null,
                 productos: POS.state.cart.map(item => {
                     const bruto = item.cantidad * item.precio;
                     const neto = item.descuento_valor > 0

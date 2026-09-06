@@ -103,6 +103,19 @@
                                                         <span class="fw-bold text-dark">Efectivo en Caja:</span>
                                                         <span class="h4 fw-bold text-success mb-0">$<%= new Intl.NumberFormat('es-CO').format(estado.sesion.monto_final_teorico_efectivo) %></span>
                                                     </div>
+                                                    <% if (Number(estado.sesion.efectivo_recibido_total || 0) > 0) { %>
+                                                    <div class="mt-2 pt-2 border-top small text-muted">
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>Efectivo recibido:</span>
+                                                            <span>$<%= new Intl.NumberFormat('es-CO').format(estado.sesion.efectivo_recibido_total) %></span>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between">
+                                                            <span>Cambio entregado:</span>
+                                                            <span>$<%= new Intl.NumberFormat('es-CO').format(estado.sesion.cambio_entregado_total) %></span>
+                                                        </div>
+                                                        <div class="fst-italic opacity-75" style="font-size:.75rem;">Informativo — ya reflejado en "Ventas (Efectivo)".</div>
+                                                    </div>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                         </div>

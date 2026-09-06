@@ -100,8 +100,14 @@ class FacturaRepository {
             const montoEfectivo = facturaData.forma_pago === 'efectivo' ? totalNum : 0;
             const montoTransferencia = facturaData.forma_pago === 'transferencia' ? totalNum : 0;
 
+            // Efectivo recibido: solo informativo (Recibido/Cambio en ticket y caja).
+            // Se guarda únicamente si es un pago en efectivo y cubre el total.
+            const efectivoRecibidoNum = Number.parseFloat(facturaData.efectivo_recibido) || 0;
+            const efectivoRecibido =
+                facturaData.forma_pago === 'efectivo' && efectivoRecibidoNum >= totalNum ? efectivoRecibidoNum : null;
+
             const [result] = await connection.query(
-                'INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, evento_id, fecha, caja_sesion_id, monto_efectivo, monto_transferencia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, evento_id, fecha, caja_sesion_id, monto_efectivo, monto_transferencia, efectivo_recibido) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     tenantId,
                     numero,
@@ -112,7 +118,8 @@ class FacturaRepository {
                     fechaEmisionUtc,
                     cajaSesionId,
                     montoEfectivo,
-                    montoTransferencia
+                    montoTransferencia,
+                    efectivoRecibido
                 ]
             );
 
@@ -280,7 +287,7 @@ class FacturaRepository {
         const [facturas] = await db.query(
             `
             SELECT f.id, f.tenant_id, f.numero, f.cliente_id, f.total, f.forma_pago, f.propina, f.evento_id,
-                   f.subtotal, f.descuento, f.total_impuestos, f.monto_efectivo, f.monto_transferencia,
+                   f.subtotal, f.descuento, f.total_impuestos, f.monto_efectivo, f.monto_transferencia, f.efectivo_recibido,
                    DATE_FORMAT(f.fecha, '%Y-%m-%d %H:%i:%s') AS fecha,
                    c.nombre AS cliente_nombre, c.direccion, c.telefono,
                    e.nombre AS evento_nombre

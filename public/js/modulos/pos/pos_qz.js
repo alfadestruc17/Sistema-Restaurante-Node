@@ -107,6 +107,11 @@ window.POS_QZ = {
         if (factura.propina) text(`Propina:`.padEnd(cols - 12) + money(factura.propina).padStart(12));
         text(`TOTAL:`.padEnd(cols - 12) + money(factura.total).padStart(12), { bold: true });
 
+        if (factura.efectivo_recibido != null && Number(factura.efectivo_recibido) > Number(factura.total)) {
+            text(`Recibido:`.padEnd(cols - 12) + money(factura.efectivo_recibido).padStart(12));
+            text(`Cambio:`.padEnd(cols - 12) + money(Number(factura.efectivo_recibido) - Number(factura.total)).padStart(12));
+        }
+
         if (factura.forma_pago === 'mixto') {
             text(`Efectivo: ${money(factura.monto_efectivo)}`);
             text(`Transferencia: ${money(factura.monto_transferencia)}`);

@@ -132,6 +132,12 @@
                                             <div class="total-final" style="font-size: 1.4em;">
                                                 Total: $<%= Number(factura.total).toLocaleString('es-CO') %>
                                             </div>
+                                            <% if (factura.efectivo_recibido != null && Number(factura.efectivo_recibido) > Number(factura.total)) { %>
+                                                <div class="small" style="text-align: right; margin-top: 6px;">
+                                                    <div>Recibido: $<%= Number(factura.efectivo_recibido).toLocaleString('es-CO') %></div>
+                                                    <div>Cambio: $<%= (Number(factura.efectivo_recibido) - Number(factura.total)).toLocaleString('es-CO') %></div>
+                                                </div>
+                                            <% } %>
                 </div>
 
                 <div class="divider"></div>

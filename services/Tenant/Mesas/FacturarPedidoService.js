@@ -8,7 +8,16 @@ class FacturarPedidoService {
     /**
      * @description Carga un pedido, lo consolida, resta inventario y genera factura final.
      */
-    static async execute({ tenantId, pedidoId, cliente_id, forma_pago, descuentosMap, propinaBody, usuarioId = null }) {
+    static async execute({
+        tenantId,
+        pedidoId,
+        cliente_id,
+        forma_pago,
+        descuentosMap,
+        propinaBody,
+        usuarioId = null,
+        efectivoRecibido = null
+    }) {
         const connection = await db.getConnection();
         try {
             await connection.beginTransaction();
@@ -65,8 +74,14 @@ class FacturarPedidoService {
                 await FacturarPedidoService._obtenerNumeroYCajaSesion(connection, tenantId);
             const fechaEmisionUtc = new Date().toISOString().slice(0, 19).replace('T', ' ');
 
+            // Efectivo recibido: solo informativo (Recibido/Cambio). Se guarda si
+            // hubo cobro en efectivo y el monto recibido cubre el total.
+            const efectivoRecibidoNum = Number.parseFloat(efectivoRecibido) || 0;
+            const efectivoRecibidoFinal =
+                montoEfectivo > 0 && efectivoRecibidoNum >= totalConPropina ? efectivoRecibidoNum : null;
+
             const [facturaInsert] = await connection.query(
-                `INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, monto_efectivo, monto_transferencia, propina, fecha, caja_sesion_id, subtotal, total_impuestos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO facturas (tenant_id, numero, cliente_id, total, forma_pago, monto_efectivo, monto_transferencia, efectivo_recibido, propina, fecha, caja_sesion_id, subtotal, total_impuestos) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     tenantId,
                     numeroFactura,
@@ -75,6 +90,7 @@ class FacturarPedidoService {
                     formaPagoFinal,
                     montoEfectivo,
                     montoTransferencia,
+                    efectivoRecibidoFinal,
                     propina,
                     fechaEmisionUtc,
                     cajaSesionId,

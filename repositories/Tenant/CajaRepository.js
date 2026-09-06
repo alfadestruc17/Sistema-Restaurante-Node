@@ -200,12 +200,25 @@ class CajaRepository {
             [sesionId]
         );
 
+        // Efectivo recibido / cambio entregado (solo informativo, no afecta el
+        // arqueo). El cambio = efectivo_recibido - total de cada factura en efectivo.
+        const [efectivoFlujo] = await db.query(
+            `SELECT
+                 COALESCE(SUM(efectivo_recibido), 0) AS recibido,
+                 COALESCE(SUM(GREATEST(efectivo_recibido - total, 0)), 0) AS cambio
+             FROM facturas
+             WHERE caja_sesion_id = ? AND efectivo_recibido IS NOT NULL`,
+            [sesionId]
+        );
+
         return {
             ventas_efectivo: parseFloat(ventasEfectivo[0]?.total || 0),
             ventas_transferencia: parseFloat(ventasTransferencia[0]?.total || 0),
             ventas: parseFloat(ventas[0]?.total || 0),
             entradas: parseFloat(entradas[0]?.total || 0),
-            salidas: parseFloat(salidas[0]?.total || 0)
+            salidas: parseFloat(salidas[0]?.total || 0),
+            efectivo_recibido_total: parseFloat(efectivoFlujo[0]?.recibido || 0),
+            cambio_entregado_total: parseFloat(efectivoFlujo[0]?.cambio || 0)
         };
     }
 }
